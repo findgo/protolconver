@@ -3,7 +3,6 @@
 //for driver
 #include "usart.h"
 #include "systick.h"
-#include "debug.h"
 #include "dlinkzigbee.h"
 static void prvClockInit(void);
 static void prvnvicInit(void);
@@ -16,21 +15,11 @@ int main(void)
     Systick_Configuration();
     Usart_Configuration();
 
-#ifdef DEBUG_MSG
-    DBG_VERBOS("init success!\r\n");
-    funcheckinit();
-#endif
     delay_ms(200);
     dlink_init();
 
     while(1)
     {
-
-
-
-#ifdef DEBUG_MSG
-        funchecktask();
-#endif
         dlink_period_task();
     }
 //Should never reach this point!

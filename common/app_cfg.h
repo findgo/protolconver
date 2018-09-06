@@ -14,10 +14,9 @@
 #define __APP_CFG_H_
 
 //!< common
-#include "common_global.h"
+#include "common_platform.h"
 #include "common_def.h"
 #include "common_type.h"
-#include "common_bits.h"
 #include "common_signal.h"
 
 //!< util
@@ -25,7 +24,7 @@
 //!< for delay
 #include "delay.h"
 //!< 
-#include "stdio.h"
+#include <stdio.h>
 
 
 

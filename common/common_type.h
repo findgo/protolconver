@@ -3,17 +3,32 @@
   * @file   common_type.h
   * @author  
   * @version 
-  * @date    
-  * @brief  	特殊定义
+  * @date     瀹氫箟閫氱敤绫诲瀷,浠ヤ究骞冲彴绉绘
+  * @brief  
   ******************************************************************************
-  * @attention 	20151110     v1.1   	jgb		重构
+  * @attention 	20180906     v1.2   	jgb     鑴辩骞冲彴闄愬埗
   ******************************************************************************
   */
 #ifndef __COMMON_TYPE_H_
 #define __COMMON_TYPE_H_
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
+
 #define ACTIVE_LOW        !
 #define ACTIVE_HIGH       !!    /* double negation forces result to be '1' */
+
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+
+#ifndef TRUE
+#define TRUE 1
+#endif
 
 
 

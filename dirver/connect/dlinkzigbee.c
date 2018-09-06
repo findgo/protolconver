@@ -89,13 +89,9 @@ void dlink_request(uint8_t src_port,uint8_t dst_port,uint16_t dst_address,uint8_
 
     dl_len += __dl_escape_check(&dl_buf[dl_len],src_port);
     dl_len += __dl_escape_check(&dl_buf[dl_len],dst_port);
-//    dl_buf[dl_len++] = src_port;
-//    dl_buf[dl_len++] = dst_port;
 
     dl_len += __dl_escape_check(&dl_buf[dl_len],dst_address & 0xff);
     dl_len += __dl_escape_check(&dl_buf[dl_len],(dst_address >> 8) & 0xff);
-//    dl_buf[dl_len++] = dst_address & 0xff;
-//    dl_buf[dl_len++] = (dst_address >> 8) & 0xff;
     
     dl_len += __dl_escape_check_buff(&dl_buf[dl_len],buf,buf_len);
 

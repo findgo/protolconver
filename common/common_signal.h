@@ -13,7 +13,7 @@
 #ifndef __COMMON_SIGNAL_H_
 #define __COMMON_SIGNAL_H_
 
-#include "common_global.h"
+#include "common_platform.h"
 #include "common_def.h"
 
 typedef bool halIntState_t;
