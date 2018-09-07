@@ -66,9 +66,10 @@
 #define HI_UINT8(a) (((a) >> 4) & 0x0F)
 #define LO_UINT8(a) ((a) & 0x0F)
 
-/* takes a byte out of a uint32 : var - uint32,  ByteNum - byte to take out (0 - 3) */
+/* takes a byte out of a uint32_t : var - uint32_t,  ByteNum - byte to take out (0 - 3) */
 #define BREAK_UINT32( var, ByteNum ) (uint8_t)((uint32_t)(((var) >>((ByteNum) * 8)) & 0x00FF))
-
+/* takes a byte out of a uint64_t : var - uint64_t,  ByteNum - byte to take out (0 - 7) */
+#define BREAK_UINT64( var, ByteNum ) (uint8_t)((uint64_t)(((var) >>((ByteNum) * 8)) & 0x00FF))
 
 //!< 
 #define SWAP8_U16(v)					((((uint16_t)(v) & 0xFF00) >> 8) | \

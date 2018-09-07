@@ -31,13 +31,9 @@
                                         (cmd) == LTL_CMD_DISCOVER_ATTRIBUTES        || \
                                         (cmd) == LTL_CMD_DEFAULT_RSP ) // exception
 
-typedef LStatus_t (*ltlReadWriteCB_t)( uint16_t trunkID, uint8_t nodeNO, uint16_t attrId, uint8_t oper,
-                                       uint8_t *pValue, uint16_t *pLen );
+/* local typedef */
 
-typedef LStatus_t (*ltlAuthorizeCB_t)(ltlAttrRec_t *pAttr, uint8_t oper );
-
-
-typedef void *(*ltlParseInProfileCmd_t)( uint8_t *pbuf,uint16_t datalen );
+typedef void *(*ltlParseInProfileCmd_t)( uint8_t *pdata,uint16_t datalen );
 typedef uint8_t (*ltlProcessInProfileCmd_t)( ltlApduMsg_t *ApduMsg );
 
 typedef uint16_t (*ltlprefixsizefn_t)(uint8_t *refer);
@@ -71,8 +67,6 @@ typedef struct ltlAttrRecsList_s
 
 
 // local function
-static void *ltlParseInReadCmd( uint8_t *pbuf,uint16_t datalen );
-static uint8_t ltlProcessInReadCmd(ltlApduMsg_t *ApduMsg);
 static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf );
 static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr,uint8_t *pDat);
 static void ltlEncodeHdr( ltlFrameHdr_t *hdr, uint16_t trunkID,uint8_t nodeNO, uint8_t cmd, uint8_t specific, uint8_t direction,
@@ -83,9 +77,19 @@ static ltlLibPlugin_t *ltlFindPlugin( uint16_t trunkID );
 static ltlAttrRecsList_t *ltlFindAttrRecsList(uint16_t trunkID, uint8_t nodeNO);
 static uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrId, ltlAttrRec_t *pAttr );
 
-
 static ltlReadWriteCB_t ltlGetReadWriteCB(uint16_t trunkID, uint8_t nodeNO);
-static LStatus_t ltlAuthorizeRead(uint16_t trunkID, uint8_t nodeNO, ltlAttrRec_t *pAttr );
+static LStatus_t ltlAuthorizeReadUsingCB(uint16_t trunkID, uint8_t nodeNO, ltlAttrRec_t *pAttr );
+static LStatus_t ltlWriteAttrData(uint16_t trunkID, uint8_t nodeNO, ltlAttrRec_t *pAttr, ltlWriteRec_t *pWriteRec );
+static LStatus_t ltlWriteAttrDataUsingCB( uint16_t trunkID,uint8_t nodeNO, ltlAttrRec_t *pAttr, uint8_t *pAttrData );
+static LStatus_t ltlAuthorizeWriteUsingCB(uint16_t trunkID, uint8_t nodeNO, ltlAttrRec_t *pAttr );
+
+
+static void *ltlParseInReadCmd( uint8_t *pdata,uint16_t datalen );
+static void *ltlParseInWriteCmd(uint8_t *pdata,uint16_t datalen);
+
+static uint8_t ltlProcessInReadCmd(ltlApduMsg_t *ApduMsg);
+static uint8_t ltlProcessInWriteCmd(ltlApduMsg_t *ApduMsg);
+static uint8_t ltlProcessInWriteUndividedCmd(ltlApduMsg_t *ApduMsg);
 
 // local variable
 static ltlLibPlugin_t *libplugins = NULL;
@@ -94,6 +98,11 @@ static ltlAttrRecsList_t *attrList = NULL;
 static ltlCmdItems_t ltlCmdTable[] = 
 {
     {ltlParseInReadCmd, ltlProcessInReadCmd},
+    {NULL, NULL},
+    {ltlParseInWriteCmd, ltlProcessInWriteCmd},
+    {ltlParseInWriteCmd, ltlProcessInWriteUndividedCmd},
+    {NULL, NULL},
+    {ltlParseInWriteCmd, ltlProcessInWriteCmd},
 };
 
 
@@ -198,8 +207,7 @@ LStatus_t ltl_registerAttrList(uint16_t trunkID, uint8_t nodeNO, uint8_t numAttr
 }
 
 /*********************************************************************
- * @fn       注册用户回调函数   
- *
+ *              注册用户回调函数,处理属性和属性的授权  
  * @brief       Register the application's callback function to read/write
  *              attribute data, and authorize read/write operation.
  *
@@ -221,7 +229,7 @@ LStatus_t ltl_registerAttrList(uint16_t trunkID, uint8_t nodeNO, uint8_t numAttr
  *
  * @return      LTL_SUCCESS if successful. LTL_FAILURE, otherwise.
  */
-LStatus_t LTL_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, 
+LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, 
                                 ltlReadWriteCB_t pfnReadWriteCB, ltlAuthorizeCB_t pfnAuthorizeCB )
 {
     ltlAttrRecsList_t *pRec = ltlFindAttrRecsList(trunkID, nodeNO);
@@ -243,30 +251,32 @@ LStatus_t LTL_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO,
  *
  *          NOTE: The calling application is responsible for incrementing
  *                the Sequence Number.
- *
+ * 
+ * @param   refer - no use
  * @param   trunkID - trunk ID
  * @param   nodeNO -  node number
- * @param   cmd - command ID
+ * @param   seqNumber - identification number for the transaction
  * @param   specific - whether the command is trunk Specific
  * @param   direction - client/server direction of the command
- * @param   disableDefaultRsp - disable Default Response command
  * @param   manuCode - manufacturer code for proprietary extensions to a profile
- * @param   seqNumber - identification number for the transaction
- * @param   cmdFormatLen - length of the command to be sent
+ * @param   disableDefaultRsp - disable Default Response command 
+ * @param   cmd - command ID
  * @param   cmdFormat - command to be sent
+ * @param   cmdFormatLen - length of the command to be sent
  *
- * @return  ZSuccess if OK
+ * @return  LTL_STATUS_SUCCESS if OK
  */
-
-LStatus_t ltl_SendCommand(uint8_t *refer,        uint16_t trunkID,uint8_t nodeNO, uint8_t cmd, uint8_t specific, 
-                            uint8_t direction, uint8_t disableDefaultRsp, uint16_t manuCode, uint8_t seqNum,
-                            uint8_t *cmdFormat,uint16_t cmdFormatLen)
+LStatus_t ltl_SendCommand(uint8_t *refer, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
+                                uint8_t specific, uint8_t direction, uint16_t manuCode, uint8_t disableDefaultRsp,
+                                uint8_t cmd, uint8_t *cmdFormat,uint16_t cmdFormatLen)
 {
     ltlFrameHdr_t hdr;
     uint8_t *msgbuf;
     uint8_t *pbuf;
     uint16_t msglen;
     uint16_t prefixlen;
+   
+    memset((uint8_t *)&hdr,0,sizeof(ltlFrameHdr_t));
     
     ltlEncodeHdr(&hdr, trunkID, nodeNO, cmd, specific, direction, disableDefaultRsp, manuCode, seqNum);
 
@@ -278,9 +288,9 @@ LStatus_t ltl_SendCommand(uint8_t *refer,        uint16_t trunkID,uint8_t nodeNO
 
     msgbuf = (uint8_t *)mo_malloc(msglen);
     if(!msgbuf){
-        return LTL_STATUS_MEMERROR;
+        return LTL_MEMERROR;
     }
- 
+    //填充前置预留空间
     pbuf = ltlPrefixBuildHdr(refer, msgbuf);
     pbuf = ltlBuildHdr(&hdr, pbuf);
     memcpy(pbuf, cmdFormat, cmdFormatLen);
@@ -307,10 +317,10 @@ static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr,uint8_t *pDat)
     memset((uint8_t *)hdr,0,sizeof(ltlFrameHdr_t));
 
     hdr->trunkID = BUILD_UINT16(*pDat, *(pDat +1));
-    pDat += 2;
-    hdr->transSeqNum = *pDat;
-    pDat++;
+    pDat += 2;   
     hdr->nodeNo = *pDat;
+    pDat++;    
+    hdr->transSeqNum = *pDat;
     pDat++;
 
     hdr->fc.type = ltl_FCType(*pDat);
@@ -331,12 +341,12 @@ static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr,uint8_t *pDat)
 static void ltlEncodeHdr( ltlFrameHdr_t *hdr, uint16_t trunkID,uint8_t nodeNO, uint8_t cmd, uint8_t specific, uint8_t direction,
                            uint8_t disableDefaultRsp, uint16_t manuCode, uint8_t seqNum)
 {
-    hdr->trunkID = trunkID;
-    
+    // trunkID
+    hdr->trunkID = trunkID;  
+    // node number
+    hdr->nodeNo = nodeNO;    
     //Transaction Sequence Number
     hdr->transSeqNum = seqNum;
-    // node number
-    hdr->nodeNo = nodeNO;
     // Add the Trunk's command ID
     hdr->commandID = cmd;
     
@@ -367,11 +377,11 @@ static uint8_t *ltlBuildHdr( ltlFrameHdr_t *hdr, uint8_t *pDat )
 {
     *pDat++ = LO_UINT16(hdr->trunkID);
     *pDat++ = HI_UINT16(hdr->trunkID);
-    //Transaction Sequence Number
-    *pDat++ = hdr->transSeqNum;
     // node number
     *pDat++ = hdr->nodeNo;
-
+    //Transaction Sequence Number
+    *pDat++ = hdr->transSeqNum;
+    
     // Build the Frame Control byte
     *pDat = hdr->fc.type;
     *pDat |= hdr->fc.manuSpecific << 2;
@@ -401,89 +411,6 @@ static uint8_t ltlHdrSize(ltlFrameHdr_t *hdr)
     }
 
     return ( size );
-}
-
-//处理进来的apdu帧,本函数只处理APDU
-void ltlProcessInApdu(MoIncomingMsgPkt_t *pkt)
-{
-    LStatus_t status = LTL_STATUS_SUCCESS;
-    ltlApduMsg_t ApduMsg;
-    ltlLibPlugin_t *pInPlugin;
-    ltlDefaultRspCmd_t defaultRspCmd;
-
-    //error 
-    if(pkt->apduLength == 0){
-        return;
-    }
-
-    //parse frame head
-    ApduMsg.pkt = pkt;
-    ApduMsg.pdata = ltlParseHdr(&(ApduMsg.hdr),pkt->apduData);
-    ApduMsg.datalen = pkt->apduLength;
-    ApduMsg.datalen -= (uint16_t)(ApduMsg.pdata - pkt->apduData); // 通过指针偏移计算apdu帧头数据长度
-
-    // process frame head    
-    //foundation type message,
-    if(ltl_IsProfileCmd(ApduMsg.hdr.fc.type)){
-        if(ltl_IsMancodeEnable(ApduMsg.hdr.fc.manuSpecific)){            
-            // 自定义 profile下的制造商命令
-            //TODO: realize after
-            status = LTL_STATUS_UNSUP_MANU_GENERAL_COMMAND;
-        }
-        else if((ApduMsg.hdr.commandID <= LTL_CMD_PROFILE_MAX) &&
-            (ltlCmdTable[ApduMsg.hdr.commandID].pfnParseInProfile != NULL)){
-            // parse foundation corresponding command 
-            ApduMsg.attrCmd = ltlCmdTable[ApduMsg.hdr.commandID].pfnParseInProfile(ApduMsg.pdata,ApduMsg.datalen);
-            if((ApduMsg.attrCmd != NULL) && (ltlCmdTable[ApduMsg.hdr.commandID].pfnProcessInProfile != NULL)){
-                //and then process corresponding appliction data domain
-                if(ltlCmdTable[ApduMsg.hdr.commandID].pfnProcessInProfile(&ApduMsg) == FALSE){
-                    // can not find attribute in the table
-                }
-            }
-
-            if(ApduMsg.attrCmd)
-                mo_free(ApduMsg.attrCmd);
-
-            if(LTL_PROFILE_CMD_HAS_RSP(ApduMsg.hdr.commandID))
-                return; // we are done in ltlProcessCmd()
-            
-        }
-        else {
-            status = LTL_STATUS_UNSUP_GENERAL_COMMAND;
-        }
-    }
-    // Not a foundation type message,
-    else{ //ltl_IsTrunkCmd(ApduMsg.hdr.fc.type)
-        // it is specific to the trunk id command
-        //find trunk id 
-        pInPlugin = ltlFindPlugin(ApduMsg.hdr.trunkID);
-        if(pInPlugin && pInPlugin->pfnIncomingHdlr){
-                  // The return value of the plugin function will be
-            //  LTL_STATUS_SUCCESS - Supported and need default response
-            //  LTL_STATUS_FAILURE - Unsupported
-            //  LTL_STATUS_CMD_HAS_RSP - Supported and do not need default rsp
-            //  LTL_STATUS_INVALID_FIELD - Supported, but the incoming msg is wrong formatted
-            //  LTL_STATUS_INVALID_VALUE - Supported, but the request not achievable by the h/w
-            //  LTL_STATUS_MEMERROR - Supported but memory allocation fails
-            
-            status = pInPlugin->pfnIncomingHdlr(&ApduMsg);
-            if(status == LTL_STATUS_CMD_HAS_RSP)
-                return; // we are done in pfnIncomingHdlr
-        }
-
-        if(status == LTL_STATUS_FAILURE){           
-            status = ApduMsg.hdr.fc.manuSpecific ? LTL_STATUS_UNSUP_MANU_TRUNK_COMMAND :  LTL_STATUS_UNSUP_TRUNK_COMMAND;
-        }
-    }
-
-    if(ApduMsg.hdr.fc.disableDefaultRsp == LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF ){
-        defaultRspCmd.commandID = ApduMsg.hdr.commandID;
-        defaultRspCmd.statusCode = status;
-        // send default response
-        ltl_SendDefaultRspCmd(pkt->refer, ApduMsg.hdr.trunkID, ApduMsg.hdr.nodeNo, 
-                            &defaultRspCmd,  LTL_FRAMECTL_DIR_SERVER_CLIENT,  TRUE,  
-                            ApduMsg.hdr.manuCode, ApduMsg.hdr.transSeqNum);
-    }
 }
 /*********************************************************************
  * @fn         
@@ -569,6 +496,7 @@ static uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrI
     return FALSE;
 }
 
+//ok
 uint8_t ltlGetDataTypeLength( uint8_t dataType )
 {
     uint8_t len;
@@ -577,45 +505,41 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
         case LTL_DATATYPE_DATA8:
         case LTL_DATATYPE_BOOLEAN:
         case LTL_DATATYPE_BITMAP8:
-        case LTL_DATATYPE_INT8:
         case LTL_DATATYPE_UINT8:
+        case LTL_DATATYPE_INT8:
         case LTL_DATATYPE_ENUM8:
             len = 1;
-        break;
+            break;
 
         case LTL_DATATYPE_DATA16:
         case LTL_DATATYPE_BITMAP16:
         case LTL_DATATYPE_UINT16:
         case LTL_DATATYPE_INT16:
         case LTL_DATATYPE_ENUM16:
-//        case LTL_DATATYPE_SEMI_PREC:
-//        case LTL_DATATYPE_TRUNK_ID:
-//        case LTL_DATATYPE_ATTR_ID:
+        case LTL_DATATYPE_TRUNK_ID:
+        case LTL_DATATYPE_ATTR_ID:
             len = 2;
-        break;
+            break;
 
         case LTL_DATATYPE_DATA32:
         case LTL_DATATYPE_BITMAP32:
         case LTL_DATATYPE_UINT32:
         case LTL_DATATYPE_INT32:
         case LTL_DATATYPE_SINGLE_PREC:
-//        case LTL_DATATYPE_TOD:
-//        case LTL_DATATYPE_DATE:
-//        case LTL_DATATYPE_UTC:
-//        case LTL_DATATYPE_BAC_OID:
             len = 4;
-        break;
-
-        case LTL_DATATYPE_DOUBLE_PREC:
-//        case LTL_DATATYPE_IEEE_ADDR:
+            break;
+        case LTL_DATATYPE_DATA64:
+        case LTL_DATATYPE_BITMAP64:           
         case LTL_DATATYPE_UINT64:
         case LTL_DATATYPE_INT64:
+        case LTL_DATATYPE_DOUBLE_PREC:
+        case LTL_DATATYPE_SN_ADDR:
             len = 8;
-        break;
+            break;
 
         case LTL_DATATYPE_128_BIT_SEC_KEY:
             len = 16;
-        break;
+            break;
 
         case LTL_DATATYPE_NO_DATA:
         case LTL_DATATYPE_UNKNOWN:
@@ -641,19 +565,366 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
  */
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData )
 {
-    uint16_t dataLen = 0;
-
     if ( dataType == LTL_DATATYPE_LONG_CHAR_STR || dataType == LTL_DATATYPE_LONG_OCTET_STR ) {
-        dataLen = BUILD_UINT16( pData[0], pData[1] ) + 2; // long string length + 2 for length field
+        return ( BUILD_UINT16( pData[0], pData[1] ) + 2); // long string length + 2 for length field
     }
     else if ( dataType == LTL_DATATYPE_CHAR_STR || dataType == LTL_DATATYPE_OCTET_STR ){
-        dataLen = *pData + 1; // string length + 1 for length field
+        return ( *pData + 1 ); // string length + 1 for length field
     }
-    else{
-        dataLen = ltlGetDataTypeLength( dataType );
+
+    return ltlGetDataTypeLength( dataType );
+}
+
+/*********************************************************************
+ * @fn      
+ *
+ * @brief   Builds a buffer from the attribute data
+ *
+ * @param   dataType - data types defined in LTL.h
+ * @param   attrData - pointer to the attribute data
+ * @param   buf - where to put the serialized data
+ *
+ * @return  pointer to end of destination buffer
+ */
+static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf )
+{
+    uint8_t *pStr;
+    uint16_t len;
+
+    switch ( dataType ){
+        case LTL_DATATYPE_DATA8:
+        case LTL_DATATYPE_BOOLEAN:
+        case LTL_DATATYPE_BITMAP8:
+        case LTL_DATATYPE_INT8:
+        case LTL_DATATYPE_UINT8:
+        case LTL_DATATYPE_ENUM8:
+            *buf++ = *((uint8_t *)attrData);
+            break;
+
+        case LTL_DATATYPE_DATA16:
+        case LTL_DATATYPE_BITMAP16:
+        case LTL_DATATYPE_UINT16:
+        case LTL_DATATYPE_INT16:
+        case LTL_DATATYPE_ENUM16:
+        case LTL_DATATYPE_TRUNK_ID:
+        case LTL_DATATYPE_ATTR_ID:
+            *buf++ = LO_UINT16( *((uint16_t *)attrData) );
+            *buf++ = HI_UINT16( *((uint16_t *)attrData) );
+            break;
+
+        case LTL_DATATYPE_DATA32:
+        case LTL_DATATYPE_BITMAP32:
+        case LTL_DATATYPE_UINT32:
+        case LTL_DATATYPE_INT32:
+        case LTL_DATATYPE_SINGLE_PREC:
+            *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 0 );
+            *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 1 );
+            *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 2 );
+            *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 3 );
+            break;
+
+        case LTL_DATATYPE_DATA64:
+        case LTL_DATATYPE_BITMAP64:           
+        case LTL_DATATYPE_UINT64:
+        case LTL_DATATYPE_INT64:
+        case LTL_DATATYPE_DOUBLE_PREC:
+        case LTL_DATATYPE_SN_ADDR:
+            pStr = (uint8_t *)attrData;
+            buf = memcpy( buf, pStr, 8 );
+        /*
+            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 0 );
+            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 1 );
+            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 2 );
+            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 3 );
+            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 4 );
+            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 5 );
+            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 6 );
+            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 7 );
+        */
+            break;
+
+        case LTL_DATATYPE_CHAR_STR:
+        case LTL_DATATYPE_OCTET_STR:
+            pStr = (uint8_t *)attrData;
+            len = *pStr;
+            buf = memcpy( buf, pStr, len+1 ); // Including length field
+            break;
+
+        case LTL_DATATYPE_LONG_CHAR_STR:
+        case LTL_DATATYPE_LONG_OCTET_STR:
+            pStr = (uint8_t *)attrData;
+            len = BUILD_UINT16( pStr[0], pStr[1] );
+            buf = memcpy( buf, pStr, len+2 ); // Including length field
+            break;
+
+        case LTL_DATATYPE_128_BIT_SEC_KEY:
+            pStr = (uint8_t *)attrData;
+            buf = memcpy( buf, pStr, 8 );
+            break;
+
+        case LTL_DATATYPE_NO_DATA:
+        case LTL_DATATYPE_UNKNOWN:
+        // Fall through
+
+        default:
+            break;
+  }
+
+  return ( buf );
+}
+
+
+static ltlReadWriteCB_t ltlGetReadWriteCB(uint16_t trunkID, uint8_t nodeNO)
+{
+  ltlAttrRecsList_t *pRec = ltlFindAttrRecsList( trunkID, nodeNO );
+
+  if ( pRec != NULL )
+  {
+    return ( pRec->pfnReadWriteCB );
+  }
+
+  return ( NULL );
+}
+/*********************************************************************
+ * @fn      
+ *
+ * @brief   Get the Read/Write Authorization callback function pointer
+ *
+ * @param   trunkID -
+ * @param   nodeNO - 
+ *
+ * @return  Authorization CB, NULL if not found
+ */
+static ltlAuthorizeCB_t ltlGetAuthorizeCB(uint16_t trunkID, uint8_t nodeNO)
+{
+    ltlAttrRecsList_t *pRec = ltlFindAttrRecsList( trunkID, nodeNO );
+
+    if ( pRec != NULL ){
+        return ( pRec->pfnAuthorizeCB );
+    }
+
+    return ( NULL );
+}
+/* 
+ * @brief   Get the Read/Write readwrite length
+ */
+static uint16_t ltlGetAttrDataLengthUsingCB( uint16_t trunkID,uint8_t nodeNO,  uint16_t attrId )
+{
+    uint16_t dataLen = 0;
+    ltlReadWriteCB_t pfnReadWriteCB = ltlGetReadWriteCB( trunkID, nodeNO );
+
+    if ( pfnReadWriteCB != NULL ){
+        // Only get the attribute length
+        (*pfnReadWriteCB)( trunkID, nodeNO, attrId, LTL_OPER_LEN, NULL, &dataLen );
     }
 
     return ( dataLen );
+}
+/* 
+ * @brief   the Read/Write readwrite callback function process
+ */
+static LStatus_t ltlReadAttrDataUsingCB( uint16_t trunkID,uint8_t nodeNO,  uint16_t attrId ,
+                                         uint8_t *pAttrData, uint16_t *pDataLen )
+{
+    ltlReadWriteCB_t pfnReadWriteCB = ltlGetReadWriteCB( trunkID, nodeNO );
+
+    if ( pDataLen != NULL ){
+        *pDataLen = 0; // Always initialize it to 0
+    }
+
+    if ( pfnReadWriteCB != NULL )
+    {
+        // Read the attribute value and its length
+        return ( (*pfnReadWriteCB)( trunkID, nodeNO, attrId, LTL_OPER_READ, pAttrData, pDataLen ) );
+    }
+
+    return ( LTL_STATUS_SOFTWARE_FAILURE );
+}
+/*********************************************************************
+ * @fn      
+ *
+ * @brief   Use application's callback to authorize a Read operation
+ *          on a given attribute.
+ *
+ * @param   trunkID - 
+ * @param   nodeNO - 
+ * @param   pAttr - pointer to attribute
+ *
+ * @return  LTL_STATUS_SUCCESS: Operation authorized
+ *          LTL_STATUS_NOT_AUTHORIZED: Operation not authorized
+ */
+static LStatus_t ltlAuthorizeReadUsingCB(uint16_t trunkID, uint8_t nodeNO, ltlAttrRec_t *pAttr )
+{
+    ltlAuthorizeCB_t pfnAuthorizeCB;
+
+    if ( ltl_AccessCtrlAuthRead( pAttr->accessControl ) ){
+        pfnAuthorizeCB = ltlGetAuthorizeCB( trunkID,nodeNO );
+
+        if ( pfnAuthorizeCB != NULL ){
+            return ( (*pfnAuthorizeCB)(pAttr, LTL_OPER_READ ) );
+        }
+    }
+
+    return ( LTL_STATUS_SUCCESS );
+}
+
+static LStatus_t ltlWriteAttrData(uint16_t trunkID, uint8_t nodeNO, ltlAttrRec_t *pAttr, ltlWriteRec_t *pWriteRec )
+{
+    uint8_t status;
+    uint16_t len;
+
+    if ( ltl_AccessCtrlWrite( pAttr->accessControl ) ){
+        status = ltlAuthorizeWriteUsingCB( trunkID, nodeNO, pAttr );
+        if ( status == LTL_STATUS_SUCCESS ){
+//            if ( ( zcl_ValidateAttrDataCB == NULL ) || zcl_ValidateAttrDataCB( pAttr, pWriteRec ) ){
+                // Write the attribute value
+                len = ltlGetAttrDataLength(pAttr->dataType, pWriteRec->attrData);
+                memcpy( pAttr->dataPtr, pWriteRec->attrData, len );
+
+                status = LTL_STATUS_SUCCESS;
+//            }
+//            else{
+//                  status = LTL_STATUS_INVALID_VALUE;
+//            }
+        }
+        }
+    else{
+        status = LTL_STATUS_READ_ONLY;
+    }
+
+    return ( status );
+}
+static LStatus_t ltlWriteAttrDataUsingCB( uint16_t trunkID,uint8_t nodeNO, ltlAttrRec_t *pAttr, uint8_t *pAttrData )
+{
+    uint8_t status;
+    ltlReadWriteCB_t pfnReadWriteCB;
+
+    if ( ltl_AccessCtrlWrite( pAttr->accessControl ) ){
+        status = ltlAuthorizeWriteUsingCB( trunkID, nodeNO, pAttr );
+        if ( status == LTL_STATUS_SUCCESS ){
+          pfnReadWriteCB = ltlGetReadWriteCB( trunkID, nodeNO);
+          if ( pfnReadWriteCB != NULL ){
+                // Write the attribute value
+                status = (*pfnReadWriteCB)( trunkID, nodeNO, pAttr->attrId, LTL_OPER_WRITE, pAttrData, NULL );
+          }
+          else{
+            status = LTL_STATUS_SOFTWARE_FAILURE;
+          }
+        }
+    }
+    else{
+        status = LTL_STATUS_READ_ONLY;
+    }
+
+    return ( status );
+}
+
+static LStatus_t ltlAuthorizeWriteUsingCB(uint16_t trunkID, uint8_t nodeNO, ltlAttrRec_t *pAttr )
+{
+    ltlAuthorizeCB_t pfnAuthorizeCB;
+    
+    if ( ltl_AccessCtrlAuthWrite( pAttr->accessControl ) ) {
+        pfnAuthorizeCB = ltlGetAuthorizeCB( trunkID, nodeNO);
+
+        if ( pfnAuthorizeCB != NULL ){
+            return ( (*pfnAuthorizeCB)(pAttr, LTL_OPER_WRITE ) );
+        }
+    }
+
+    return ( LTL_STATUS_SUCCESS );
+}
+
+
+LStatus_t ltl_SendReadRsp(uint8_t *refer, uint16_t trunkID, uint8_t nodeNO,
+                                uint8_t seqNum,uint8_t direction, uint16_t manuCode, 
+                                uint8_t disableDefaultRsp, ltlReadRspCmd_t *readRspCmd )
+{
+    uint8_t *buf;
+    uint8_t *pBuf;
+    uint16_t len = 0;
+    uint16_t dataLen;
+    LStatus_t status;
+    uint8_t i;
+    ltlReadRspStatus_t *statusRec;
+
+    // calculate the size of the command
+    for ( i = 0; i < readRspCmd->numAttr; i++ ) {
+        statusRec = &(readRspCmd->attrList[i]);
+
+        len += 2 + 1; // Attribute ID + Status
+
+        if ( statusRec->status == LTL_STATUS_SUCCESS ){
+            len += 1; // Attribute Data Type length
+
+            // Attribute Data length
+            if ( statusRec->data != NULL ){
+                len += ltlGetAttrDataLength( statusRec->dataType, statusRec->data );
+            }
+            else{
+                len += ltlGetAttrDataLengthUsingCB( trunkID, nodeNO, statusRec->attrID );
+            }
+        }
+    }
+
+    buf = mo_malloc( len );
+    if ( buf == NULL ){
+        return LTL_MEMERROR;
+    }
+    
+    // Load the buffer - serially
+    pBuf = buf;
+    for ( i = 0; i < readRspCmd->numAttr; i++ ){
+        statusRec = &(readRspCmd->attrList[i]);
+
+        *pBuf++ = LO_UINT16( statusRec->attrID );
+        *pBuf++ = HI_UINT16( statusRec->attrID );
+        *pBuf++ = statusRec->status;
+
+        if ( statusRec->status == LTL_STATUS_SUCCESS ){
+            *pBuf++ = statusRec->dataType;
+
+            if ( statusRec->data != NULL ){
+                // Copy attribute data to the buffer to be sent out
+                pBuf = ltlSerializeData( statusRec->dataType, (void *)statusRec->data, pBuf );
+            }
+            else{
+                dataLen = 0;
+                // Read attribute data directly into the buffer to be sent out
+                ltlReadAttrDataUsingCB( trunkID, nodeNO, statusRec->attrID, pBuf, &dataLen );
+                pBuf += dataLen;
+            }
+        }
+    } // for loop
+
+    status = ltl_SendCommand(refer, trunkID, nodeNO, seqNum, FALSE, direction, manuCode, disableDefaultRsp,
+                    LTL_CMD_READ_ATTRIBUTES_RSP, buf,len);
+              
+    mo_free( buf );
+
+    return ( status );
+}
+LStatus_t ltl_SendwriteRsp( uint8_t *refer, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum , uint8_t direction,  uint16_t manuCode, 
+                                 uint8_t disableDefaultRsp, ltlWriteRspCmd_t *writeRspCmd)
+{
+
+
+    return LTL_STATUS_SUCCESS;
+}
+
+//ok
+LStatus_t ltl_SendDefaultRspCmd( uint8_t *refer, uint16_t trunkID,uint8_t nodeNO,
+                                uint8_t seqNum, uint8_t direction, uint16_t manuCode,
+                                uint8_t disableDefaultRsp, ltlDefaultRspCmd_t *defaultRspCmd)
+{
+  uint8_t buf[2]; // Command ID and Status;
+
+  // Load the buffer - serially
+  buf[0] = defaultRspCmd->commandID;
+  buf[1] = defaultRspCmd->statusCode;
+
+  return (ltl_SendCommand(refer, trunkID, nodeNO, seqNum, FALSE, direction, manuCode, disableDefaultRsp,
+                    LTL_CMD_DEFAULT_RSP, buf,2));
 }
 
 /*********************************************************************
@@ -664,12 +935,13 @@ uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData )
  *      NOTE: THIS FUNCTION ALLOCATES THE RETURN BUFFER, SO THE CALLING
  *            FUNCTION IS RESPONSIBLE TO FREE THE MEMORY.
  *
- * @param   pCmd - pointer to incoming data to parse
+ * @param   pdata - pointer to incoming data to parse
+ * @param   datalen - pointer to incoming data to parse
  *
  * @return  pointer to the parsed command structure
  */
  //ok
-static void *ltlParseInReadCmd( uint8_t *pbuf,uint16_t datalen )
+static void *ltlParseInReadCmd( uint8_t *pdata, uint16_t datalen )
 {
     ltlReadCmd_t *readCmd;
     uint8_t i;    
@@ -681,12 +953,97 @@ static void *ltlParseInReadCmd( uint8_t *pbuf,uint16_t datalen )
     
     readCmd->numAttr = datalen / 2; // Atrribute ID number
     for ( i = 0; i < readCmd->numAttr; i++ ){
-        readCmd->attrID[i] = BUILD_UINT16( pbuf[0], pbuf[1] );
-        pbuf += 2;
+        readCmd->attrID[i] = BUILD_UINT16( pdata[0], pdata[1] );
+        pdata += 2;
     }
 
     return ( (void *)readCmd );
 }
+/*********************************************************************
+ * @fn      
+ *
+ * @brief   Parse the "Profile" Write Commands 
+ *
+ *      NOTE: THIS FUNCTION ALLOCATES THE RETURN BUFFER, SO THE CALLING
+ *            FUNCTION IS RESPONSIBLE TO FREE THE MEMORY.
+ *
+ * @param   pdata - pointer to incoming data to parse
+ * @param   datalen - pointer to incoming data to parse
+ *
+ * @return  pointer to the parsed command structure
+ */
+ //OK
+static void *ltlParseInWriteCmd(uint8_t *pdata ,uint16_t datalen)
+{
+    uint16_t attrDataLen;
+    uint8_t *dataPtr;
+    uint8_t numAttr;
+    uint8_t hdrLen;
+    uint16_t tempLen;
+    uint8_t dataType;
+    uint8_t *tempBuf;
+    uint8_t i;
+    ltlWriteCmd_t *writeCmd;
+    ltlWriteRec_t *statusRec;
+        
+    tempBuf = pdata;
+    tempLen = 0;
+    numAttr = 0;
+    // find out the number of attributes and the length of attribute data
+    while ( tempBuf < ( pdata + datalen ) )
+    {
+        numAttr++;
+        tempBuf += 2; // move pass attribute id
+
+        dataType = *tempBuf++;// get data type and then move pass data type 
+
+        attrDataLen = ltlGetAttrDataLength( dataType, tempBuf ); // get corresponding data length by data type 
+        tempBuf += attrDataLen; // move pass attribute data
+
+        // Padding needed if buffer has odd number of octects in length
+        if ( attrDataLen % 2 ){
+            attrDataLen++;
+        }
+
+        tempLen += attrDataLen;
+    }
+
+    // calculate the length of the response header
+    hdrLen = sizeof( ltlWriteCmd_t ) + ( numAttr * sizeof( ltlWriteRec_t ) );
+
+    writeCmd = (ltlWriteCmd_t *)mo_malloc( hdrLen + tempLen );
+    if ( writeCmd == NULL ){
+        return (void *)NULL;
+    }
+    
+    tempBuf = pdata;
+    dataPtr = (uint8_t *)( (uint8_t *)writeCmd + hdrLen ); // data store the hdr tail
+    
+    writeCmd->numAttr = numAttr;
+    for ( i = 0; i < numAttr; i++ ){ 
+        statusRec = &(writeCmd->attrList[i]);
+
+        statusRec->attrID = BUILD_UINT16( tempBuf[0], tempBuf[1] ); // get attribute id
+        tempBuf += 2;// move pass attribute id
+        statusRec->dataType = *tempBuf++; // get data type and move pass data type 
+
+        attrDataLen = ltlGetAttrDataLength( statusRec->dataType, tempBuf );// get corresponding data length by data type 
+        memcpy( dataPtr, tempBuf, attrDataLen); // copy data to dst
+        statusRec->attrData = dataPtr;
+
+        tempBuf += attrDataLen; // move pass attribute data
+
+        // advance attribute data pointer
+        if ( attrDataLen % 2){
+            attrDataLen++;
+        }
+
+        dataPtr += attrDataLen; // data store move nest datptr
+    }
+    
+    return ( (void *)writeCmd );
+}
+
 /*********************************************************************
  * @fn      
  *
@@ -724,7 +1081,7 @@ static void *ltlParseInReadCmd( uint8_t *pbuf,uint16_t datalen )
 
         if ( ltlFindAttrRec( ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo, readCmd->attrID[i], &attrRec ) ){
             if ( ltl_AccessCtrlRead( attrRec.accessControl ) ) {
-                statusRec->status = ltlAuthorizeRead( ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo, &attrRec );
+                statusRec->status = ltlAuthorizeReadUsingCB( ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo, &attrRec );
                 if ( statusRec->status == LTL_STATUS_SUCCESS ){
                     statusRec->data = attrRec.dataPtr;
                     statusRec->dataType = attrRec.dataType;
@@ -740,278 +1097,192 @@ static void *ltlParseInReadCmd( uint8_t *pbuf,uint16_t datalen )
     }
 
     // Build and send Read Response command
-    ltl_SendReadRsp( ApduMsg->pkt->refer,ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo,
-                    readRspCmd, LTL_FRAMECTL_DIR_SERVER_CLIENT,
-                    true, ApduMsg->hdr.transSeqNum );
+    ltl_SendReadRsp(ApduMsg->pkt->refer,ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo,
+                    ApduMsg->hdr.transSeqNum, LTL_FRAMECTL_DIR_SERVER_CLIENT,
+                    LTL_MANU_CODE_SPECIFIC_LTL, true,readRspCmd);
     mo_free( readRspCmd );
 
     return TRUE;
 }
-
-
-static ltlReadWriteCB_t ltlGetReadWriteCB(uint16_t trunkID, uint8_t nodeNO)
-{
-  ltlAttrRecsList_t *pRec = ltlFindAttrRecsList( trunkID, nodeNO );
-
-  if ( pRec != NULL )
-  {
-    return ( pRec->pfnReadWriteCB );
-  }
-
-  return ( NULL );
-}
 /*********************************************************************
- * @fn      
+ * @fn      processInWriteCmd
  *
- * @brief   Get the Read/Write Authorization callback function pointer
- *          for a given endpoint.
+ * @brief   Process the "Profile" Write and Write No Response Commands
  *
- * @param   trunkID -
- * @param   nodeNO - 
+ * @param   pInMsg - incoming message to process
  *
- * @return  Authorization CB, NULL if not found
+ * @return  TRUE if command processed. FALSE, otherwise.
  */
-static ltlAuthorizeCB_t ltlGetAuthorizeCB(uint16_t trunkID, uint8_t nodeNO)
+static uint8_t ltlProcessInWriteCmd(ltlApduMsg_t *ApduMsg)
 {
-    ltlAttrRecsList_t *pRec = ltlFindAttrRecsList( trunkID, nodeNO );
-
-    if ( pRec != NULL ){
-        return ( pRec->pfnAuthorizeCB );
-    }
-
-    return ( NULL );
-}
-static uint16_t ltlGetAttrDataLengthUsingCB( uint16_t trunkID,uint8_t nodeNO,  uint16_t attrId )
-{
-    uint16_t dataLen = 0;
-    ltlReadWriteCB_t pfnReadWriteCB = ltlGetReadWriteCB( trunkID, nodeNO );
-
-    if ( pfnReadWriteCB != NULL ){
-        // Only get the attribute length
-        (*pfnReadWriteCB)( trunkID, nodeNO, attrId, LTL_OPER_LEN, NULL, &dataLen );
-    }
-
-    return ( dataLen );
-}
-
-static LStatus_t ltlReadAttrDataUsingCB( uint16_t trunkID,uint8_t nodeNO,  uint16_t attrId ,
-                                         uint8_t *pAttrData, uint16_t *pDataLen )
-{
-    ltlReadWriteCB_t pfnReadWriteCB = ltlGetReadWriteCB( trunkID, nodeNO );
-
-    if ( pDataLen != NULL ){
-        *pDataLen = 0; // Always initialize it to 0
-    }
-
-    if ( pfnReadWriteCB != NULL )
-    {
-        // Read the attribute value and its length
-        return ( (*pfnReadWriteCB)( trunkID, nodeNO, attrId, LTL_OPER_READ, pAttrData, pDataLen ) );
-    }
-
-    return ( LTL_STATUS_SOFTWARE_FAILURE );
-}
-/*********************************************************************
- * @fn      
- *
- * @brief   Use application's callback to authorize a Read operation
- *          on a given attribute.
- *
- * @param   trunkID - 
- * @param   nodeNO - 
- * @param   pAttr - pointer to attribute
- *
- * @return  LTL_STATUS_SUCCESS: Operation authorized
- *          LTL_STATUS_NOT_AUTHORIZED: Operation not authorized
- */
-static LStatus_t ltlAuthorizeRead(uint16_t trunkID, uint8_t nodeNO, ltlAttrRec_t *pAttr )
-{
-    ltlAuthorizeCB_t pfnAuthorizeCB;
-
-    if ( ltl_AccessCtrlAuthRead( pAttr->accessControl ) ){
-        pfnAuthorizeCB = ltlGetAuthorizeCB( trunkID,nodeNO );
-
-        if ( pfnAuthorizeCB != NULL ){
-            return ( (*pfnAuthorizeCB)(pAttr, LTL_OPER_READ ) );
-        }
-    }
-
-    return ( LTL_STATUS_SUCCESS );
-}
-
-
-
-LStatus_t ltl_SendReadRsp( uint8_t *refer, uint16_t trunkID,uint8_t nodeNO,
-                                 ltlReadRspCmd_t *readRspCmd, uint8_t direction,
-                                 uint8_t disableDefaultRsp, uint8_t seqNum )
-{
-    uint8_t *buf;
-    uint8_t *pBuf;
-    uint16_t len = 0;
-    uint16_t dataLen;
-    LStatus_t status;
-    uint8_t i;
-    ltlReadRspStatus_t *statusRec;
-
-    // calculate the size of the command
-    for ( i = 0; i < readRspCmd->numAttr; i++ ) {
-        statusRec = &(readRspCmd->attrList[i]);
-
-        len += 2 + 1; // Attribute ID + Status
-
-        if ( statusRec->status == LTL_STATUS_SUCCESS ){
-            len++; // Attribute Data Type length
-
-            // Attribute Data length
-            if ( statusRec->data != NULL ){
-                len += ltlGetAttrDataLength( statusRec->dataType, statusRec->data );
-            }
-            else{
-                len += ltlGetAttrDataLengthUsingCB( trunkID, nodeNO, statusRec->attrID );
-            }
-        }
-    }
-
-    buf = mo_malloc( len );
-    if ( buf == NULL ){
-        return LTL_STATUS_MEMERROR;
-    }
+    uint8_t sendRsp = FALSE;
+    uint8_t i,j;
+    uint8_t status;
+    ltlAttrRec_t attrRec;
+    ltlWriteRec_t *statusRec;    
+    ltlWriteCmd_t *writeCmd;
+    ltlWriteRspCmd_t *writeRspCmd;
     
-    // Load the buffer - serially
-    pBuf = buf;
-    for ( i = 0; i < readRspCmd->numAttr; i++ ){
-        statusRec = &(readRspCmd->attrList[i]);
+    writeCmd = (ltlWriteCmd_t *)ApduMsg->attrCmd;
+    if ( ApduMsg->hdr.commandID == LTL_CMD_WRITE_ATTRIBUTES ) {
+        // We need to send a response back - allocate space for it
+        writeRspCmd = (ltlWriteRspCmd_t *)mo_malloc( sizeof( ltlWriteRspCmd_t )
+                                                + sizeof( ltlWriteRspStatus_t ) * writeCmd->numAttr );
+        if ( writeRspCmd == NULL ){
+            return FALSE; // EMBEDDED RETURN
+        }
 
-        *pBuf++ = LO_UINT16( statusRec->attrID );
-        *pBuf++ = HI_UINT16( statusRec->attrID );
-        *pBuf++ = statusRec->status;
+        sendRsp = TRUE;
+    }
 
-        if ( statusRec->status == LTL_STATUS_SUCCESS ){
-            *pBuf++ = statusRec->dataType;
+    // 对每个属性进行处理,并做好应答准备
+    for ( i = 0, j = 0; i < writeCmd->numAttr; i++ ){
+        statusRec = &(writeCmd->attrList[i]);
 
-            if ( statusRec->data != NULL ){
-                // Copy attribute data to the buffer to be sent out
-                pBuf = ltlSerializeData( statusRec->dataType, (void *)statusRec->data, pBuf );
+        if ( ltlFindAttrRec(ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo, statusRec->attrID, &attrRec )) {
+            if ( statusRec->dataType == attrRec.dataType ) {
+                // Write the new attribute value
+                if ( attrRec.dataPtr != NULL ){
+                    status = ltlWriteAttrData( ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo, &attrRec, statusRec );
+                }
+                else {// Use CB
+                    status = ltlWriteAttrDataUsingCB( ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo, &attrRec, statusRec->attrData );
+                }
+
+                // If successful, a write attribute status record shall NOT be generated
+                if ( sendRsp && status != LTL_STATUS_SUCCESS ){
+                    // Attribute is read only - move on to the next write attribute record
+                    writeRspCmd->attrList[j].status = status;
+                    writeRspCmd->attrList[j].attrID = statusRec->attrID;
+                    j++;
+                }
             }
-            else{
-                dataLen = 0;
-                // Read attribute data directly into the buffer to be sent out
-                ltlReadAttrDataUsingCB( trunkID, nodeNO, statusRec->attrID, pBuf, &dataLen );
-                pBuf += dataLen;
+            else {
+                // Attribute data type is incorrect 
+                // move on to the next write attribute record
+                if ( sendRsp ) {
+                    writeRspCmd->attrList[j].status = LTL_STATUS_INVALID_DATA_TYPE;
+                    writeRspCmd->attrList[j].attrID = statusRec->attrID;
+                    j++;
+                }
+            }
+        }
+        else{
+            // Attribute is not supported - move on to the next write attribute record
+            if ( sendRsp ){
+                writeRspCmd->attrList[j].status = LTL_STATUS_UNSUPPORTED_ATTRIBUTE;
+                writeRspCmd->attrList[j].attrID = statusRec->attrID;
+                j++;
             }
         }
     } // for loop
 
-    status = ltl_SendCommand(refer, trunkID, nodeNO, LTL_CMD_READ_ATTRIBUTES_RSP, FALSE,
-              direction, disableDefaultRsp, 0, seqNum, buf, len );
-    mo_free( buf );
+    if ( sendRsp ){
+        writeRspCmd->numAttr = j;
+        if ( writeRspCmd->numAttr == 0 ){
+            // Since all records were written successful, include a single status record
+            // in the resonse command with the status field set to SUCCESS and the
+            // attribute ID field omitted.
+            writeRspCmd->attrList[0].status = LTL_STATUS_SUCCESS;
+            writeRspCmd->numAttr = 1;
+        }
 
-    return ( status );
+//        ltl_SendwriteRsp(ApduMsg->pkt->refer, uint16_t trunkID, uint8_t nodeNO, 
+//                    writeRspCmd, LTL_FRAMECTL_DIR_SERVER_CLIENT, true, ApduMsg->hdr.transSeqNum)
+//        ltl_SendWriteRsp( pInMsg->msg->endPoint, &(pInMsg->msg->srcAddr),
+//                        pInMsg->msg->clusterId, writeRspCmd, ZCL_FRAME_SERVER_CLIENT_DIR,
+//                        true, pInMsg->hdr.transSeqNum );
+        mo_free( writeRspCmd );
+    }
+
+    return TRUE;
 }
 
-
-//ok
-LStatus_t ltl_SendDefaultRspCmd( uint8_t *refer, uint16_t trunkID,uint8_t nodeNO,
-                                 ltlDefaultRspCmd_t *defaultRspCmd, uint8_t direction,
-                                 uint8_t disableDefaultRsp, uint16_t manuCode, uint8_t seqNum )
+static uint8_t ltlProcessInWriteUndividedCmd(ltlApduMsg_t *ApduMsg)
 {
-  uint8_t buf[2]; // Command ID and Status;
-
-  // Load the buffer - serially
-  buf[0] = defaultRspCmd->commandID;
-  buf[1] = defaultRspCmd->statusCode;
-
-  return ( ltl_SendCommand( refer, trunkID, nodeNO, LTL_CMD_DEFAULT_RSP, FALSE,
-                            direction, disableDefaultRsp, manuCode, seqNum, buf, 2) );
+   return TRUE; 
 }
 
-/*********************************************************************
- * @fn      
- *
- * @brief   Builds a buffer from the attribute data
- *
- * @param   dataType - data types defined in LTL.h
- * @param   attrData - pointer to the attribute data
- * @param   buf - where to put the serialized data
- *
- * @return  pointer to end of destination buffer
- */
-static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf )
+//处理进来的apdu帧,本函数只处理APDU
+void ltlProcessInApdu(MoIncomingMsgPkt_t *pkt)
 {
-    uint8_t *pStr;
-    uint16_t len;
+    LStatus_t status = LTL_STATUS_SUCCESS;
+    ltlApduMsg_t ApduMsg;
+    ltlLibPlugin_t *pInPlugin;
+    ltlDefaultRspCmd_t defaultRspCmd;
 
-    switch ( dataType ){
-        case LTL_DATATYPE_DATA8:
-        case LTL_DATATYPE_BOOLEAN:
-        case LTL_DATATYPE_BITMAP8:
-        case LTL_DATATYPE_INT8:
-        case LTL_DATATYPE_UINT8:
-        case LTL_DATATYPE_ENUM8:
-            *buf++ = *((uint8_t *)attrData);
-            break;
+    //error 
+    if(pkt->apduLength == 0){
+        return;
+    }
 
-        case LTL_DATATYPE_DATA16:
-        case LTL_DATATYPE_BITMAP16:
-        case LTL_DATATYPE_UINT16:
-        case LTL_DATATYPE_INT16:
-        case LTL_DATATYPE_ENUM16:
-        //case LTL_DATATYPE_SEMI_PREC:
-        case LTL_DATATYPE_TRUNK_ID:
-        case LTL_DATATYPE_ATTR_ID:
-            *buf++ = LO_UINT16( *((uint16_t *)attrData) );
-            *buf++ = HI_UINT16( *((uint16_t *)attrData) );
-            break;
+    //parse frame head
+    ApduMsg.pkt = pkt;
+    ApduMsg.pdata = ltlParseHdr(&(ApduMsg.hdr),pkt->apduData);
+    ApduMsg.datalen = pkt->apduLength;
+    ApduMsg.datalen -= (uint16_t)(ApduMsg.pdata - pkt->apduData); // 通过指针偏移计算apdu帧头数据长度
 
-        case LTL_DATATYPE_DATA32:
-        case LTL_DATATYPE_BITMAP32:
-        case LTL_DATATYPE_UINT32:
-        case LTL_DATATYPE_INT32:
-        case LTL_DATATYPE_SINGLE_PREC:
-        //case LTL_DATATYPE_TOD:
-        //case LTL_DATATYPE_DATE:
-        //case LTL_DATATYPE_UTC:
-        //case LTL_DATATYPE_BAC_OID:
-            *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 0 );
-            *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 1 );
-            *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 2 );
-            *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 3 );
+    // process frame head    
+    //foundation type message,
+    if(ltl_IsProfileCmd(ApduMsg.hdr.fc.type)){
+        if(ltl_IsMancodeEnable(ApduMsg.hdr.fc.manuSpecific)){            
+            // 自定义 profile下的制造商命令
+            //TODO: realize after
+            status = LTL_STATUS_UNSUP_MANU_GENERAL_COMMAND;
+        }
+        else if((ApduMsg.hdr.commandID <= LTL_CMD_PROFILE_MAX) &&
+            (ltlCmdTable[ApduMsg.hdr.commandID].pfnParseInProfile != NULL)){
+            // parse foundation corresponding command 
+            ApduMsg.attrCmd = ltlCmdTable[ApduMsg.hdr.commandID].pfnParseInProfile(ApduMsg.pdata,ApduMsg.datalen);
+            if((ApduMsg.attrCmd != NULL) && (ltlCmdTable[ApduMsg.hdr.commandID].pfnProcessInProfile != NULL)){
+                //and then process corresponding appliction data domain
+                if(ltlCmdTable[ApduMsg.hdr.commandID].pfnProcessInProfile(&ApduMsg) == FALSE){
+                    // can not find attribute in the table
+                }
+            }
+
+            if(ApduMsg.attrCmd)
+                mo_free(ApduMsg.attrCmd);
+
+            if(LTL_PROFILE_CMD_HAS_RSP(ApduMsg.hdr.commandID))
+                return; // we are done in ltlProcessCmd()
             
-            break;
+        }
+        else {
+            status = LTL_STATUS_UNSUP_GENERAL_COMMAND;
+        }
+    }
+    // Not a foundation type message,
+    else{ //ltl_IsTrunkCmd(ApduMsg.hdr.fc.type)
+        // it is specific to the trunk id command
+        //find trunk id 
+        pInPlugin = ltlFindPlugin(ApduMsg.hdr.trunkID);
+        if(pInPlugin && pInPlugin->pfnIncomingHdlr){
+                  // The return value of the plugin function will be
+            //  LTL_STATUS_SUCCESS - Supported and need default response
+            //  LTL_STATUS_FAILURE - Unsupported
+            //  LTL_STATUS_CMD_HAS_RSP - Supported and do not need default rsp
+            //  LTL_STATUS_INVALID_FIELD - Supported, but the incoming msg is wrong formatted
+            //  LTL_STATUS_INVALID_VALUE - Supported, but the request not achievable by the h/w
+            //  LTL_STATUS_MEMERROR - Supported but memory allocation fails
+            
+            status = pInPlugin->pfnIncomingHdlr(&ApduMsg);
+            if(status == LTL_STATUS_CMD_HAS_RSP)
+                return; // we are done in pfnIncomingHdlr
+        }
 
-        //case LTL_DATATYPE_IEEE_ADDR:
-        //pStr = (uint8*)attrData;
-        //buf = memcpy( buf, pStr, 8 );
-        //break;
+        if(status == LTL_STATUS_FAILURE){           
+            status = ApduMsg.hdr.fc.manuSpecific ? LTL_STATUS_UNSUP_MANU_TRUNK_COMMAND :  LTL_STATUS_UNSUP_TRUNK_COMMAND;
+        }
+    }
 
-        case LTL_DATATYPE_CHAR_STR:
-        case LTL_DATATYPE_OCTET_STR:
-            pStr = (uint8_t *)attrData;
-            len = *pStr;
-            buf = memcpy( buf, pStr, len+1 ); // Including length field
-            break;
-
-        case LTL_DATATYPE_LONG_CHAR_STR:
-        case LTL_DATATYPE_LONG_OCTET_STR:
-            pStr = (uint8_t *)attrData;
-            len = BUILD_UINT16( pStr[0], pStr[1] );
-            buf = memcpy( buf, pStr, len+2 ); // Including length field
-            break;
-
-        case LTL_DATATYPE_128_BIT_SEC_KEY:
-            pStr = (uint8_t *)attrData;
-            buf = memcpy( buf, pStr, 8 );
-            break;
-
-        case LTL_DATATYPE_NO_DATA:
-        case LTL_DATATYPE_UNKNOWN:
-        // Fall through
-
-        default:
-            break;
-  }
-
-  return ( buf );
+    if(ApduMsg.hdr.fc.disableDefaultRsp == LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF ){
+        defaultRspCmd.commandID = ApduMsg.hdr.commandID;
+        defaultRspCmd.statusCode = status;
+        // send default response
+        ltl_SendDefaultRspCmd(pkt->refer, ApduMsg.hdr.trunkID, ApduMsg.hdr.nodeNo,
+                                ApduMsg.hdr.transSeqNum, LTL_FRAMECTL_DIR_SERVER_CLIENT, 
+                                LTL_MANU_CODE_SPECIFIC_LTL, TRUE,  &defaultRspCmd);
+    }
 }
-
 

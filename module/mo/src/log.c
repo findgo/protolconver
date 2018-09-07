@@ -4,7 +4,8 @@
 #include <stdarg.h>
 #include "log.h"
 
-static void mo_log_default_log(void *ctx, log_level_t level, const char *format,...)
+// 默认输出到stdout
+static void mo_log_defaultlog_callback(void *ctx, log_level_t level, const char *format,...)
 {
     (void)ctx;
     (void)level;
@@ -15,7 +16,8 @@ static void mo_log_default_log(void *ctx, log_level_t level, const char *format,
 	va_end(ap);
 }
 
-static void mo_log_null_log(void *ctx, log_level_t level, const char *format,...)
+//将所以信息默
+static void mo_log_nulllog_callback(void *ctx, log_level_t level, const char *format,...)
 {
     (void)ctx;
     (void)level;
@@ -25,15 +27,25 @@ static void mo_log_null_log(void *ctx, log_level_t level, const char *format,...
 logger_t default_logger = {
 	MO_LEVEL_ERROR,
     NULL,
-	mo_log_default_log
+	mo_log_defaultlog_callback
 };
 
-void mo_log_set_logger(void *context, log_Funcpfn_t log_func)
+/*********************************************************************
+ * @fn          
+ *
+ * @brief       注册一个
+ *
+ * @param       log_Funcpfn_t - function pointer to read/write routine
+ *
+ * @return      
+ */
+void mo_log_set_logger_callback(log_FuncpfnCB_t log_func)
 {
     if (NULL == log_func)
-        log_func = mo_log_null_log;
+        log_func = mo_log_nulllog_callback;
+    else if(log_func == MO_LOG_DEFAULTLOG_CB)
+        log_func = mo_log_defaultlog_callback;
 
-    default_logger.context = context;
     default_logger.log = log_func;
 }
 
