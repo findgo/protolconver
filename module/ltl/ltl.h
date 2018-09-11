@@ -67,9 +67,9 @@
 #define LTL_DATATYPE_ENUM16                             0x3b
 #define LTL_DATATYPE_SINGLE_PREC                        0x3c
 #define LTL_DATATYPE_DOUBLE_PREC                        0x3d
-#define LTL_DATATYPE_OCTET_STR                          0x41
+#define LTL_DATATYPE_OCTET_ARRAY                        0x41
 #define LTL_DATATYPE_CHAR_STR                           0x42
-#define LTL_DATATYPE_LONG_OCTET_STR                     0x43
+#define LTL_DATATYPE_LONG_OCTET_ARRAY                   0x43
 #define LTL_DATATYPE_LONG_CHAR_STR                      0x44
 #define LTL_DATATYPE_ARRAY                              0x51
 #define LTL_DATATYPE_TRUNK_ID                           0x52
@@ -84,21 +84,21 @@
 // 0x02-0x7D are reserved.
 #define LTL_STATUS_NOT_AUTHORIZED                       0x7E
 #define LTL_STATUS_MALFORMED_COMMAND                    0x80
-#define LTL_STATUS_UNSUP_TRUNK_COMMAND                  0x81    //不支持集下命令
-#define LTL_STATUS_UNSUP_GENERAL_COMMAND                0x82   //不支持profile命令
-#define LTL_STATUS_UNSUP_MANU_TRUNK_COMMAND             0x83  // 不支持制造商集下的命令
-#define LTL_STATUS_UNSUP_MANU_GENERAL_COMMAND           0x84  // 不支持制造商profile的命令
+#define LTL_STATUS_UNSUP_TRUNK_COMMAND                  0x81  //不支持集下命令
+#define LTL_STATUS_UNSUP_GENERAL_COMMAND                0x82 //不支持profile下的通用标准命令
+#define LTL_STATUS_UNSUP_MANU_TRUNK_COMMAND             0x83  // 不支持集下的制造商命令
+#define LTL_STATUS_UNSUP_MANU_GENERAL_COMMAND           0x84  // 不支持profile下制造商的命令
 #define LTL_STATUS_INVALID_FIELD                        0x85
-#define LTL_STATUS_UNSUPPORTED_ATTRIBUTE                0x86 
+#define LTL_STATUS_UNSUPPORTED_ATTRIBUTE                0x86  //不支持的属性
 #define LTL_STATUS_INVALID_VALUE                        0x87
-#define LTL_STATUS_READ_ONLY                            0x88
+#define LTL_STATUS_READ_ONLY                            0x88   // 只读
 #define LTL_STATUS_INSUFFICIENT_SPACE                   0x89
 #define LTL_STATUS_DUPLICATE_EXISTS                     0x8a
 #define LTL_STATUS_NOT_FOUND                            0x8b
 #define LTL_STATUS_UNREPORTABLE_ATTRIBUTE               0x8c
 #define LTL_STATUS_INVALID_DATA_TYPE                    0x8d    //无效数据类型
 #define LTL_STATUS_INVALID_SELECTOR                     0x8e
-#define LTL_STATUS_WRITE_ONLY                           0x8f
+#define LTL_STATUS_WRITE_ONLY                           0x8f   //只写
 #define LTL_STATUS_INCONSISTENT_STARTUP_STATE           0x90
 #define LTL_STATUS_DEFINED_OUT_OF_BAND                  0x91
 #define LTL_STATUS_INCONSISTENT                         0x92
@@ -129,6 +129,14 @@
 #define LTL_FAILURE  0x01  
 #define LTL_MEMERROR 0x02
 
+
+
+// 对于应用层的数据类型的一些 字节串 字符串 数组进行定义预留长度
+#define OCTET_CHAR_HEADROOM_LEN         (1) // length : 1
+#define OCTET_CHAR_LONG_HEADROOM_LEN    (2) // length : 2
+#define ARRAY_HEADROOM_LEN              (2) // element type + number of element : 1 +　1
+
+
 /*********************************************************************
  * MACROS
  */
@@ -138,8 +146,10 @@
 #define ltl_IsMancodeEnable(a)          ( (a) == LTL_FRAMECTL_MANU_ENABLE )
 #define ltl_IsMancodeDisable(a)         ( (a) == LTL_FRAMECTL_MANU_DSABLE )
 
-#define ltl_IsRcvbyServerCmd( a )       ( (a) == LTL_FRAMECTL_DIR_CLIENT_SERVER )
-#define ltl_IsRcvbyClientCmd( a )       ( (a) == LTL_FRAMECTL_DIR_SERVER_CLIENT )
+// ltl_ServerCmd client to server
+// ltl_ClientCmd server to client
+#define ltl_ServerCmd( a )       ( (a) == LTL_FRAMECTL_DIR_CLIENT_SERVER )
+#define ltl_ClientCmd( a )       ( (a) == LTL_FRAMECTL_DIR_SERVER_CLIENT )
 
 // LTL header - frame control field
 typedef struct
@@ -165,15 +175,15 @@ typedef struct
 //传进来的APDU包
 typedef struct
 {
-    uint8_t *refer;
-    uint16_t apduLength;
-    uint8_t *apduData;
+    void *refer; 
+    uint16_t apduLength; /* apdu length */
+    uint8_t *apduData;  /* apdu pointer */
 }MoIncomingMsgPkt_t;
 //解析完包头的APDU包
 typedef struct 
 {
     MoIncomingMsgPkt_t *pkt;
-    ltlFrameHdr_t hdr;
+    ltlFrameHdr_t hdr;  /* adpu head frame  */
     uint16_t datalen; // length of remaining data
     uint8_t *pdata;  // point to data after header
     void *attrCmd; // point to the parsed attribute or command
@@ -187,11 +197,6 @@ typedef struct
     uint16_t dataLen;
     uint8_t  *pData;
 } ltlParseCmd_t;
-
-// Function pointer type to handle incoming messages.
-//   msg - incoming message
-typedef LStatus_t (*ltlInHdlr_t)( ltlApduMsg_t *pInHdlrMsg );
-
 
 /*------------------------for application-----------------------------------------------*/
 
@@ -271,6 +276,21 @@ typedef struct
 } ltlDefaultRspCmd_t;
 
 /* for callback */
+ // Function pointer type to handle Manufacturer messages.
+ typedef LStatus_t(*ltlProfileManuSpecificCB_t)(ltlApduMsg_t *ApduMsg);
+// Function pointer type to handle incoming messages.
+// The return value of the plugin function will be
+//  LTL_STATUS_SUCCESS - Supported and need default response
+//  LTL_STATUS_FAILURE - Unsupported
+//  LTL_STATUS_CMD_HAS_RSP - Supported and do not need default rsp
+//  LTL_STATUS_INVALID_FIELD - Supported, but the incoming msg is wrong formatted
+//  LTL_STATUS_INVALID_VALUE - Supported, but the request not achievable by the h/w
+//  LTL_STATUS_MEMERROR - Supported but memory allocation fails
+
+typedef LStatus_t (*ltlSpecificTrunckHdCB_t)( ltlApduMsg_t *ApduMsg );
+
+
+
 /* 回调函数定义当   ltlAttrRec_t 属性记录中dataPtr为NULL是由用户提供数据
 回调实现三个oper, LTL_OPER_LEN,LTL_OPER_READ,LTL_OPER_WRITE
 由用户决定数据的存储,比如数据库
@@ -280,7 +300,6 @@ typedef LStatus_t (*ltlReadWriteCB_t)( uint16_t trunkID, uint8_t nodeNO, uint16_
                                        uint8_t *pValue, uint16_t *pLen );
 /* 回调函数定义 由用户决定数据的授权,
 回调实现两个oper, LTL_OPER_READ,LTL_OPER_WRITE
-由用户决定数据的存储,比如数据库等
  @return  only LTL_STATUS_SUCCESS 成功  LTL_STATUS_NOT_AUTHORIZED 未授权
 */
 typedef LStatus_t (*ltlAuthorizeCB_t)(ltlAttrRec_t *pAttr, uint8_t oper );
@@ -296,7 +315,7 @@ typedef LStatus_t (*ltlAuthorizeCB_t)(ltlAttrRec_t *pAttr, uint8_t oper );
  
  * @return      0 if OK
  */
-LStatus_t ltl_registerPlugin(uint16_t starttrunkID,uint16_t endtrunkID,ltlInHdlr_t pfnInHdlr);
+LStatus_t ltl_registerPlugin(uint16_t starttrunkID,uint16_t endtrunkID,ltlSpecificTrunckHdCB_t pfnSpecificTrunkHdCB);
 /*********************************************************************
  *              注册集下 指定节点的属性列表
  * @brief      
@@ -307,7 +326,7 @@ LStatus_t ltl_registerPlugin(uint16_t starttrunkID,uint16_t endtrunkID,ltlInHdlr
  *
  * @return      0 if OK
  */
-LStatus_t ltl_registerAttrList(uint16_t trunkID, uint8_t nodeNO, uint8_t numAttr, ltlAttrRec_t newAttrList[] );
+LStatus_t ltl_registerAttrList(uint16_t trunkID, uint8_t nodeNO, uint8_t numAttr,const ltlAttrRec_t newAttrList[] );
 /*********************************************************************
  *              注册用户回调函数,处理属性和属性的授权  
  * @brief       Register the application's callback function to read/write
@@ -337,20 +356,37 @@ LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO,
 
 
 
-LStatus_t ltl_SendCommand(uint8_t *refer, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
+LStatus_t ltl_SendCommand(void *refer, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
                                 uint8_t specific, uint8_t direction, uint16_t manuCode, uint8_t disableDefaultRsp,
                                 uint8_t cmd, uint8_t *cmdFormat,uint16_t cmdFormatLen);
-
-LStatus_t ltl_SendReadRsp(uint8_t *refer, uint16_t trunkID, uint8_t nodeNO,
+LStatus_t ltl_SendReadReq(void *refer, uint16_t trunkID, uint8_t nodeNO,
+                                uint8_t seqNum,uint8_t direction, uint16_t manuCode, 
+                                uint8_t disableDefaultRsp, ltlReadCmd_t *readCmd );
+LStatus_t ltl_SendReadRsp(void *refer, uint16_t trunkID, uint8_t nodeNO,
                                 uint8_t seqNum,uint8_t direction, uint16_t manuCode, 
                                 uint8_t disableDefaultRsp, ltlReadRspCmd_t *readRspCmd );
-LStatus_t ltl_SendwriteRsp( uint8_t *refer, uint16_t trunkID,uint8_t nodeNO,
+LStatus_t ltl_SendWriteRequest(void *refer, uint16_t trunkID, uint8_t nodeNO,
+                                uint8_t seqNum,uint8_t direction, uint16_t manuCode, 
+                                uint8_t disableDefaultRsp, uint8_t cmd, ltlWriteCmd_t *writeCmd );
+#define ltl_SendWriteReq(refer, trunkID, nodeNO, seqNum, direction, manuCode, disableDefaultRsp, writeCmd ) \
+                        ltl_SendWriteRequest(refer, trunkID, nodeNO, seqNum, direction, manuCode, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES, writeCmd )
+#define ltl_SendWriteRequUndivided(refer, trunkID, nodeNO, seqNum, direction, manuCode, disableDefaultRsp, writeCmd ) \
+                        ltl_SendWriteRequest(refer, trunkID, nodeNO, seqNum, direction, manuCode, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED, writeCmd )
+                        
+#define ltl_SendWriteReqNoRsp(refer, trunkID, nodeNO, seqNum, direction, manuCode, disableDefaultRsp, writeCmd ) \
+                        ltl_SendWriteRequest(refer, trunkID, nodeNO, seqNum, direction, manuCode, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES_NORSP, writeCmd )
+                        
+LStatus_t ltl_SendwriteRsp( void *refer, uint16_t trunkID,uint8_t nodeNO,
                                  uint8_t seqNum , uint8_t direction,  uint16_t manuCode, 
                                  uint8_t disableDefaultRsp, ltlWriteRspCmd_t *writeRspCmd);
-LStatus_t ltl_SendDefaultRspCmd( uint8_t *refer, uint16_t trunkID,uint8_t nodeNO,
+LStatus_t ltl_SendDefaultRspCmd( void *refer, uint16_t trunkID,uint8_t nodeNO,
                                 uint8_t seqNum, uint8_t direction, uint16_t manuCode,
                                 uint8_t disableDefaultRsp, ltlDefaultRspCmd_t *defaultRspCmd);
 
-void ltlProcessInApdu(MoIncomingMsgPkt_t *pkt);
+void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt);
+
+
+void ltl_StrToAppString(char *pRawStr, char *pAppStr, uint8_t Applen );
+void ltl_LongStrToAppString(char *pRawStr, char *pAppStr, uint16_t Applen );
 
 #endif

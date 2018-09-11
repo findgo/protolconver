@@ -4,9 +4,9 @@
 #include "usart.h"
 #include "systick.h"
 #include "dlinkzigbee.h"
+
 #include "ltl.h"
-
-
+#include "ltl_genattr.h"
 
 
 static void prvClockInit(void);
@@ -26,6 +26,7 @@ int main(void)
     prvnvicInit();
     Systick_Configuration();
     Usart_Configuration();
+    ltl_GeneralAttributeInit();
 
     delay_ms(200);
     dlink_init();

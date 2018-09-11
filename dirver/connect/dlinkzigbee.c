@@ -1,7 +1,7 @@
 
 
 #include "dlinkzigbee.h"
-
+#include "ltl.h"
 typedef struct dl_config_s{
     uint16_t shortaddress;
     uint16_t pandid;
@@ -202,19 +202,15 @@ static void dl_parse(uint8_t src_port,uint8_t dst_port,uint16_t src_addr,uint8_t
                 break;
             
             case DL_CONFIGURE_WR_RSP_SUCCESS:
-                break;
             case DL_CONFIGURE_WR_RSP_NO_REMOTE_ACESS:
-                break;
             case DL_CONFIGURE_WR_RSP_CMD_ERR:
-                break;
             case DL_CONFIGURE_WR_RSP_LENGTH_ERR:
-                break;            
             case DL_CONFIGURE_WR_RSP_VALUE_UNUSEALBE:
                 break; 
             }
             break;
         case DL_PORT_ERR_REPORT:
-            if(dat[0] == 0xe0){// must be 0x0e
+            if(dat[0] == 0x0e){// must be 0x0e
                 // dat[1]： Illegal port use by user
             }
             break;
@@ -240,8 +236,8 @@ static void dl_parse(uint8_t src_port,uint8_t dst_port,uint16_t src_addr,uint8_t
         default: break;
         }
     }
-    else if(DL_PORT_PASSTHROUGH == dst_port && src_port == DL_PORT_PASSTHROUGH){
-        dl_lchtime(src_addr,dat,dat_len);
+    else if(DL_PORT_PASSTHROUGH == dst_port && DL_PORT_PASSTHROUGH == src_port ){
+        dl_lchtime(src_addr, dat, dat_len);
     }
     // other ignore ,and it may be error message
 }
@@ -253,11 +249,17 @@ static void dl_info(uint8_t *dat,uint8_t dat_len)
 
 static void dl_lchtime(uint16_t src_addr,uint8_t *dat,uint8_t dat_len)
 {
-    dlink_request_passthrough(src_addr, dat, dat_len);  
+    MoIncomingMsgPkt_t pkt;
+
+    pkt.refer = (void *)&src_addr;
+    pkt.apduLength = dat_len;
+    pkt.apduData = dat;
+    
+    ltl_ProcessInApdu(&pkt);
 }
 
-#define DL_FSM_HEAD  0
-#define DL_FSM_LENGH 1
+#define DL_FSM_HEAD         0
+#define DL_FSM_LENGH        1
 #define DL_FSM_TOKEN        2
 #define DL_FSM_ESCAPE       3
 #define DL_FSM_TAIL         4

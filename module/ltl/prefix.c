@@ -1,5 +1,6 @@
 
 #include <stdint.h>
+#include "dlinkzigbee.h"
 /*********************************************************************
  * @fn     
  *
@@ -11,7 +12,6 @@
  */
 uint8_t ltlprefixsize(uint8_t *refer)
 {
-
     return 0;
 }
 
@@ -28,13 +28,14 @@ uint8_t ltlprefixsize(uint8_t *refer)
 
 uint8_t *ltlPrefixBuildHdr( uint8_t *refer, uint8_t *pDat )
 {
-    
     return pDat;
 }
 
-void ltlrequest(uint8_t *pbuf,uint16_t buflen)
+void ltlrequest(void *refer, uint8_t *pbuf,uint16_t buflen)
 {
-    (void)pbuf;
-    (void)buflen;
+    uint16_t dst_address;
+
+    dst_address = *((uint16_t *)refer);
+    dlink_request_passthrough(dst_address, pbuf, buflen);
 }
 
