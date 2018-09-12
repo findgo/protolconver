@@ -129,7 +129,7 @@ static LStatus_t ltlGeneral_ProcessSpecificInonoff( ltlApduMsg_t *ApduMsg )
         }
         else{
             if(ltlGeneralCBs->pfnOnoff)
-                ltlGeneralCBs->pfnOnoff(ApduMsg->hdr.commandID);
+                ltlGeneralCBs->pfnOnoff(ApduMsg->hdr.nodeNo, ApduMsg->hdr.commandID);
         }
     }
 

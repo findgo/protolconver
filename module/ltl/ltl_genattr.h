@@ -18,6 +18,19 @@
 #define ATTRID_BASIC_POWER_SOURCE       0x0007
 
 #define MANUFACTURER_NAME_STRING_MAX_LEN 16
+// for basic power source
+#define POWERSOURCE_UNKOWN              0x00
+#define POWERSOURCE_SINGLE_PHASE        0x01
+#define POWERSOURCE_THREE_PHASE         0x02
+#define POWERSOURCE_DC                  0x03
+#define POWERSOURCE_BATTERY             0x04
+#define POWERSOURCE_EMERGENCY           0x05
+// Bit b7 indicates whether the device has a secondary power source in the form of a battery backup
+
+/*** Power Source Attribute bits  ***/
+#define POWER_SOURCE_PRIMARY                              0x7F
+#define POWER_SOURCE_SECONDARY                            0x80
+
 
 // ltl version
 #define LTL_VERSION     0x01

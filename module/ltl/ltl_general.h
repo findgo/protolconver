@@ -15,9 +15,12 @@ typedef void(*ltlGenCB_BasicReboot_t)(void);
 //   identifyTime - number of miniseconds the device will continue to identify itself
 typedef void (*ltlGenCB_Identify_t)( uint16_t identifyTime );
 // This callback is called to process an incoming On, Off or Toggle command.
+//  nodeNO: node number 
 //   cmd - received command, which will be either COMMAND_ONOFF_ON, COMMAND_ONOFF_OFF
 //         or COMMAND_ONOFF_TOGGLE.
-typedef void (*ltlGenCB_Onoff_t)(uint8_t cmd);
+typedef void (*ltlGenCB_Onoff_t)(uint8_t nodeNO, uint8_t cmd);
+
+
 
 typedef struct
 {

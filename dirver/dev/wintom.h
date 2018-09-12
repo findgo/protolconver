@@ -28,54 +28,54 @@ NOTE: 当控制器或电机进入地址设置模式时， 主机可以设置它�
 #define __WINTOM_H__
 
 
-#define WT_PACKET_HEAD_MSB 0x55
-#define WT_PACKET_HEAD_LSB 0xaa
+#define WT_PACKET_HEAD_MSB  0x55
+#define WT_PACKET_HEAD_LSB  0xaa
 
-#define WT_MOTO_NO_GENERAL 0x00 // 如果控制器是单路或电机内置控制器时用0x00
-#define WT_DEV_ID_GERNERAL 0x00 // 其实相当于广播
+#define WT_MOTO_NO_GENERAL  0x00 // 如果控制器是单路或电机内置控制器时用0x00
+#define WT_DEV_ID_GERNERAL  0x00 // 其实相当于广播
 // command code
 //General
-#define WT_CMDCODE_OPEN 0x01
-#define WT_CMDCODE_STOP 0x02
-#define WT_CMDCODE_CLOSE 0x03
-#define WT_CMDCODE_GO_POS 0x04
-#define WT_CMDCODE_GET_POS 0x05
-#define WT_CMDCODE_REVERSING 0x06
-#define WT_CMDCODE_CLEAR_TRIP 0x07
-#define WT_CMDCODE_HAND_ENABLE 0x08
-#define WT_CMDCODE_HAND_DISABLE 0x09
+#define WT_CMDCODE_OPEN                 0x01
+#define WT_CMDCODE_STOP                 0x02
+#define WT_CMDCODE_CLOSE                0x03
+#define WT_CMDCODE_GO_POS               0x04
+#define WT_CMDCODE_GET_POS              0x05
+#define WT_CMDCODE_REVERSING            0x06
+#define WT_CMDCODE_CLEAR_TRIP           0x07
+#define WT_CMDCODE_HAND_ENABLE          0x08
+#define WT_CMDCODE_HAND_DISABLE         0x09
 #define WT_CMDCODE_SET_OPEN_LIMIT_POINT 0x0a
 #define WT_CMDCODE_SET_CLOSE_LIMIT_POINT 0x0b
-#define WT_CMDCODE_SET_MID_POS1 0x0e
-#define WT_CMDCODE_SET_MID_POS2 0x0f
-#define WT_CMDCODE_RUNTO_MID_POS1 0x0c
-#define WT_CMDCODE_RUNTO_MID_POS2 0x0d
-#define WT_CMDCODE_LEAF_UP 0x10
-#define WT_CMDCODE_LEAF_DOWN 0x11
-#define WT_CMDCODE_SET_ANGLE 0x14
-#define WT_CMDCODE_GET_ANGLE 0x05
-#define WT_CMDCODE_SET_DEVID 0x81
-#define WT_CMDCODE_GET_DEVID 0x82
-#define WT_CMDCODE_DEL_DEVID 0x83
-#define WT_CMDCODE_GET_STATUS 0x84
+#define WT_CMDCODE_SET_MID_POS1         0x0e
+#define WT_CMDCODE_SET_MID_POS2         0x0f
+#define WT_CMDCODE_RUNTO_MID_POS1       0x0c
+#define WT_CMDCODE_RUNTO_MID_POS2       0x0d
+#define WT_CMDCODE_LEAF_UP              0x10
+#define WT_CMDCODE_LEAF_DOWN            0x11
+#define WT_CMDCODE_SET_ANGLE            0x14
+#define WT_CMDCODE_GET_ANGLE            0x05
+#define WT_CMDCODE_SET_DEVID            0x81
+#define WT_CMDCODE_GET_DEVID            0x82
+#define WT_CMDCODE_DEL_DEVID            0x83
+#define WT_CMDCODE_GET_STATUS           0x84
 
-#define WT_CHANNEL_0 0x00
-#define WT_CHANNEL_1 0x01
-#define WT_CHANNEL_2 0x02
-#define WT_CHANNEL_3 0x03
-#define WT_CHANNEL_4 0x04
-#define WT_CHANNEL_5 0x05
-#define WT_CHANNEL_6 0x06
-#define WT_CHANNEL_7 0x07
-#define WT_CHANNEL_8 0x08
-#define WT_CHANNEL_9 0x09
-#define WT_CHANNEL_10 0x0a
-#define WT_CHANNEL_11 0x0b
-#define WT_CHANNEL_12 0x0c
-#define WT_CHANNEL_13 0x0d
-#define WT_CHANNEL_14 0x0e
-#define WT_CHANNEL_15 0x0f
-#define WT_CHANNEL_ALL 0x10
+#define WT_CHANNEL_0    0x00
+#define WT_CHANNEL_1    0x01
+#define WT_CHANNEL_2    0x02
+#define WT_CHANNEL_3    0x03
+#define WT_CHANNEL_4    0x04
+#define WT_CHANNEL_5    0x05
+#define WT_CHANNEL_6    0x06
+#define WT_CHANNEL_7    0x07
+#define WT_CHANNEL_8    0x08
+#define WT_CHANNEL_9    0x09
+#define WT_CHANNEL_10   0x0a
+#define WT_CHANNEL_11   0x0b
+#define WT_CHANNEL_12   0x0c
+#define WT_CHANNEL_13   0x0d
+#define WT_CHANNEL_14   0x0e
+#define WT_CHANNEL_15   0x0f
+#define WT_CHANNEL_ALL  0x10
 
 #define WT_MOTO_STATUS_OPEN_LIMIT_POINT_BIT     ((uint8_t)1 << 0)
 #define WT_MOTO_STATUS_CLOSE_LIMIT_POINT_BIT    ((uint8_t)1 << 1)

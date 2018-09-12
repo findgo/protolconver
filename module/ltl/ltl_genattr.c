@@ -17,14 +17,14 @@ static uint32_t mver_getminorver(void);
 static void SerialNumber(void);
 
 //local 
-const uint8_t ltlver = LTL_VERSION;
-const uint16_t applver = APPL_VERSION;
-const uint16_t hwver = HW_VERSION;
+static const uint8_t ltlver = LTL_VERSION;
+static const uint16_t applver = APPL_VERSION;
+static const uint16_t hwver = HW_VERSION;
 static char manufactTab[OCTET_CHAR_HEADROOM_LEN + MANUFACTURER_NAME_STRING_MAX_LEN];
 static uint32_t buildDateCode;
-const uint32_t productID = PRODUCT_IDENTIFIER;
+static const uint32_t productID = PRODUCT_IDENTIFIER;
 static uint8_t serialnumberTab[16];
-const uint32_t powersrc;
+static const uint8_t powersrc = POWERSOURCE_DC;
 
 
 const ltlAttrRec_t GeneralAttriList[] = {
@@ -72,7 +72,7 @@ const ltlAttrRec_t GeneralAttriList[] = {
     },
     {
         ATTRID_BASIC_POWER_SOURCE,
-        LTL_DATATYPE_UINT32,
+        LTL_DATATYPE_UINT8,
         ACCESS_CONTROL_READ,
         (void *)&powersrc
     },
@@ -84,8 +84,7 @@ void ltl_GeneralAttributeInit(void)
     ltl_StrToAppString(MANUFACTURER_NAME, manufactTab, sizeof(manufactTab));
     buildDateCode = mver_getminorver();    
     SerialNumber();
-
-    
+   
     ltl_registerAttrList(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO,
                     sizeof(GeneralAttriList)/sizeof(GeneralAttriList[0]), GeneralAttriList);
 }

@@ -7,21 +7,13 @@
 
 #include "ltl.h"
 #include "ltl_genattr.h"
-
+#include "prefix.h"
 
 static void prvClockInit(void);
 static void prvnvicInit(void);
 
-//uint8_t buf[] = {0x11,0x22,0x33};
-//uint8_t buf2[] = {0x0a,0x0b,0xaa,0x0c,0x1d,0x66,0x66,0x0d,0x11,0x22,0x33};
 int main(void)
 {   
-//    MoIncomingMsgPkt_t pkt;
-
-//    pkt.refer = NULL;
-//    pkt.apduData = buf2;
-//    pkt.apduLength = sizeof(buf2);
-
     prvClockInit();
     prvnvicInit();
     Systick_Configuration();
@@ -29,10 +21,9 @@ int main(void)
     ltl_GeneralAttributeInit();
 
     delay_ms(200);
+    dl_registerParseCallBack(NULL, ltlApduParsing);
     dlink_init();
     
-//    ltl_SendCommand(NULL, 0x0b0a, 0x0c, 0x0d, TRUE, LTL_FRAMECTL_DIR_SERVER_CLIENT, TRUE, 0, 0xAA, buf, sizeof(buf));
-//    ltlProcessInApdu(&pkt);
     while(1)
     {
         dlink_period_task();
