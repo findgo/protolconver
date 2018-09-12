@@ -79,37 +79,34 @@
 #define LTL_DATATYPE_UNKNOWN                            0xff
 
 /*** Error Status Codes ***/
-#define LTL_STATUS_SUCCESS                              0x00
-#define LTL_STATUS_FAILURE                              0x01
+#define LTL_STATUS_SUCCESS                              0x00 //操作成功
+#define LTL_STATUS_FAILURE                              0x01 //操作失败
 // 0x02-0x7D are reserved.
-#define LTL_STATUS_NOT_AUTHORIZED                       0x7E
+#define LTL_STATUS_NOT_AUTHORIZED                       0x7E // 未授权
 #define LTL_STATUS_MALFORMED_COMMAND                    0x80
 #define LTL_STATUS_UNSUP_TRUNK_COMMAND                  0x81  //不支持集下命令
-#define LTL_STATUS_UNSUP_GENERAL_COMMAND                0x82 //不支持profile下的通用标准命令
+#define LTL_STATUS_UNSUP_GENERAL_COMMAND                0x82   //不支持profile下的通用标准命令
 #define LTL_STATUS_UNSUP_MANU_TRUNK_COMMAND             0x83  // 不支持集下的制造商命令
 #define LTL_STATUS_UNSUP_MANU_GENERAL_COMMAND           0x84  // 不支持profile下制造商的命令
-#define LTL_STATUS_INVALID_FIELD                        0x85
+#define LTL_STATUS_INVALID_FIELD                        0x85  // 域无效,一般表现为发送的值域对设备无影响
 #define LTL_STATUS_UNSUPPORTED_ATTRIBUTE                0x86  //不支持的属性
-#define LTL_STATUS_INVALID_VALUE                        0x87
+#define LTL_STATUS_INVALID_VALUE                        0x87  // 无效数值
 #define LTL_STATUS_READ_ONLY                            0x88   // 只读
-#define LTL_STATUS_INSUFFICIENT_SPACE                   0x89
-#define LTL_STATUS_DUPLICATE_EXISTS                     0x8a
-#define LTL_STATUS_NOT_FOUND                            0x8b
-#define LTL_STATUS_UNREPORTABLE_ATTRIBUTE               0x8c
-#define LTL_STATUS_INVALID_DATA_TYPE                    0x8d    //无效数据类型
-#define LTL_STATUS_INVALID_SELECTOR                     0x8e
-#define LTL_STATUS_WRITE_ONLY                           0x8f   //只写
-#define LTL_STATUS_INCONSISTENT_STARTUP_STATE           0x90
-#define LTL_STATUS_DEFINED_OUT_OF_BAND                  0x91
-#define LTL_STATUS_INCONSISTENT                         0x92
-#define LTL_STATUS_ACTION_DENIED                        0x93
-#define LTL_STATUS_TIMEOUT                              0x94
-#define LTL_STATUS_ABORT                                0x95
-#define LTL_STATUS_INVALID_IMAGE                        0x96
-#define LTL_STATUS_WAIT_FOR_DATA                        0x97
-#define LTL_STATUS_NO_IMAGE_AVAILABLE                   0x98
-#define LTL_STATUS_REQUIRE_MORE_IMAGE                   0x99
-#define LTL_STATUS_SOFTWARE_FAILURE                     0x9a
+#define LTL_STATUS_NOT_FOUND                            0x8a  //请求的信息没有找到
+#define LTL_STATUS_UNREPORTABLE_ATTRIBUTE               0x8b  // 这个属性不能定期报告
+#define LTL_STATUS_INVALID_DATA_TYPE                    0x8c    //无效数据类型
+#define LTL_STATUS_WRITE_ONLY                           0x8d   //只写
+#define LTL_STATUS_DEFINED_OUT_OF_BAND                  0x8e   // 写的数据超过范围
+#define LTL_STATUS_INCONSISTENT                         0x8f
+#define LTL_STATUS_ACTION_DENIED                        0x90  // 拒绝此命令动作
+#define LTL_STATUS_TIMEOUT                              0x91  //超时
+#define LTL_STATUS_ABORT                                0x92  //停止
+//#define LTL_STATUS_INVALID_IMAGE                        0x96  //无效镜像
+//#define LTL_STATUS_WAIT_FOR_DATA                        0x97  //等待数据
+//#define LTL_STATUS_NO_IMAGE_AVAILABLE                   0x98  // 没有有效的镜像
+//#define LTL_STATUS_REQUIRE_MORE_IMAGE                   0x99  //请求更多的镜像
+#define LTL_STATUS_HARDWARE_FAILURE                     0xc0  // 硬件问题错误
+#define LTL_STATUS_SOFTWARE_FAILURE                     0xc1  // 软件错误
 // 0xc3-0xff are reserved.
 #define LTL_STATUS_CMD_HAS_RSP                          0xff
 
@@ -267,6 +264,22 @@ typedef struct
   ltlWriteRspStatus_t attrList[];  // attribute status records
 } ltlWriteRspCmd_t;
 
+// Attribute Report
+typedef struct
+{
+  uint16_t attrID;             // atrribute ID
+  uint8_t  dataType;           // attribute data type
+  uint8_t  *attrData;          // this structure is allocated, so the data is HERE
+                             // - the size depends on the data type of attrID
+} ltlReport_t;
+
+// Report Attributes Command format
+typedef struct
+{
+  uint8_t       numAttr;       // number of reports in the list
+  ltlReport_t attrList[];    // attribute report list
+} ltlReportCmd_t;
+
 
 // Default Response Command format
 typedef struct
@@ -379,6 +392,10 @@ LStatus_t ltl_SendWriteRequest(void *refer, uint16_t trunkID, uint8_t nodeNO,
 LStatus_t ltl_SendwriteRsp( void *refer, uint16_t trunkID,uint8_t nodeNO,
                                  uint8_t seqNum , uint8_t direction,  uint16_t manuCode, 
                                  uint8_t disableDefaultRsp, ltlWriteRspCmd_t *writeRspCmd);
+LStatus_t ltl_SendReportCmd( void *refer, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum , uint8_t direction,  uint16_t manuCode, 
+                                 uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd);
+
 LStatus_t ltl_SendDefaultRspCmd( void *refer, uint16_t trunkID,uint8_t nodeNO,
                                 uint8_t seqNum, uint8_t direction, uint16_t manuCode,
                                 uint8_t disableDefaultRsp, ltlDefaultRspCmd_t *defaultRspCmd);

@@ -1083,7 +1083,52 @@ LStatus_t ltl_SendWriteRequest(void *refer, uint16_t trunkID, uint8_t nodeNO,
 
     return ( status);
 }
-                                
+LStatus_t ltl_SendReportCmd( void *refer, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum , uint8_t direction,  uint16_t manuCode, 
+                                 uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd)
+{
+    uint8_t i;
+    uint16_t dataLen;
+    uint8_t *buf;
+    uint8_t *pBuf;
+    LStatus_t status;
+    ltlReport_t *reportRec;
+
+    // calculate the size of the command
+    dataLen = 0;
+    for ( i = 0; i < reportCmd->numAttr; i++ ){
+        reportRec = &(reportCmd->attrList[i]);
+
+        dataLen += 2 + 1; // Attribute ID + data type
+
+        // + Attribute Data
+        dataLen += ltlGetAttrDataLength( reportRec->dataType, reportRec->attrData );
+    }
+
+    buf = mo_malloc( dataLen );
+    if ( buf == NULL ){
+        return LTL_MEMERROR;
+    }
+    
+    // Load the buffer - serially
+    pBuf = buf;
+    for ( i = 0; i < reportCmd->numAttr; i++ ){
+        reportRec = &(reportCmd->attrList[i]);
+
+        *pBuf++ = LO_UINT16( reportRec->attrID );
+        *pBuf++ = HI_UINT16( reportRec->attrID );
+        *pBuf++ = reportRec->dataType;
+
+        pBuf = ltlSerializeData( reportRec->dataType, reportRec->attrData, pBuf );
+    }
+
+    status = ltl_SendCommand(refer, trunkID, nodeNO, seqNum, 
+                            FALSE, direction, manuCode, disableDefaultRsp,
+                            LTL_CMD_REPORT_ATTRIBUTES, buf, dataLen);
+    mo_free( buf );
+
+    return ( status );
+}
 LStatus_t ltl_SendWriteRsp( void *refer, uint16_t trunkID,uint8_t nodeNO,
                                  uint8_t seqNum , uint8_t direction,  uint16_t manuCode, 
                                  uint8_t disableDefaultRsp, ltlWriteRspCmd_t *writeRspCmd)

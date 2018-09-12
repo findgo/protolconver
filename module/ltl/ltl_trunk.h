@@ -9,11 +9,16 @@
 #define LTL_TRUNK_ID_GENERAL_ONOFF  0x0001
 
 
-
 // for LTL_TRUNK_ID_GENERAL_BASIC specific command
 #define COMMAND_BASIC_RESET_FACT_DEFAULT 0x00
 #define COMMAND_BASIC_REBOOT_DEVICE     0x01
 #define COMMAND_BASIC_IDENTIFY          0x02
+
+// for LTL_TRUNK_ID_GENERAL_ONOFF
+#define COMMAND_ONOFF_OFF               0x00
+#define COMMAND_ONOFF_ON                0x01
+#define COMMAND_ONOFF_TOGGLE            0x02
+
 
 
 #endif
