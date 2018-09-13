@@ -4,8 +4,6 @@
 #include "dlinkzigbee.h"
 
 /*********************************************************************
- * @fn     
- *
  * @brief   header of the prefix length
  *
  * @param   refer - in ---- information
@@ -18,8 +16,6 @@ uint8_t ltlprefixsize(uint8_t *refer)
 }
 
 /*********************************************************************
- * @fn     
- *
  * @brief   Build header of the prefix format
  *
  * @param   refer - in ---- information

@@ -10,7 +10,7 @@
      波特率默认9600
 command packet defined
     包头      命令长度 命令 命令参数 .... checksum
-   2 (55 aa)  cmdlength      cmd   cmd paran checksum   
+   2 (55 aa)  cmdlength      cmd   cmd_para checksum   
    NOTE: 命令长度 = 命令长度后 checksum前的字节数
    起始标记头固定为0x55 0xaa 先发MSB 再发LSB
     */
