@@ -3,7 +3,7 @@
 #ifndef __HEAP_MANGE_H_
 #define __HEAP_MANGE_H_
 
-#include "heap_macros.h"
+#include "heap_def.h"
 
 // for byte alignment
 #if portBYTE_ALIGNMENT == 32

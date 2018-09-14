@@ -7,7 +7,7 @@
   * @brief    本文档宏用于控制堆的配置，
   ******************************************************************************
   * @attention      v1.1    jgb     20170512重构 
-  * @attention      v1.2    jgb     20180913 抽像出临保护宏
+  * @attention      v1.2    jgb     20180913 抽像出临界保护宏
   ******************************************************************************
   */
   /*  本堆管理全部移植于freertos 的堆管理，几乎未做任何修改，只修改了临界区的保护,将宏抽出来了
@@ -24,7 +24,8 @@
 #define __HEAP_MACROS_H_
 
 #include <stdint.h>
-
+#include "porting_def.h"
+//#include "common_signal.h"
 
 /* set support dynamic alloca compatibility. */
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
@@ -39,9 +40,9 @@
 //提供临界保护宏
 // set a save variable and enter exit criticial macro
 // portCriticial_state_Variable: 定义一个保存变量
-#define portCriticial_state_Variable
-#define portCriticial_Enter_code()
-#define protCriticial_Exit_code()
+#define portCriticial_state_Variable    //halIntState_t bintstate
+#define portCriticial_Enter_code()      //ENTER_SAFE_ATOM_CODE(bintstate)
+#define protCriticial_Exit_code()       //EXIT_SAFE_ATOM_CODE(bintstate)
 
 /* set use app malloc failed hook */
 #define configUSE_MALLOC_FAILED_HOOK    0
@@ -49,13 +50,7 @@
 /* for debug printf malloc and free trace */
 #define traceMALLOC( pvAddress, uiSize )
 #define traceFREE( pvAddress, uiSize )
-#define mtCOVERAGE_TEST_MARKER()
-#define configASSERT( x )
 
-typedef long BaseType_t;
-
-#define pdFALSE         ( ( BaseType_t ) 0 )
-#define pdTRUE          ( ( BaseType_t ) 1 )
 
 #endif
 

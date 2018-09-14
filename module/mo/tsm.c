@@ -7,7 +7,6 @@
 static  uint32_t tsm_invokeID_bitsTbl[8] = {0xfffffffe, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
 static uint8_t tsm_current_invokeID = 1;
 
-
 /*********************************************************************
  * @brief   set corresponding invoke id mask in used
  *

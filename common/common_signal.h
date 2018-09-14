@@ -16,48 +16,47 @@
 #include "common_platform.h"
 #include "common_def.h"
 
-typedef bool halIntState_t;
+typedef uint8_t halIntState_t;
 
-#define OS_Enter_Criticial() 	st( __set_PRIMASK(1); )
-#define OS_Exit_Criticial()		st( __set_PRIMASK(0); )
+#define OS_ENTER_CRITICIAL()        st( __set_PRIMASK(1); )
+#define OS_EXIT_CRITICIAL()         st( __set_PRIMASK(0); )
 
-#define OSAL_ENABLE_INTERRUPTS()         st( __set_PRIMASK(0); )
-#define OSAL_DISABLE_INTERRUPTS()        st( __set_PRIMASK(1); )
+#define OS_ENABLE_INTERRUPTS()         st( __set_PRIMASK(0); )
+#define OS_DISABLE_INTERRUPTS()        st( __set_PRIMASK(1); )
 
-#define GLOABLE_INTERRUPT_ENABLED()     ((0 ==  __get_PRIMASK()) ? true : false)
+#define GLOABLE_INTERRUPT_ENABLED()     ((0 ==  __get_PRIMASK()) ? TRUE : FALSE)
+
 
 //! \brief The safe ATOM code section macro
 #define SAFE_ATOM_CODE(__CODE)     \
     {\
         halIntState_t bintstate = GLOABLE_INTERRUPT_ENABLED();\
-        OS_Enter_Criticial();\
+        OS_ENTER_CRITICIAL();\
         __CODE;\
-        if (bintstate)\
-        {\
-            OS_Exit_Criticial();\
+        if (bintstate){ \
+            OS_EXIT_CRITICIAL();\
         }\
     }
 #define ENTER_SAFE_ATOM_CODE(bintstate)  \
             bintstate = GLOABLE_INTERRUPT_ENABLED();\
-            OS_Enter_Criticial();
+            OS_ENTER_CRITICIAL();
 
 //! \brief Exit from the safe atom operations
 #define EXIT_SAFE_ATOM_CODE(bintstate)           \
-            if (bintstate)\
-            {\
-                OS_Exit_Criticial();\
+            if (bintstate) {    \
+                OS_EXIT_CRITICIAL();\
             }
 
 //! \brief ATOM code section macro
 #define ATOM_CODE(__CODE)  \
             {\
-                OS_Enter_Criticial();\
+                OS_ENTER_CRITICIAL();\
                 __CODE;\
-                OS_Exit_Criticial();\
+                OS_EXIT_CRITICIAL();\
             }
 
-#define ENTER_ATOM_CODE()  OS_Enter_Criticial();             
+#define ENTER_ATOM_CODE()  OS_ENTER_CRITICIAL();             
 //! \brief Exit from the atom operations
-#define EXIT_ATOM_CODE()   OS_Exit_Criticial();
+#define EXIT_ATOM_CODE()   OS_EXIT_CRITICIAL();
 
 #endif
