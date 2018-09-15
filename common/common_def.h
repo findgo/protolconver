@@ -7,8 +7,8 @@
   * @date    
   * @brief    é€šç”¨æ€§å®šä¹‰,ç”¨äºæ•°æ®å¤„ç†
   ******************************************************************************
-  * @attention 	20151110     v1.1   	jgb		ÖØ¹¹
-  * @attention 	20180906     v1.2   	jgb	    è„±ç¦»å¹³å°é™åˆ¶
+  * @attention  20151110     v1.1       jgb     ÖØ¹¹
+  * @attention  20180906     v1.2       jgb     è„±ç¦»å¹³å°é™åˆ¶
   ******************************************************************************
   */
 
@@ -18,7 +18,7 @@
 #define __COMMON_DEF_H_
 
 #include "common_type.h"
-
+#include "common_signal.h"
 /* ------------------------------------------------------------------------------------------------
  *                                             Macros
  * ------------------------------------------------------------------------------------------------
@@ -72,26 +72,26 @@
 #define BREAK_UINT64( var, ByteNum ) (uint8_t)((uint64_t)(((var) >>((ByteNum) * 8)) & 0x00FF))
 
 //!< 
-#define SWAP8_U16(v)					((((uint16_t)(v) & 0xFF00) >> 8) | \
-										(((uint16_t)(v) & 0x00FF) << 8))
-#define SWAP8_U24(v)					((((uint32_t)(v) & 0x00FF0000) >> 16) | \
-										(((uint32_t)(v) & 0x0000FF00) << 0) | \
-										(((uint32_t)(v) & 0x000000FF) << 16))
-#define SWAP8_U32(v)					((((uint32_t)(v) & 0xFF000000) >> 24) | \
-										(((uint32_t)(v) & 0x00FF0000) >> 8) | \
-										(((uint32_t)(v) & 0x0000FF00) << 8) | \
-										(((uint32_t)(v) & 0x000000FF) << 24))
+#define SWAP8_U16(v)                    ((((uint16_t)(v) & 0xFF00) >> 8) | \
+                                        (((uint16_t)(v) & 0x00FF) << 8))
+#define SWAP8_U24(v)                    ((((uint32_t)(v) & 0x00FF0000) >> 16) | \
+                                        (((uint32_t)(v) & 0x0000FF00) << 0) | \
+                                        (((uint32_t)(v) & 0x000000FF) << 16))
+#define SWAP8_U32(v)                    ((((uint32_t)(v) & 0xFF000000) >> 24) | \
+                                        (((uint32_t)(v) & 0x00FF0000) >> 8) | \
+                                        (((uint32_t)(v) & 0x0000FF00) << 8) | \
+                                        (((uint32_t)(v) & 0x000000FF) << 24))
 
 
 //! \name binary compatibility  
-#define USE_SET_BIT(__x, BitNum) 	((__x) |= (BV(BitNum)))
-#define USE_CLR_BIT(__x, BitNum) 	((__x) &= ~(BV(BitNum)))
-#define USE_CPL_BIT(__x ,BitNum) 	((__x) ^= (BV(BitNum)))
-#define USE_GET_BIT(__x, BitNum) 	(((__x) >> (BitNum)) & 0x01)
+#define USE_SET_BIT(__x, BitNum)    ((__x) |= (BV(BitNum)))
+#define USE_CLR_BIT(__x, BitNum)    ((__x) &= ~(BV(BitNum)))
+#define USE_CPL_BIT(__x ,BitNum)    ((__x) ^= (BV(BitNum)))
+#define USE_GET_BIT(__x, BitNum)    (((__x) >> (BitNum)) & 0x01)
 
 //½«Ò»¸ö×ÖÄ¸×ª»»Îª´óĞ´
 #define  UPCASE( c )    (((c) >= 'a' && (c) <= 'z') ? ((c) - 0x20) : (c) )
-	
+    
 //ÅĞ¶Ï×Ö·ûÊÇ²»ÊÇ10½øÖµµÄÊı×Ö
 #define  DECCHK( c )    ((c) >= '0' && (c) <= '9')
 //ÅĞ¶Ï×Ö·ûÊÇ²»ÊÇ16½øÖµµÄÊı×Ö
@@ -107,6 +107,18 @@
 //µÃµ½Ò»¸ö½á¹¹ÌåÖĞfieldËùÕ¼ÓÃµÄ×Ö½ÚÊı
 #define FSIZ( type, field ) sizeof( ((type *) 0)->field )
 
+
+
+//æä¾›ä¸­æ–­çº§ä¸´ç•Œä¿æŠ¤å®
+// set a save variable and enter exit criticial macro
+// portCriticial_state_Variable: å®šä¹‰ä¸€ä¸ªä¿å­˜å˜é‡
+#define portCriticial_state_Variable    //halIntState_t bintstate
+#define portCriticial_Enter_code()      //ENTER_SAFE_ATOM_CODE(bintstate)
+#define portCriticial_Exit_code()       //EXIT_SAFE_ATOM_CODE(bintstate)
+
+
+
+#define configASSERT( x )
 
 
 

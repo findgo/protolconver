@@ -33,7 +33,7 @@ void listInitialiseItem( ListItem_t * const pxItem )
 }
 /*-----------------------------------------------------------*/
 
-void ListInsertEnd( List_t * const pxList, ListItem_t * const pxNewListItem )
+void listInsertEnd( List_t * const pxList, ListItem_t * const pxNewListItem )
 {
     ListItem_t * const pxIndex = pxList->pxIndex;
 
@@ -53,7 +53,7 @@ void ListInsertEnd( List_t * const pxList, ListItem_t * const pxNewListItem )
 }
 /*-----------------------------------------------------------*/
 
-void ListInsert( List_t * const pxList, ListItem_t * const pxNewListItem )
+void listInsert( List_t * const pxList, ListItem_t * const pxNewListItem )
 {
     ListItem_t *pxIterator;
     const uint32_t xValueOfInsertion = pxNewListItem->xItemValue;

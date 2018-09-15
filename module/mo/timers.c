@@ -1,12 +1,7 @@
 
 /* Standard includes. */
 #include <stdlib.h>
-
-#include "heap_mange.h"
-#include "list.h"
-//#include "queue.h"
 #include "timers.h"
-#include "mclock.h"
 
 //使能匿名结构体
 #pragma anon_unions
@@ -19,15 +14,10 @@ typedef struct tmrTimer_s
     TimerCallbackFunction_t pxCallbackFunction; /*<< The function that will be called when the timer expires. */
 } tmrTimer_t;
 
-/* The definition of messages that can be sent and received on the timer queue.
-Two types of message can be queued - messages that manipulate a software timer,
-and messages that request the execution of a non-timer related callback.  The
-two message types are defined in two separate structures, xTimerParametersType
-and xCallbackParametersType respectively. */
 typedef struct tmrTimerParameter_s
 {
-    uint32_t            xTimeoutInTicks;    /*<< An value record time out value */
-    uint32_t            xMarkTimeInTicks;   /* mark time when command send*/
+    uint32_t            xTimeoutInTicks;        /*<< An value record time out value */
+    uint32_t            xMarkTimeInTicks;       /*<<  mark time when command send*/
     tmrTimer_t *           pxTimer;            /*<< The timer to which the command will be applied. */
 } tmrTimerParameter_t;
 
@@ -50,7 +40,7 @@ static List_t *pxOverflowTimerList;
 
 /* A queue that is used to send commands to the timer service task. */
 static QueueHandle_t xTimerQueueHandle = NULL;
-static StaticQueue_t xTimerQueueStatic;
+static QueueStatic_t xTimerQueueStatic;
 static uint8_t ucTimerQueueStorageStatic[ configTIMER_QUEUE_LENGTH * sizeof( tmrTimerQueueMessage_t ) ];
 
 /*local funcition */
@@ -93,13 +83,8 @@ static void __CheckForValidListAndQueue( void )
         pxOverflowTimerList = &xActiveTimerList2;
 
         // 创建一个消息队列用于发送消息
-        xTimerQueueHandle = xQueueCreateStatic( ( uint32_t ) configTIMER_QUEUE_LENGTH, sizeof( tmrTimerQueueMessage_t ), &( ucTimerQueueStorageStatic[ 0 ] ), &xTimerQueueStatic );
-        //xTimerQueueHandle = xQueueCreate( ( uint32_t ) configTIMER_QUEUE_LENGTH, sizeof( tmrTimerQueueMessage_t ) );
+        xTimerQueueHandle = queueAssign(&xTimerQueueStatic, configTIMER_QUEUE_LENGTH, sizeof(tmrTimerQueueMessage_t), &( ucTimerQueueStorageStatic[ 0 ]));
     }
-}
-static uint32_t __GetCurTimeTick(void)
-{
-    return mcu_getCurSysctime();    
 }
 /*
  * Insert the timer into either xActiveTimerList1, or xActiveTimerList2,
@@ -179,7 +164,7 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
     tmrTimerQueueMessage_t xMessage;
     tmrTimer_t *pxTimer;
 
-    while( xQueueReceive( xTimerQueueHandle, &xMessage ) == TRUE ) 
+    while( queueReceive( xTimerQueueHandle, &xMessage ) == TRUE ) 
     {
         /* Commands that are positive are timer commands rather than pended function calls. */            
         /* The messages uses the xTimerParameters member to work on a software timer. */
@@ -196,7 +181,6 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
 
         switch( xMessage.xMessageID ) {
         case tmrCOMMAND_START :
-        case tmrCOMMAND_START_FROM_ISR :
             /* Start or restart a timer.*/
             if( __InsertTimerInActiveList( pxTimer, xTimeNow, xMessage.xMarkTimeInTicks, xMessage.xTimeoutInTicks) != FALSE ) {
                 /* The timer expired before it was added to the active timer list.  Process it now. */
@@ -205,9 +189,7 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
             break;
 
         case tmrCOMMAND_STOP :
-        case tmrCOMMAND_STOP_FROM_ISR :
         case tmrCOMMAND_DELETE :   
-        case tmrCOMMAND_DELETE_FROM_ISR:
             // 开头已经从链表删除过了,不做任何事
             /* The timer has already been removed from the active list */
             break;
@@ -278,13 +260,7 @@ uint8_t timerGenericCommand( TimerHandle_t xTimer, const uint32_t xCommandID, co
         xMessage.xMarkTimeInTicks = xTimeNow;
         xMessage.pxTimer = ( tmrTimer_t * ) xTimer;
 
-        if( xCommandID < tmrFIRST_FROM_ISR_COMMAND ){
-            return xQueueSendToBack( xTimerQueueHandle, &xMessage);
-        }
-        else{
-            return xQueueSendToBackFromISR( xTimerQueueHandle, &xMessage );
-        }
-
+        return queueSendToBack( xTimerQueueHandle, &xMessage);
     }
     
     return FALSE;
@@ -329,7 +305,7 @@ void timerTask( void )
 
     //wheather over flow or not must be check current time list has timer expired to process?
     while( ( !listLIST_IS_EMPTY( pxCurrentTimerList ) ) && ( listGET_ITEM_VALUE_OF_HEAD_ENTRY( pxCurrentTimerList ) <= xTimeNow ) )
-   {
+    {
         pxTimer = ( tmrTimer_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxCurrentTimerList );
 
         /* Remove the timer from the list of active timers.  
@@ -345,5 +321,9 @@ void timerTask( void )
 }
 
 
+static uint32_t __GetCurTimeTick(void)
+{
+    return mcu_getCurSysctime();    
+}
 
 

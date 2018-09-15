@@ -9,6 +9,8 @@
 #include "ltl_genattr.h"
 #include "prefix.h"
 
+#include "timers.h"
+
 static void prvClockInit(void);
 static void prvnvicInit(void);
 
@@ -27,6 +29,7 @@ int main(void)
     while(1)
     {
         dlink_period_task();
+        timerTask();
     }
 //Should never reach this point!
 }
