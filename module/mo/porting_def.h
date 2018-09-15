@@ -1,7 +1,10 @@
 
 
 // 本文件主要是从其它平台移植的库的一些定义
-
+/*
+ *
+ *
+ */
 
 #ifndef __PORTING_DEF_H__
 #define __PORTING_DEF_H__
@@ -11,22 +14,22 @@
 #include <stddef.h>
 #include <string.h>
 
-//from freeRTOS 
-//use for list heap 
 
-// macro define by use
-typedef uint32_t TickType_t;
-typedef unsigned long UBaseType_t;
-typedef long BaseType_t;
+//提供中断级临界保护宏
+// set a save variable and enter exit criticial macro
+// portCriticial_state_Variable: 定义一个保存变量
+//#define portCriticial_state_Variable    //halIntState_t bintstate
+//#define portCriticial_Enter_code()      //ENTER_SAFE_ATOM_CODE(bintstate)
+//#define protCriticial_Exit_code()       //EXIT_SAFE_ATOM_CODE(bintstate)
 
-#define pdFALSE         ( ( BaseType_t ) 0 )
-#define pdTRUE          ( ( BaseType_t ) 1 )
+// 用于任务级临界保护宏,线程保护?
+#define taskENTER_CRITICAL()
+#define taskENTER_CRITICAL_FROM_ISR()  
+#define taskEXIT_CRITICAL()             
+#define taskEXIT_CRITICAL_FROM_ISR( x )         
 
-#define portMAX_DELAY  ( TickType_t )0xffffffffUL
 #define mtCOVERAGE_TEST_DELAY()
 #define mtCOVERAGE_TEST_MARKER()
 #define configASSERT( x )
-
-
 
 #endif

@@ -95,7 +95,6 @@ void *pvPortMalloc( size_t xWantedSize )
 {
 void *pvReturn = NULL;
 static uint8_t *pucAlignedHeap = NULL;
-portCriticial_state_Variable;
 
 	/* Ensure that blocks are always aligned to the required number of bytes. */
 	#if( portBYTE_ALIGNMENT != 1 )
@@ -108,7 +107,7 @@ portCriticial_state_Variable;
 	}
 	#endif
 
-    portCriticial_Enter_code();
+	//vTaskSuspendAll();
 	{
 		if( pucAlignedHeap == NULL )
 		{
@@ -128,7 +127,7 @@ portCriticial_state_Variable;
 
 		traceMALLOC( pvReturn, xWantedSize );
 	}
-    protCriticial_Exit_code();
+	//( void ) xTaskResumeAll();
 
 	#if( configUSE_MALLOC_FAILED_HOOK == 1 )
 	{

@@ -141,9 +141,8 @@ void *pvPortMalloc( size_t xWantedSize )
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 void *pvReturn = NULL;
-    portCriticial_state_Variable;
-    
-	portCriticial_Enter_code();
+
+	//vTaskSuspendAll();
 	{
 		/* If this is the first call to malloc then the heap will require
 		initialisation to setup the list of free blocks. */
@@ -267,7 +266,7 @@ void *pvReturn = NULL;
 
 		traceMALLOC( pvReturn, xWantedSize );
 	}
-	protCriticial_Exit_code();
+	//( void ) xTaskResumeAll();
 
 	#if( configUSE_MALLOC_FAILED_HOOK == 1 )
 	{
@@ -291,7 +290,7 @@ void vPortFree( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;
-    portCriticial_state_Variable;
+
 	if( pv != NULL )
 	{
 		/* The memory being freed will have an BlockLink_t structure immediately
@@ -313,14 +312,14 @@ BlockLink_t *pxLink;
 				allocated. */
 				pxLink->xBlockSize &= ~xBlockAllocatedBit;
 
-				portCriticial_Enter_code();
+				//vTaskSuspendAll();
 				{
 					/* Add this block to the list of free blocks. */
 					xFreeBytesRemaining += pxLink->xBlockSize;
 					traceFREE( pv, pxLink->xBlockSize );
 					prvInsertBlockIntoFreeList( ( ( BlockLink_t * ) pxLink ) );
 				}
-                protCriticial_Exit_code();
+				//( void ) xTaskResumeAll();
 			}
 			else
 			{

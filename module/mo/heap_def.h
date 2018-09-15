@@ -8,9 +8,10 @@
   ******************************************************************************
   * @attention      v1.1    jgb     20170512重构 
   * @attention      v1.2    jgb     20180913 抽像出临界保护宏
+  * @attention      v1.3    jgb     20180914 去除临界保护 由用户自己控制临界区
   ******************************************************************************
   */
-  /*  本堆管理全部移植于freertos 的堆管理，几乎未做任何修改，只修改了临界区的保护,将宏抽出来了
+  /*  本堆管理全部移植于freertos 的堆管理，几乎未做任何修改，只去除了临界区的保护
   *  heap_1  只实现分配，不实现释放
   *  heap_2  实现分配和释放，但不支持碎片管理
   *  heap_3  对库文件malloc free做了临界保护
@@ -36,13 +37,6 @@
 /* set byte alignment */
 #define portBYTE_ALIGNMENT                  4
 #define portPOINTER_SIZE_TYPE               uint32_t
-
-//提供临界保护宏
-// set a save variable and enter exit criticial macro
-// portCriticial_state_Variable: 定义一个保存变量
-#define portCriticial_state_Variable    //halIntState_t bintstate
-#define portCriticial_Enter_code()      //ENTER_SAFE_ATOM_CODE(bintstate)
-#define protCriticial_Exit_code()       //EXIT_SAFE_ATOM_CODE(bintstate)
 
 /* set use app malloc failed hook */
 #define configUSE_MALLOC_FAILED_HOOK    0

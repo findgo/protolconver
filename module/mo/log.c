@@ -7,9 +7,10 @@
 // 默认输出到stdout
 static void mo_log_defaultlog_callback(void *ctx, log_level_t level, const char *format,...)
 {
+    va_list ap;
+    
     (void)ctx;
     (void)level;
-    va_list ap;
 
     va_start(ap,format);
 	printf(format,va_arg(ap,char *));

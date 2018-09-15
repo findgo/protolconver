@@ -170,13 +170,12 @@ void *pvPortMalloc( size_t xWantedSize )
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 void *pvReturn = NULL;
-    portCriticial_state_Variable;
-    
+
 	/* The heap must be initialised before the first call to
 	prvPortMalloc(). */
 	configASSERT( pxEnd );
 
-	portCriticial_Enter_code();
+	//vTaskSuspendAll();
 	{
 		/* Check the requested block size is not so large that the top bit is
 		set.  The top bit of the block size member of the BlockLink_t structure
@@ -287,7 +286,7 @@ void *pvReturn = NULL;
 
 		traceMALLOC( pvReturn, xWantedSize );
 	}
-	protCriticial_Exit_code();
+	//( void ) xTaskResumeAll();
 
 	#if( configUSE_MALLOC_FAILED_HOOK == 1 )
 	{
@@ -310,7 +309,6 @@ void vPortFree( void *pv )
 {
 uint8_t *puc = ( uint8_t * ) pv;
 BlockLink_t *pxLink;
-    portCriticial_state_Variable;
 
 	if( pv != NULL )
 	{
@@ -333,14 +331,14 @@ BlockLink_t *pxLink;
 				allocated. */
 				pxLink->xBlockSize &= ~xBlockAllocatedBit;
 
-				portCriticial_Enter_code();
+				//vTaskSuspendAll();
 				{
 					/* Add this block to the list of free blocks. */
 					xFreeBytesRemaining += pxLink->xBlockSize;
 					traceFREE( pv, pxLink->xBlockSize );
 					prvInsertBlockIntoFreeList( ( ( BlockLink_t * ) pxLink ) );
 				}
-				protCriticial_Exit_code();
+				//( void ) xTaskResumeAll();
 			}
 			else
 			{

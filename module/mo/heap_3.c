@@ -91,14 +91,13 @@
 void *pvPortMalloc( size_t xWantedSize )
 {
 void *pvReturn;
-portCriticial_state_Variable;
-    
-	portCriticial_Enter_code();
+
+	//vTaskSuspendAll();
 	{
 		pvReturn = malloc( xWantedSize );
 		traceMALLOC( pvReturn, xWantedSize );
 	}
-	protCriticial_Exit_code();
+	//( void ) xTaskResumeAll();
 
 	#if( configUSE_MALLOC_FAILED_HOOK == 1 )
 	{
@@ -115,15 +114,14 @@ portCriticial_state_Variable;
 
 void vPortFree( void *pv )
 {
-portCriticial_state_Variable;
 	if( pv )
 	{
-        portCriticial_Enter_code();
+		//vTaskSuspendAll();
 		{
 			free( pv );
 			traceFREE( pv, 0 );
 		}
-        protCriticial_Exit_code();
+		//( void ) xTaskResumeAll();
 	}
 }
 

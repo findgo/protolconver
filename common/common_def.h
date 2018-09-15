@@ -107,6 +107,13 @@
 //得到一个结构体中field所占用的字节数
 #define FSIZ( type, field ) sizeof( ((type *) 0)->field )
 
+
+
+
+
+
+
+
 #endif
 
 
