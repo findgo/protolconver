@@ -164,7 +164,7 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
     tmrTimerQueueMessage_t xMessage;
     tmrTimer_t *pxTimer;
 
-    while( queueReceive( xTimerQueueHandle, &xMessage ) == TRUE ) 
+    while( queuePop( xTimerQueueHandle, &xMessage ) == TRUE ) 
     {
         /* Commands that are positive are timer commands rather than pended function calls. */            
         /* The messages uses the xTimerParameters member to work on a software timer. */
@@ -261,7 +261,7 @@ uint8_t timerGenericCommand( TimerHandle_t xTimer, const uint32_t xCommandID, co
         xMessage.xMarkTimeInTicks = xTimeNow;
         xMessage.pxTimer = ( tmrTimer_t * ) xTimer;
 
-        return queueSendToBack( xTimerQueueHandle, &xMessage);
+        return queuePutBack( xTimerQueueHandle, &xMessage);
     }
     
     return FALSE;

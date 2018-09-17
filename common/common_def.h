@@ -102,10 +102,21 @@
 #define  MEM_B( x )  ( *( (uint8_t *) (x) ) )//µÃµ½Ö¸¶¨µØÖ·ÉÏµÄÒ»¸öbyte
 #define  MEM_W( x )  ( *( (uint16_t *) (x) ) )//µÃµ½Ö¸¶¨µØÖ·ÉÏµÄÁ½¸öbyte
 
-//µÃµ½Ò»¸öfieldÔÚ½á¹¹Ìå(struct)ÖÐµÄÆ«ÒÆÁ¿
-#define FPOS( type, field ) ( (uint32_t) &(( type *) 0)-> field )
-//µÃµ½Ò»¸ö½á¹¹ÌåÖÐfieldËùÕ¼ÓÃµÄ×Ö½ÚÊý
-#define FSIZ( type, field ) sizeof( ((type *) 0)->field )
+// the offset of the MEMBER in the structure
+// èŽ·å¾—MEMBERåœ¨ç»“æž„ä½“çš„åç§»é‡
+#define offsetofStruct(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+/* é€šè¿‡ç»“æž„ä½“æˆå‘˜MEMBERçš„åœ°å€,å¾—åˆ°TYPEçš„é¦–åœ°å€
+ * container_from - cast a member of a structure out to the containing structure é€šè¿‡å®¹å™¨æˆå‘˜MEMBERçš„åœ°å€,å¾—åˆ°å®¹å™¨çš„åœ°å€
+ * @ptr:    the pointer to the member.  ç»“æž„ä½“æˆå‘˜MEMBERçš„åœ°å€
+ * @TYPE:   the type of the container struct this is embedded in. ç»“æž„ä½“ç±»åž‹
+ * @MEMBER: the name of the member within the struct. ç»“æž„ä½“æˆå‘˜çš„åç§°
+ */
+#define container_from(ptr, TYPE, MEMBER) ((TYPE *)( (char *)ptr - offsetofStruct( TYPE, MEMBER) ))
+    
+// the MEMBER of size in the structure
+// èŽ·å¾—ç»“æž„ä½“ä¸­é‚£ä¸ª MEMBERæˆå‘˜çš„å ç©ºé—´çš„å¤§å°
+#define FSIZE( TYPE, MEMBER )  sizeof( ((TYPE *) 0)->MEMBER )
+
 
 
 
@@ -119,9 +130,6 @@
 
 
 #define configASSERT( x )
-
-
-
 
 
 

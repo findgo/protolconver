@@ -89,15 +89,19 @@ void queueDelete( QueueHandle_t xQueue )
 }
 static void __CopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const uint8_t xPosition )
 {
-    if( xPosition == QUEUE_SEND_TO_BACK ){
+    if( xPosition == QUEUE_TO_BACK ){
         ( void ) memcpy( ( void * ) pxQueue->pcWriteTo, pvItemToQueue, ( size_t ) pxQueue->uxItemSize ); 
+        
         pxQueue->pcWriteTo += pxQueue->uxItemSize;
         if( pxQueue->pcWriteTo >= pxQueue->pcTail )  {
             pxQueue->pcWriteTo = pxQueue->pcHead;
         }
     }
     else{
-        ( void ) memcpy( ( void * ) pxQueue->pcReadFrom, pvItemToQueue, ( size_t ) pxQueue->uxItemSize ); 
+        if(pvItemToQueue){
+            ( void ) memcpy( ( void * ) pxQueue->pcReadFrom, pvItemToQueue, ( size_t ) pxQueue->uxItemSize ); 
+        }
+        
         pxQueue->pcReadFrom -= pxQueue->uxItemSize;
         if( pxQueue->pcReadFrom < pxQueue->pcHead ) {
             pxQueue->pcReadFrom = ( pxQueue->pcTail - pxQueue->uxItemSize );
@@ -113,8 +117,8 @@ static void __CopyDataFromQueue( Queue_t * const pxQueue, void * const pvBuffer 
     if( pxQueue->pcReadFrom >= pxQueue->pcTail ) {
         pxQueue->pcReadFrom = pxQueue->pcHead;
     }
-    
-    ( void ) memcpy( ( void * ) pvBuffer, ( void * ) pxQueue->pcReadFrom, ( size_t ) pxQueue->uxItemSize ); 
+    if(pvBuffer)
+        ( void ) memcpy( ( void * ) pvBuffer, ( void * ) pxQueue->pcReadFrom, ( size_t ) pxQueue->uxItemSize ); 
 }
 static void __InitialiseNewQueue(Queue_t *pxNewQueue, const uint32_t uxQueueItemCap, const uint32_t uxItemSize, uint8_t *pucQueueStorage)
 {
@@ -124,7 +128,7 @@ static void __InitialiseNewQueue(Queue_t *pxNewQueue, const uint32_t uxQueueItem
     pxNewQueue->uxItemSize = uxItemSize;
     ( void ) queueReset( pxNewQueue );
 }
-uint8_t xQueueGenericSend( QueueHandle_t xQueue, const void * const pvItemToQueue , const uint8_t xCopyPosition )
+uint8_t xQueueGenericPut( QueueHandle_t xQueue, const void * const pvItemToQueue , const uint8_t xCopyPosition )
 {
     Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 
@@ -143,13 +147,12 @@ uint8_t xQueueGenericSend( QueueHandle_t xQueue, const void * const pvItemToQueu
     return FALSE;
 }
 
-uint8_t xQueueGenericReceive( QueueHandle_t xQueue, void * const pvBuffer, const uint8_t xJustPeeking )
+uint8_t xQueueGenericPop( QueueHandle_t xQueue, void * const pvBuffer, const uint8_t xJustPeeking )
 {
     int8_t *pcOriginalReadPosition;
     Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 
     configASSERT( pxQueue );
-    configASSERT( pvBuffer );
 
     /* Is there data in the queue now?. */
     if( pxQueue->uItemCurCnt > ( uint32_t ) 0 ) {
@@ -172,6 +175,63 @@ uint8_t xQueueGenericReceive( QueueHandle_t xQueue, void * const pvBuffer, const
     
     return FALSE;
 }
+void *xQueueOnAlloc( QueueHandle_t xQueue , const uint8_t xPosition )
+{
+    int8_t *pcPutPosition;
+    Queue_t * const pxQueue = ( Queue_t * ) xQueue;
+
+    configASSERT( pxQueue );    
+
+    /* Is there room on the queue now?  The running task must be the highest priority task wanting to access the queue.  
+      If the head item in the queue is to be overwritten then it does not matter if the queue is full. */
+    if( pxQueue->uItemCurCnt < pxQueue->uItemCap  ) {
+        
+        if( xPosition == QUEUE_TO_BACK ){
+            pcPutPosition =  pxQueue->pcWriteTo;
+            
+            pxQueue->pcWriteTo += pxQueue->uxItemSize;
+            if( pxQueue->pcWriteTo >= pxQueue->pcTail )  {
+                pxQueue->pcWriteTo = pxQueue->pcHead;
+            }
+        }
+        else{
+             pcPutPosition =   pxQueue->pcReadFrom;
+
+            pxQueue->pcReadFrom -= pxQueue->uxItemSize;
+            if( pxQueue->pcReadFrom < pxQueue->pcHead ) {
+                pxQueue->pcReadFrom = ( pxQueue->pcTail - pxQueue->uxItemSize );
+            }
+        }
+        
+        pxQueue->uItemCurCnt++;
+
+        return (void *)pcPutPosition;
+    }
+
+    return (void *)NULL;
+}
+
+void *queueOnPeek( QueueHandle_t xQueue )
+{
+    int8_t *pcpeekPosition;
+    Queue_t * const pxQueue = ( Queue_t * ) xQueue;
+
+    configASSERT( pxQueue );
+
+    /* Is there data in the queue now?. */
+    if( pxQueue->uItemCurCnt > ( uint32_t ) 0 ) {
+        pcpeekPosition = pxQueue->pcReadFrom + pxQueue->uxItemSize;
+        
+        if( pcpeekPosition >= pxQueue->pcTail ) {
+            pcpeekPosition = pxQueue->pcHead;
+        }
+
+        return (void *)pcpeekPosition;
+    }
+    
+    return (void *)NULL;
+}
+
 
 uint32_t queueItemAvailableValid(const QueueHandle_t xQueue )
 {
