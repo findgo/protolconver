@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "queue.h"
-#include "heap_mange.h"
 
 typedef struct Queue_s
 {
@@ -21,7 +20,7 @@ typedef struct Queue_s
 static void __CopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const uint8_t xPosition );
 static void __CopyDataFromQueue( Queue_t * const pxQueue, void * const pvBuffer );
 static void __InitialiseNewQueue(Queue_t *pxNewQueue, const uint32_t uxQueueItemCap, const uint32_t uxItemSize, uint8_t *pucQueueStorage);
-
+#if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
 QueueHandle_t queueNew( const uint32_t uxQueueItemCap, const uint32_t uxItemSize)
 {
     Queue_t *pxNewQueue;
@@ -34,7 +33,7 @@ QueueHandle_t queueNew( const uint32_t uxQueueItemCap, const uint32_t uxItemSize
     /* Allocate enough space to hold the maximum number of items that can be in the queue at any time. */
     xQueueSizeInBytes = ( size_t ) ( uxQueueItemCap * uxItemSize );
 
-    pxNewQueue = ( Queue_t * ) pvPortMalloc( sizeof( Queue_t ) + xQueueSizeInBytes );
+    pxNewQueue = ( Queue_t * ) mo_malloc( sizeof( Queue_t ) + xQueueSizeInBytes );
 
     if( pxNewQueue ){
         /* Jump past the queue structure to find the location of the queue storage area. */
@@ -45,6 +44,7 @@ QueueHandle_t queueNew( const uint32_t uxQueueItemCap, const uint32_t uxItemSize
 
     return ( QueueHandle_t )pxNewQueue;
 }
+#endif
 QueueHandle_t queueAssign( QueueStatic_t *pxStaticQueue , const uint32_t uxQueueItemCap, const uint32_t uxItemSize, uint8_t *pucQueueStorage )
 {
     Queue_t *pxNewQueue;
@@ -84,7 +84,8 @@ uint8_t queueReset( QueueHandle_t xQueue)
 }
 void queueDelete( QueueHandle_t xQueue )
 {
-    ( void )xQueue;
+
+    mo_free(xQueue);
 }
 static void __CopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const uint8_t xPosition )
 {
@@ -188,12 +189,12 @@ uint32_t queueItemAvailableIdle( const QueueHandle_t xQueue )
     return (pxQueue->uItemCap - pxQueue->uItemCurCnt);
 }
 
-uint8_t queueIsQueueEmpty( const QueueHandle_t *xQueue )
+uint8_t queueIsQueueEmpty( const QueueHandle_t xQueue )
 {
    return (uint8_t )( ( ( Queue_t * )xQueue )->uItemCurCnt == ( uint32_t )  0 );
 }
 
-uint8_t queueIsQueueFull( const QueueHandle_t *pxQueue )
+uint8_t queueIsQueueFull( const QueueHandle_t xQueue )
 {
-        return (uint8_t )(( ( Queue_t *)pxQueue )->uItemCurCnt == ( ( Queue_t *)pxQueue )->uItemCap );
+        return (uint8_t )(( ( Queue_t *)xQueue )->uItemCurCnt == ( ( Queue_t *)xQueue )->uItemCap );
 }

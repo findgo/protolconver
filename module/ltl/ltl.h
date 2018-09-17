@@ -403,6 +403,9 @@ LStatus_t ltl_SendDefaultRspCmd( void *refer, uint16_t trunkID,uint8_t nodeNO,
 void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt);
 
 
+uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrId, ltlAttrRec_t *pAttr );
+
+
 void ltl_StrToAppString(char *pRawStr, char *pAppStr, uint8_t Applen );
 void ltl_LongStrToAppString(char *pRawStr, char *pAppStr, uint16_t Applen );
 

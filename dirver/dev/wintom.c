@@ -131,7 +131,10 @@ void wintom_getSingleDevID(uint8_t channel)
     WT_SEND(wt_txbuf,wt_len);
 }
 
-void wintom_parsing()
+
+
+
+void wintom_ProcessInApdu(uint8_t command, uint8_t *apdu, uint16_t apdu_len)
 {
-    
+      
 }

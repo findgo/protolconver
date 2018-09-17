@@ -38,10 +38,6 @@ void *pvPortMalloc( size_t xWantedSize );
 void vPortFree( void *pv );
 size_t xPortGetFreeHeapSize( void );
 
-#define pmalloc(xWantedSize) pvPortMalloc( xWantedSize )
-#define vfree(pv)            vPortFree(pv)
-#define xGetfreeHeapSize()   xPortGetFreeHeapSize()
-
 #if ( configUSE_MALLOC_FAILED_HOOK == 1 )
 extern void vApplicationMallocFailedHook( void );
 #endif

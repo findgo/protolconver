@@ -6,7 +6,7 @@
 
 #include "common_type.h"
 #include "common_def.h"
-
+#include "memalloc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,7 +18,7 @@ extern "C" {
  * queueSend(), queueReceive(), etc.
  */
 typedef void * QueueHandle_t;
-
+//静态结构体,用于屏蔽用户对结构体的可见
 typedef struct QueueStatic_s
 {
     void *pvDummy0[ 4 ];
@@ -43,8 +43,8 @@ void queueDelete( QueueHandle_t xQueue );
 
 uint32_t queueItemAvailableValid(const QueueHandle_t xQueue );
 uint32_t queueItemAvailableIdle( const QueueHandle_t xQueue );
-uint8_t queueIsQueueEmpty( const QueueHandle_t *xQueue );
-uint8_t queueIsQueueFull( const QueueHandle_t *pxQueue );
+uint8_t queueIsQueueEmpty( const QueueHandle_t xQueue );
+uint8_t queueIsQueueFull( const QueueHandle_t xQueue );
 
 // internal used
 uint8_t xQueueGenericSend( QueueHandle_t xQueue, const void * const pvItemToQueue , const uint8_t xCopyPosition );

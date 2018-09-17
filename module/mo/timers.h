@@ -4,7 +4,7 @@
 #define TIMERS_H
 
 #include "common_type.h"
-#include "heap_mange.h"
+#include "memalloc.h"
 #include "list.h"
 #include "queue.h"
 #include "mclock.h"
@@ -25,7 +25,7 @@ or interrupt version of the queue send function should be used. */
 #define tmrCOMMAND_START                        ( ( uint32_t ) 0 )
 #define tmrCOMMAND_STOP                         ( ( uint32_t ) 1 )
 #define tmrCOMMAND_DELETE                       ( ( uint32_t ) 2 )
-
+//静态结构体,用于屏蔽用户对结构体的可见
 typedef struct TimerStatic_s
 {
     ListItemStatic_t    xDummy0;
@@ -37,10 +37,12 @@ typedef void * TimerHandle_t;
 /* Defines the prototype to which timer callback functions must conform. */
 typedef void (*TimerCallbackFunction_t)( void* arg );
 
+#if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
 TimerHandle_t timerNew( TimerCallbackFunction_t pxCallbackFunction, void * arg) ;
+#endif
 TimerHandle_t timerAssign(TimerStatic_t * pxTimerBuffer, TimerCallbackFunction_t pxCallbackFunction, void * arg) ; 
 uint8_t timerIsTimerActive( TimerHandle_t xTimer ) ;
-void timerTask( void ) ;
+void timerTask( void );
 #define timerStart( xTimer, timeout)    timerGenericCommand( ( xTimer ), tmrCOMMAND_START, timeout)
 #define timerRestart( xTimer, timeout ) timerStart( xTimer, timeout)
 #define timerStop( xTimer )             timerGenericCommand( ( xTimer ), tmrCOMMAND_STOP, 0U )

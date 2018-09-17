@@ -5,14 +5,25 @@
 #include "systick.h"
 #include "dlinkzigbee.h"
 
+#include "memalloc.h"
+#include "timers.h"
+
+
 #include "ltl.h"
 #include "ltl_genattr.h"
 #include "prefix.h"
 
-#include "timers.h"
 
 static void prvClockInit(void);
 static void prvnvicInit(void);
+static TimerStatic_t tmstatic;
+static TimerHandle_t tmhandle = NULL;
+static void tmCb(void *arg);
+
+static TimerStatic_t tmstaticF;
+static TimerHandle_t tmhandleF = NULL;
+static void tmCbF(void *arg);
+
 
 int main(void)
 {   
@@ -25,6 +36,11 @@ int main(void)
     delay_ms(200);
     dl_registerParseCallBack(NULL, ltlApduParsing);
     dlink_init();
+
+    tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
+    timerStart(tmhandle, 300);
+    tmhandleF = timerAssign(&tmstaticF, tmCbF,(void *)&tmhandleF);
+    timerStart(tmhandleF, 500);
     
     while(1)
     {
@@ -32,6 +48,56 @@ int main(void)
         timerTask();
     }
 //Should never reach this point!
+}
+
+static void tmCb(void *arg)
+{
+    uint16_t dst_addr = DL_BROADCAST_ADD;
+
+    ltlReport_t *lreport;
+    ltlAttrRec_t attrirecord;
+    ltlReportCmd_t *reportcmd;
+
+    if(ltlFindAttrRec(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, ATTRID_BASIC_SERIAL_NUMBER, &attrirecord)){
+ 
+        reportcmd = (ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1);
+        reportcmd->numAttr = 1;
+        lreport = &(reportcmd->attrList[0]);
+        lreport->attrID = attrirecord.attrId;
+        lreport->dataType = attrirecord.dataType;
+        lreport->attrData = attrirecord.dataPtr;
+
+        ltl_SendReportCmd(&dst_addr, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, 
+                        LTL_FRAMECTL_DIR_CLIENT_SERVER, LTL_MANU_CODE_SPECIFIC_LTL, TRUE,reportcmd);
+        
+        mo_free(reportcmd);
+    }
+    timerRestart(*((TimerHandle_t *)arg), 300);
+}
+
+static void tmCbF(void *arg)
+{
+    uint16_t dst_addr = DL_BROADCAST_ADD;
+
+    ltlReport_t *lreport;
+    ltlAttrRec_t attrirecord;
+    ltlReportCmd_t *reportcmd;
+
+    if(ltlFindAttrRec(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, ATTRID_BASIC_MANUFACTURER_NAME, &attrirecord)){
+ 
+        reportcmd = (ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1);
+        reportcmd->numAttr = 1;
+        lreport = &(reportcmd->attrList[0]);
+        lreport->attrID = attrirecord.attrId;
+        lreport->dataType = attrirecord.dataType;
+        lreport->attrData = attrirecord.dataPtr;
+
+        ltl_SendReportCmd(&dst_addr, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, 
+                        LTL_FRAMECTL_DIR_CLIENT_SERVER, LTL_MANU_CODE_SPECIFIC_LTL, TRUE,reportcmd);
+        
+        mo_free(reportcmd);
+    }
+    timerRestart(*((TimerHandle_t *)arg), 500);
 }
 
 /*

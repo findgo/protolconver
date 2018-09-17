@@ -15,6 +15,15 @@
 #include <string.h>
 
 
+/* set support dynamic alloca compatibility. */
+#define configSUPPORT_DYNAMIC_ALLOCATION        1
+
+
+
+
+
+
+
 //提供中断级临界保护宏
 // set a save variable and enter exit criticial macro
 // portCriticial_state_Variable: 定义一个保存变量

@@ -26,10 +26,6 @@
 
 #include <stdint.h>
 #include "porting_def.h"
-//#include "common_signal.h"
-
-/* set support dynamic alloca compatibility. */
-#define configSUPPORT_DYNAMIC_ALLOCATION        1
 
 /* Default total heap size 17K*/
 #define configTOTAL_HEAP_SIZE               ( ( size_t ) ( 4 * 1024 ) )
@@ -44,7 +40,6 @@
 /* for debug printf malloc and free trace */
 #define traceMALLOC( pvAddress, uiSize )
 #define traceFREE( pvAddress, uiSize )
-
 
 #endif
 

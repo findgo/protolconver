@@ -59,7 +59,7 @@ typedef struct ltlAttrRecsList_s
     uint16_t            trunkID;      // Used to link it into the trunk descriptor
     uint8_t             nodeNO; // Number of the following records
     uint8_t             numAttributes;
-    const ltlAttrRec_t        *attrs;        // attribute record
+    const ltlAttrRec_t  *attrs;        // attribute record
     ltlReadWriteCB_t    pfnReadWriteCB;// Read or Write attribute value callback function
     ltlAuthorizeCB_t    pfnAuthorizeCB;// Authorize Read or Write operation   
     void *next;
@@ -77,7 +77,6 @@ static uint8_t *ltlBuildHdr( ltlFrameHdr_t *hdr, uint8_t *pDat );
 static uint8_t ltlHdrSize(ltlFrameHdr_t *hdr);
 static ltlLibPlugin_t *ltlFindPlugin( uint16_t trunkID );
 static ltlAttrRecsList_t *ltlFindAttrRecsList(uint16_t trunkID, uint8_t nodeNO);
-static uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrId, ltlAttrRec_t *pAttr );
 
 static ltlReadWriteCB_t ltlGetReadWriteCB(uint16_t trunkID, uint8_t nodeNO);
 static LStatus_t ltlAuthorizeReadUsingCB(uint16_t trunkID, uint8_t nodeNO, ltlAttrRec_t *pAttr );
@@ -468,6 +467,7 @@ static ltlLibPlugin_t *ltlFindPlugin( uint16_t trunkID )
 
     return ( (ltlLibPlugin_t *)NULL );
 }
+
 /*********************************************************************
  * @brief   Find the right attribute record list for an trunkID and nodeNumber
  *
@@ -502,7 +502,7 @@ static ltlAttrRecsList_t *ltlFindAttrRecsList(uint16_t trunkID, uint8_t nodeNO)
  *
  * @return  TRUE if record found. FALSE, otherwise.
  */
-static uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrId, ltlAttrRec_t *pAttr )
+uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrId, ltlAttrRec_t *pAttr )
 {
     uint8_t i;
     ltlAttrRecsList_t *pRec = ltlFindAttrRecsList( trunkID, nodeNO);

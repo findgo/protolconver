@@ -201,7 +201,7 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
     }
 }
 
-//ok
+#if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
 TimerHandle_t timerNew( TimerCallbackFunction_t pxCallbackFunction, void *arg) 
 {
     tmrTimer_t *pxNewTimer;
@@ -214,6 +214,7 @@ TimerHandle_t timerNew( TimerCallbackFunction_t pxCallbackFunction, void *arg)
 
     return ( TimerHandle_t )pxNewTimer;
 }
+#endif
 // ok
 TimerHandle_t timerAssign(TimerStatic_t *pxTimerBuffer, TimerCallbackFunction_t pxCallbackFunction, void *arg)
 {

@@ -12,7 +12,7 @@
  */
 void *mo_malloc(size_t size)
 {
-    return pmalloc(size);
+    return pvPortMalloc(size);
     //return malloc(size);
 }
 
@@ -25,7 +25,7 @@ void *mo_malloc(size_t size)
  */
 void mo_free(void *ptr)
 {
-    vfree(ptr);
+    vPortFree(ptr);
     //free(ptr);
 }
 /*********************************************************************
@@ -40,7 +40,7 @@ void *mo_calloc(size_t nmemb, size_t size)
 {
     void * addr=NULL;
 
-    addr = (void *)pmalloc(size * nmemb); 
+    addr = (void *)pvPortMalloc(size * nmemb); 
     memset(addr,0,size * nmemb);
 
     return addr;
@@ -58,11 +58,11 @@ void *mo_realloc(void *ptr, size_t size)
 {
     void * addr=NULL;
         
-    addr = (void*)pmalloc(size);
+    addr = (void*)pvPortMalloc(size);
     if( addr ){
         memset(addr, 0, size);
         memcpy(addr, ptr, size);
-        vfree(ptr);
+        vPortFree(ptr);
     }
 
     return addr;
