@@ -49,6 +49,7 @@ static void __CheckForValidListAndQueue( void ) ;
 static uint32_t __GetCurTimeTick(void);
 static uint8_t __InsertTimerInActiveList( tmrTimer_t * const pxTimer, const uint32_t xTimeNow , 
                                         const uint32_t xTimeoutInTicks, const uint32_t xMarkTimeInTicks);
+static uint8_t __GenericCommandReceived(tmrTimerQueueMessage_t *message);
 static void __ProcessReceivedCommands( uint32_t xTimeNow);
 
 
@@ -156,6 +157,17 @@ static uint8_t __InsertTimerInActiveList( tmrTimer_t * const pxTimer, const uint
     return xProcessTimerNow;
 }
 
+static uint8_t __GenericCommandReceived(tmrTimerQueueMessage_t *message)
+{
+    uint8_t bret;
+    
+    taskENTER_CRITICAL();
+    bret = queuePop( xTimerQueueHandle, message );
+    taskEXIT_CRITICAL();
+
+    return bret;
+}
+
 /*
  *
  */
@@ -164,7 +176,7 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
     tmrTimerQueueMessage_t xMessage;
     tmrTimer_t *pxTimer;
 
-    while( queuePop( xTimerQueueHandle, &xMessage ) == TRUE ) 
+    while( __GenericCommandReceived(&xMessage) == TRUE ) 
     {
         /* Commands that are positive are timer commands rather than pended function calls. */            
         /* The messages uses the xTimerParameters member to work on a software timer. */
@@ -181,6 +193,7 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
 
         switch( xMessage.xMessageID ) {
         case tmrCOMMAND_START :
+        case tmrCOMMAND_START_FROM_ISR:
             /* Start or restart a timer.*/
             if( __InsertTimerInActiveList( pxTimer, xTimeNow, xMessage.xMarkTimeInTicks, xMessage.xTimeoutInTicks) != FALSE ) {
                 /* The timer expired before it was added to the active timer list.  Process it now. */
@@ -189,7 +202,8 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
             break;
 
         case tmrCOMMAND_STOP :
-        case tmrCOMMAND_DELETE :   
+        case tmrCOMMAND_STOP_FROM_ISR:
+        case tmrCOMMAND_DELETE :
             // 开头已经从链表删除过了,不做任何事
             /* The timer has already been removed from the active list */
             break;
@@ -206,7 +220,7 @@ TimerHandle_t timerNew( TimerCallbackFunction_t pxCallbackFunction, void *arg)
 {
     tmrTimer_t *pxNewTimer;
 
-    pxNewTimer = ( tmrTimer_t * ) pvPortMalloc( sizeof( tmrTimer_t ) );
+    pxNewTimer = ( tmrTimer_t * ) mo_malloc( sizeof( tmrTimer_t ) );
 
     if( pxNewTimer ){
         __InitialiseNewTimer(pxNewTimer, pxCallbackFunction, arg );
@@ -245,26 +259,36 @@ uint8_t timerIsTimerActive( TimerHandle_t xTimer )
 
 /*-----------------------------------------------------------*/
 // ok
-uint8_t timerGenericCommand( TimerHandle_t xTimer, const uint32_t xCommandID, const uint32_t xTimeoutInTicks)
+uint8_t timerGenericCommandSend( TimerHandle_t xTimer, const uint32_t xCommandID, const uint32_t xTimeoutInTicks)
 {
-    uint32_t xTimeNow;
+    uint8_t breturn;
     tmrTimerQueueMessage_t xMessage;
-
+    isrSaveCriticial_status_Variable;
+    
     /* Send a message to the timer service task to perform a particular action on a particular timer definition. */
     if( xTimerQueueHandle ){
-        // get when send this command for mark
-        xTimeNow = __GetCurTimeTick();
-            
         /* Send a command to the timer service task to start the xTimer timer. */
         xMessage.xMessageID = xCommandID;
         xMessage.xTimeoutInTicks = xTimeoutInTicks;
-        xMessage.xMarkTimeInTicks = xTimeNow;
         xMessage.pxTimer = ( tmrTimer_t * ) xTimer;
 
-        return queuePutBack( xTimerQueueHandle, &xMessage);
+        if( xCommandID < tmrFIRST_FROM_ISR_COMMAND ){
+            taskENTER_CRITICAL();
+            // get when send this command for mark
+            xMessage.xMarkTimeInTicks = __GetCurTimeTick();;
+            breturn = queuePutBack( xTimerQueueHandle, &xMessage);
+            taskEXIT_CRITICAL();
+        }
+        else {
+            isrENTER_CRITICAL();
+            // get when send this command for mark
+            xMessage.xMarkTimeInTicks = __GetCurTimeTick();;
+            breturn = queuePutBack( xTimerQueueHandle, &xMessage);
+            isrEXIT_CRITICAL();
+        }
     }
     
-    return FALSE;
+    return breturn;
 }
 /*-----------------------------------------------------------*/
 
@@ -276,7 +300,9 @@ void timerTask( void )
     uint8_t xTimerListsNeedSwitch = FALSE;
     tmrTimer_t *pxTimer;
     List_t *pxTemp;
-    
+
+    __CheckForValidListAndQueue();
+
     xTimeNow = __GetCurTimeTick();
     if( xTimeNow < xLastTime ){ // 发生回绕,时间溢出
         xTimerListsNeedSwitch = TRUE;

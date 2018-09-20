@@ -487,6 +487,11 @@
               <FileType>1</FileType>
               <FilePath>..\module\Mserial.c</FilePath>
             </File>
+            <File>
+              <FileName>port_atom.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\module\port_atom.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

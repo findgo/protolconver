@@ -60,7 +60,6 @@ struct MiniListItem_s
     struct ListItem_s * configLIST_VOLATILE pxPrevious;
 };
 typedef struct MiniListItem_s MiniListItem_t;
-
 /*
  * Definition of the type of queue used by the scheduler.
  */
@@ -71,11 +70,25 @@ typedef struct List_s
     MiniListItem_t xListEnd;                            /*< List item that contains the maximum possible item value meaning it is always at the end of the list and is therefore used as a marker. */
 } List_t;
 
+//静态结构体,用于屏蔽用户对结构体的可见
 typedef struct ListItemStatic_s
 {
-    uint32_t xDummy1;
-    void *pvDummy2[ 4 ];
+	uint32_t xDummy0;
+	void *pvDummy1[ 4 ];
 }ListItemStatic_t;
+
+typedef struct MiniListItemStatic_s
+{
+    uint32_t xDummy0;
+    void *pvDummy1[ 2 ];
+}MiniListItemStatic_t;
+
+typedef struct ListStatic_s
+{
+    uint32_t xDummy0;
+    void *pvDummy1;
+    MiniListItemStatic_t xDummy2;
+}ListStatic_t;
 
 /*
  * Access macro to set the owner of a list item.  The owner of a list item

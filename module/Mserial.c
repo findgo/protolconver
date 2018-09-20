@@ -298,18 +298,17 @@ static void Start_TXCtransmit(uint8_t COM,comcfg_t *cfg)
 uint16_t Serial_WriteBuf(uint8_t COM,uint8_t *buf,uint16_t len)
 {
     uint16_t count;
-    halIntState_t bintstate;
     comcfg_t *cfg;
 
     cfg = GetUseCom(COM);
-    ENTER_SAFE_ATOM_CODE(bintstate);
+    taskENTER_CRITICAL();
     count = SerialTxBufPut(cfg,buf, len);
         //采用发送完成中断 has some bug
 //    Start_TXCtransmit(COM,cfg);
 
     //采用发送完成空中断
     Start_TXEtransmit(COM,cfg);
-    EXIT_SAFE_ATOM_CODE(bintstate);
+    taskEXIT_CRITICAL();
     
     return count;
 }
@@ -319,18 +318,17 @@ uint16_t Serial_WriteBuf(uint8_t COM,uint8_t *buf,uint16_t len)
 uint16_t Serial_WriteByte(uint8_t COM,uint8_t dat)
 {
     uint16_t count;
-    halIntState_t bintstate;
     comcfg_t *cfg;
 
     cfg = GetUseCom(COM);
-    ENTER_SAFE_ATOM_CODE(bintstate);
+    taskENTER_CRITICAL();
     count = SerialTxBytePut(cfg,dat);
     
     //采用发送完成中断 has some bug
 //    Start_TXCtransmit(COM,cfg);
     Start_TXEtransmit(COM,cfg);
 
-    EXIT_SAFE_ATOM_CODE(bintstate);
+    taskEXIT_CRITICAL();
 
     return count;
 }
@@ -344,13 +342,12 @@ uint16_t Serial_WriteByte(uint8_t COM,uint8_t dat)
 uint16_t Serial_Read(uint8_t COM,uint8_t *buf, uint16_t len)
 {
     uint16_t length;
-    halIntState_t bintstate;
     comcfg_t *cfg;
 
     cfg = GetUseCom(COM);
-    ENTER_SAFE_ATOM_CODE(bintstate);
+    taskENTER_CRITICAL();
     length = SerialRxBufPop(cfg,buf, len);
-    EXIT_SAFE_ATOM_CODE(bintstate);
+    taskEXIT_CRITICAL();
     
     return length;
 }
@@ -367,15 +364,15 @@ uint16_t Serial_Read(uint8_t COM,uint8_t *buf, uint16_t len)
 void COM0_TXE_Isr_callback(void)
 {
     uint8_t temp;
-    halIntState_t bintstate;
+    isrSaveCriticial_status_Variable;
 
-    ENTER_SAFE_ATOM_CODE(bintstate);
+    isrENTER_CRITICAL();
     if(SerialTxBytePop(&comcfg0,&temp)){
         COM0PutByte(temp);
     }else{
         COM0TxIEDisable();
     }
-    EXIT_SAFE_ATOM_CODE(bintstate);
+    isrEXIT_CRITICAL();
 }
 /**
   * @brief  发送完成中断回调函数
@@ -397,10 +394,10 @@ void COM0_TXC_Isr_callback(void)
 void COM0_RX_Isr_callback(void)
 {
     uint8_t temp = COM0GetByte();
-    halIntState_t bintstate;
+    isrSaveCriticial_status_Variable;
 
-    ENTER_SAFE_ATOM_CODE(bintstate);    
+    isrENTER_CRITICAL();    
     SerialRxBytePut(&comcfg0,temp);
-    EXIT_SAFE_ATOM_CODE(bintstate);
+    isrEXIT_CRITICAL();
 }
 

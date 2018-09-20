@@ -82,11 +82,6 @@ uint8_t queueReset( QueueHandle_t xQueue)
     /* A value is returned for calling semantic consistency with previous versions. */
     return TRUE;
 }
-void queueDelete( QueueHandle_t xQueue )
-{
-
-    mo_free(xQueue);
-}
 static void __CopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const uint8_t xPosition )
 {
     if( xPosition == QUEUE_TO_BACK ){
