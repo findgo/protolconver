@@ -18,7 +18,8 @@
 #define __COMMON_DEF_H_
 
 #include "common_type.h"
-#include "common_signal.h"
+#include "port_atom.h"
+#include "porting_def.h"
 /* ------------------------------------------------------------------------------------------------
  *                                             Macros
  * ------------------------------------------------------------------------------------------------
@@ -120,14 +121,8 @@
 
 
 
-//提供中断级临界保护宏
-// set a save variable and enter exit criticial macro
-// portCriticial_state_Variable: 定义一个保存变量
-#define portCriticial_state_Variable    //halIntState_t bintstate
-#define portCriticial_Enter_code()      //ENTER_SAFE_ATOM_CODE(bintstate)
-#define portCriticial_Exit_code()       //EXIT_SAFE_ATOM_CODE(bintstate)
 
-
+//调试信息配置
 
 #define configASSERT( x )
 

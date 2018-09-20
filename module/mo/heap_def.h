@@ -25,7 +25,7 @@
 #define __HEAP_MACROS_H_
 
 #include <stdint.h>
-#include "porting_def.h"
+#include "common_def.h"
 
 /* Default total heap size 17K*/
 #define configTOTAL_HEAP_SIZE               ( ( size_t ) ( 4 * 1024 ) )

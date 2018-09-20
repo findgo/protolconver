@@ -17,7 +17,7 @@
 #include "common_platform.h"
 #include "common_def.h"
 #include "common_type.h"
-#include "common_signal.h"
+#include "port_atom.h"
 
 //!< util
 //#include "util_bits.h"

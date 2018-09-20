@@ -38,10 +38,11 @@ int main(void)
     dlink_init();
 
     tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
-    timerStart(tmhandle, 300);
-    tmhandleF = timerAssign(&tmstaticF, tmCbF,(void *)&tmhandleF);
-    timerStart(tmhandleF, 500);
-    
+    timerStart(tmhandle, 1000);
+//    tmhandleF = timerAssign(&tmstaticF, tmCbF,(void *)&tmhandleF);
+//    timerStart(tmhandleF, 500);
+   
+
     while(1)
     {
         dlink_period_task();

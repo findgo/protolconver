@@ -18,6 +18,8 @@ extern "C" {
  * queuePut(), queuePop(), etc.
  */
 typedef void * QueueHandle_t;
+
+
 //静态结构体,用于屏蔽用户对结构体的可见
 typedef struct QueueStatic_s
 {
@@ -29,10 +31,11 @@ typedef struct QueueStatic_s
 #define QUEUE_TO_BACK       ( ( uint8_t ) 0 )
 #define QUEUE_TO_FRONT      ( ( uint8_t ) 1 )
 
+#if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
 QueueHandle_t queueNew( const uint32_t uxQueueItemCap, const uint32_t uxItemSize);
+#endif
 QueueHandle_t queueAssign( QueueStatic_t *pxStaticQueue , const uint32_t uxQueueItemCap, const uint32_t uxItemSize, uint8_t *pucQueueStorage );
 uint8_t queueReset( QueueHandle_t xQueue);
-void queueDelete( QueueHandle_t xQueue );
 
 #define queuePut( xQueue, pvItemToQueue ) xQueueGenericPut( xQueue, pvItemToQueue, QUEUE_TO_BACK )
 #define queuePutBack( xQueue, pvItemToQueue ) xQueueGenericPut( xQueue, pvItemToQueue, QUEUE_TO_BACK )

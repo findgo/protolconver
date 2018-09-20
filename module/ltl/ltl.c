@@ -1358,7 +1358,7 @@ static void *ltlParseInWriteCmd(uint8_t *pdata ,uint16_t datalen)
     // Build and send Read Response command
     ltl_SendReadRsp(ApduMsg->pkt->refer,ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo,
                     ApduMsg->hdr.transSeqNum, LTL_FRAMECTL_DIR_SERVER_CLIENT,
-                    LTL_MANU_CODE_SPECIFIC_LTL, true,readRspCmd);
+                    LTL_MANU_CODE_SPECIFIC_LTL, true, readRspCmd);
     mo_free( readRspCmd );
 
     return TRUE;

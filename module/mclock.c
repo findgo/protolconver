@@ -12,13 +12,6 @@ static volatile uint32_t Ms_ClockTimerCounter = 0; //time count
   */
 uint32_t mcu_getCurSysctime(void)
 {
-    //halIntState_t intState;
-    //uint32_t tmp;
-
-    //ENTER_SAFE_ATOM_CODE(intState);
-    //tmp = Ms_ClockTimerCounter;//获得系统时间
-    //EXIT_SAFE_ATOM_CODE(intState);
-    //return tmp;
     return Ms_ClockTimerCounter;
 }
 /**
@@ -30,13 +23,10 @@ uint32_t mcu_getCurSysctime(void)
 uint32_t mcu_elapsedSystime(void)
 {
     static volatile uint32_t wHisTimerCounter = 0;
-    //halIntState_t intState;
     uint32_t elapsedMSec = 0;
     uint32_t tmp;
-    
-    //ENTER_SAFE_ATOM_CODE(intState);
+
     tmp = Ms_ClockTimerCounter;//获得系统时间
-    //EXIT_SAFE_ATOM_CODE(intState);
 
     if(tmp != wHisTimerCounter){
         elapsedMSec = (uint32_t)((tmp - wHisTimerCounter)&0xffffffffu);
