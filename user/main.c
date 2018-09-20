@@ -7,7 +7,7 @@
 
 #include "memalloc.h"
 #include "timers.h"
-
+#include "event_groups.h"
 
 #include "ltl.h"
 #include "ltl_genattr.h"
@@ -24,7 +24,6 @@ static TimerStatic_t tmstaticF;
 static TimerHandle_t tmhandleF = NULL;
 static void tmCbF(void *arg);
 
-
 int main(void)
 {   
     prvClockInit();
@@ -39,13 +38,12 @@ int main(void)
 
     tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
     timerStart(tmhandle, 1000);
-//    tmhandleF = timerAssign(&tmstaticF, tmCbF,(void *)&tmhandleF);
-//    timerStart(tmhandleF, 500);
-   
+    tmhandleF = timerAssign(&tmstaticF, tmCbF,(void *)&tmhandleF);
+    timerStart(tmhandleF, 500);
 
     while(1)
     {
-        dlink_period_task();
+        dlinkTask();
         timerTask();
     }
 //Should never reach this point!

@@ -360,7 +360,7 @@ static uint8_t dl_packetbuf[DL_PACKET_BUFF_MAX];
 static uint8_t dl_packetbytes;
 static uint8_t dl_fsm_state = DL_FSM_HEAD;
 
-void dlink_period_task(void)
+void dlinkTask(void)
 {
     uint8_t ch;
 

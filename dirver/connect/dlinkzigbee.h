@@ -150,7 +150,7 @@ typedef void (*dl_apduParsepfn_t)(uint16_t src_addr, uint8_t *apdu, uint8_t apdu
 // define 
 #define DL_SEND(buf,len)    Serial_WriteBuf(COM0,buf,len)
 #define DL_RCV(buf,len)     Serial_Read(COM0,buf,len)
-#define DL_RCVBUFLEN()      serialRxValidAvail(COM0)
+#define DL_RCVBUFLEN()      SerialRxValidAvail(COM0)
 
 uint8_t dlink_request(uint8_t src_port, uint8_t dst_port, uint16_t dst_address, uint8_t * dat, uint8_t dat_len);
 
@@ -166,7 +166,7 @@ uint8_t dlink_ttlpin5_request(uint16_t dst_address,uint8_t cmd);
 dl_basicInfo_t *dlink_getbasicInfo(void);
 
 uint8_t dl_registerParseCallBack(dl_apduParsepfn_t info_cb, dl_apduParsepfn_t passthrough_cb);
-void dlink_period_task(void);
+void dlinkTask(void);
 void dlink_init(void);
 
 #endif

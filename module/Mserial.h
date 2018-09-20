@@ -69,7 +69,7 @@ enum{
 uint16_t Serial_WriteByte(uint8_t COM,uint8_t dat);
 uint16_t Serial_WriteBuf(uint8_t COM,uint8_t *buf,uint16_t len);
 uint16_t Serial_Read(uint8_t COM,uint8_t *buf,uint16_t len);
-uint16_t serialRxValidAvail(uint8_t COM);
+uint16_t SerialRxValidAvail(uint8_t COM);
 #define Serial_WriteStr(COM,str) Serial_WriteBuf(COM,(uint8_t *)str,strlen(str))
 
 

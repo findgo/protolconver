@@ -88,16 +88,11 @@ static comcfg_t *GetUseCom(uint8_t COM)
   * @note   
   * @retval number successful put into buf
   */
-static uint16_t SerialTxBufPut(comcfg_t *cfg,uint8_t *buf, uint16_t len)
+static uint16_t SerialTxPut( comcfg_t *cfg, uint8_t *buf, uint16_t len )
 {
     uint16_t availcount;
 
-    // get txbuf idle avail count
-    availcount = SERIAL_TX_IDLE_AVAIL(cfg);
-    if (availcount < len) {   // ≈–∂œ∑¢ÀÕª∫¥Ê «∑Ò”–◊„πªø’º‰
-        len = availcount;
-    }
-
+    len = MIN( SERIAL_TX_IDLE_AVAIL(cfg), len );    
     availcount = len;
     
     while(availcount){
@@ -112,35 +107,15 @@ static uint16_t SerialTxBufPut(comcfg_t *cfg,uint8_t *buf, uint16_t len)
     return len;
 }
 /**
-  * @brief  œÚ∑¢ÀÕª∫≥Â«¯¥Ê“ª∏ˆ ˝æ›
-  * @param  dat: “™¥Ê»Îª∫≥Â«¯µƒ ˝æ›
-  * @note   
-  * @retval true or false
-  */
-static uint16_t SerialTxBytePut(comcfg_t *cfg,uint8_t dat)
-{
-    if (SERIAL_TX_IDLE_AVAIL(cfg) > 0){
-        cfg->ptxbuf[cfg->txTail] = dat;
-        cfg->txcount++;
-        if (++cfg->txTail >= cfg->txsize){
-            cfg->txTail = 0;
-        } 
-        return 1;
-    }
-
-  return 0;
-}
-
-/**
   * @brief  ∑¢ÀÕª∫≥Â«¯»°≥ˆ“ª∏ˆ◊÷Ω⁄ ˝æ›
   * @param  dat: “™»°ª∫≥Â«¯µƒ ˝æ›µÿ÷∑
   * @note   
   * @retval ∑µªÿ»°≥ˆµƒ◊÷Ω⁄ ˝
   * @note       ÷–∂œ∑¢ÀÕ»° ˝æ› ±–Ë“™µ˜”√
   */
-uint16_t SerialTxBytePop(comcfg_t *cfg,uint8_t *dat)
+uint16_t SerialTxPop( comcfg_t *cfg, uint8_t *dat )
 {
-    if(IS_SERIAL_TX_VALID(cfg)){//∑¢ÀÕª∫≥Â«¯ «∑Ò”– ˝æ›
+    if(IS_SERIAL_TX_VALID(cfg)){//ÊòØÂê¶ÊúâÊúâÊïàÊï∞ÊçÆ
         *dat = cfg->ptxbuf[cfg->txHead];
         cfg->txcount--;
         if(++cfg->txHead >= cfg->txsize){
@@ -158,7 +133,7 @@ uint16_t SerialTxBytePop(comcfg_t *cfg,uint8_t *dat)
   * @retval ∑µªÿ∑¢ÀÕª∫≥Â«¯”––ß◊÷Ω⁄ ˝
   * @note       
   */
-uint16_t serialTxValidAvail(uint8_t COM)
+uint16_t SerialTxValidAvail( uint8_t COM )
 {
     comcfg_t *cfg;
     
@@ -173,7 +148,7 @@ uint16_t serialTxValidAvail(uint8_t COM)
   * @retval     ture or false
   * @note       ÷–∂œΩ” ’¥Ê ˝æ› ±÷–∂œµ˜”√
   */
-bool SerialRxBytePut(comcfg_t *cfg,uint8_t dat)
+bool SerialRxPut( comcfg_t *cfg, uint8_t dat )
 {
     if(SERIAL_RX_IDLE_AVAIL(cfg) > 0){
         cfg->prxbuf[cfg->rxTail] = dat;
@@ -193,7 +168,7 @@ bool SerialRxBytePut(comcfg_t *cfg,uint8_t dat)
   * @note   
   * @retval  ∑µªÿ»°≥ˆ ˝æ›µƒ µº ∏ˆ ˝
   */
-static uint16_t SerialRxBufPop(comcfg_t *cfg,uint8_t *buf, uint16_t len)
+static uint16_t SerialRxPop( comcfg_t *cfg, uint8_t *buf, uint16_t len )
 {
     uint16_t cnt = 0;
     
@@ -215,7 +190,7 @@ static uint16_t SerialRxBufPop(comcfg_t *cfg,uint8_t *buf, uint16_t len)
   * @note   
   * @retval  ∑µªÿ»°≥ˆ ˝æ›µƒ µº ∏ˆ ˝
   */
-uint16_t serialRxValidAvail(uint8_t COM)
+uint16_t SerialRxValidAvail( uint8_t COM )
 {
     comcfg_t *cfg;
     
@@ -224,7 +199,7 @@ uint16_t serialRxValidAvail(uint8_t COM)
 }
 
 //∆Ù∂Ø“ª∏ˆ∑¢ÀÕø’÷–∂œ
-static void Start_TXEtransmit(uint8_t COM,comcfg_t *cfg)
+static void Start_TXEtransmit( uint8_t COM, comcfg_t *cfg )
 {
     //≤…”√∑¢ÀÕÕÍ≥…ø’÷–∂œ
     if(IS_SERIAL_TX_VALID(cfg)){//”– ˝æ›
@@ -260,7 +235,7 @@ static void Start_TXCtransmit(uint8_t COM,comcfg_t *cfg)
 {
     uint8_t temp;
         
-    if(SerialTxBytePop(cfg,&temp)){
+    if(SerialTxPop(cfg,&temp)){
          switch(COM){
 #if COM_USE_NUM >= 1
             case COM0:
@@ -302,7 +277,7 @@ uint16_t Serial_WriteBuf(uint8_t COM,uint8_t *buf,uint16_t len)
 
     cfg = GetUseCom(COM);
     taskENTER_CRITICAL();
-    count = SerialTxBufPut(cfg,buf, len);
+    count = SerialTxPut(cfg,buf, len);
         //≤…”√∑¢ÀÕÕÍ≥…÷–∂œ has some bug
 //    Start_TXCtransmit(COM,cfg);
 
@@ -315,14 +290,14 @@ uint16_t Serial_WriteBuf(uint8_t COM,uint8_t *buf,uint16_t len)
 
 
 
-uint16_t Serial_WriteByte(uint8_t COM,uint8_t dat)
+uint16_t Serial_WriteByte( uint8_t COM, uint8_t dat )
 {
     uint16_t count;
     comcfg_t *cfg;
 
     cfg = GetUseCom(COM);
     taskENTER_CRITICAL();
-    count = SerialTxBytePut(cfg,dat);
+    count = SerialTxPut( cfg, &dat, 1 );
     
     //≤…”√∑¢ÀÕÕÍ≥…÷–∂œ has some bug
 //    Start_TXCtransmit(COM,cfg);
@@ -339,14 +314,14 @@ uint16_t Serial_WriteByte(uint8_t COM,uint8_t dat)
   * @note   
   * @retval  ∑µªÿ»°µΩ ˝æ›µƒ µº ∏ˆ ˝
   */
-uint16_t Serial_Read(uint8_t COM,uint8_t *buf, uint16_t len)
+uint16_t Serial_Read( uint8_t COM, uint8_t *buf, uint16_t len )
 {
     uint16_t length;
     comcfg_t *cfg;
 
     cfg = GetUseCom(COM);
     taskENTER_CRITICAL();
-    length = SerialRxBufPop(cfg,buf, len);
+    length = SerialRxPop(cfg, buf, len);
     taskEXIT_CRITICAL();
     
     return length;
@@ -367,7 +342,7 @@ void COM0_TXE_Isr_callback(void)
     isrSaveCriticial_status_Variable;
 
     isrENTER_CRITICAL();
-    if(SerialTxBytePop(&comcfg0,&temp)){
+    if(SerialTxPop(&comcfg0,&temp)){
         COM0PutByte(temp);
     }else{
         COM0TxIEDisable();
@@ -397,7 +372,7 @@ void COM0_RX_Isr_callback(void)
     isrSaveCriticial_status_Variable;
 
     isrENTER_CRITICAL();    
-    SerialRxBytePut(&comcfg0,temp);
+    SerialRxPut(&comcfg0,temp);
     isrEXIT_CRITICAL();
 }
 

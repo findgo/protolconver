@@ -603,6 +603,11 @@
               <FileType>1</FileType>
               <FilePath>..\module\mo\timers.c</FilePath>
             </File>
+            <File>
+              <FileName>event_groups.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\module\mo\event_groups.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
