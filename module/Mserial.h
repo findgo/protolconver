@@ -21,24 +21,18 @@
 
 
 // 宏 控制支持的串口数量
-#define COM_USE_NUM     1
+#define COM_USE_NUM     2
 
 
 
 
-enum{
-    COM0,
-    COM1,
-    COM2,
-    COM3
-};
 
 //宏 用于控制非阻塞方式下，设置发送，接收最大缓冲区
 #define COM0_RX_MAX_SIZE   512
 #define COM0_TX_MAX_SIZE   255
 
-#define COM1_RX_MAX_SIZE   255
-#define COM1_TX_MAX_SIZE   255
+#define COM1_RX_MAX_SIZE   128
+#define COM1_TX_MAX_SIZE   128
 
 #define COM2_RX_MAX_SIZE   255
 #define COM2_TX_MAX_SIZE   255
@@ -51,10 +45,10 @@ enum{
 #define COM0TxIEEnable()    do{ USART_ITConfig(USART_USING1, USART_IT_TXE, ENABLE); }while(0)
 #define COM0TxIEDisable()   do{ USART_ITConfig(USART_USING1, USART_IT_TXE, DISABLE); }while(0)
 
-#define COM1PutByte(dat)    
-#define COM1GetByte()     	
-#define COM1TxIEEnable()    	
-#define COM1TxIEDisable()   	
+#define COM1PutByte(dat)    (USART_SendData(USART_USING2, dat))
+#define COM1GetByte()     	((uint8_t)USART_ReceiveData(USART_USING2))
+#define COM1TxIEEnable()    do{ USART_ITConfig(USART_USING2, USART_IT_TXE, ENABLE); }while(0)
+#define COM1TxIEDisable()   do{ USART_ITConfig(USART_USING2, USART_IT_TXE, DISABLE); }while(0)
 
 #define COM2PutByte(dat)  	
 #define COM2GetByte()     	
@@ -77,6 +71,9 @@ void COM0_TXE_Isr_callback(void);
 void COM0_TXC_Isr_callback(void);
 void COM0_RX_Isr_callback(void);
 
+void COM1_TXE_Isr_callback(void);
+void COM1_TXC_Isr_callback(void);
+void COM1_RX_Isr_callback(void);
 
 #endif
 

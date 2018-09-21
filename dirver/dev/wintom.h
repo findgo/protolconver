@@ -29,6 +29,8 @@ NOTE: 当控制器或电机进入地址设置模式时， 主机可以设置它�
 #define __WINTOM_H__
 
 #include "common_type.h"
+#include "usart.h"
+#include "mserial.h"
 
 #define WT_PACKET_HEAD_MSB  0x55
 #define WT_PACKET_HEAD_LSB  0xaa
@@ -41,7 +43,7 @@ NOTE: 当控制器或电机进入地址设置模式时， 主机可以设置它�
 #define WT_CMDCODE_STOP                 0x02  // 停止
 #define WT_CMDCODE_CLOSE                0x03  // 关
 #define WT_CMDCODE_GO_POS               0x04  // 电机运行到任何位置
-#define WT_CMDCODE_GET_POS              0x05  // 读取窗帘位置
+#define WT_CMDCODE_GET_POS              0x05  //need rsp 读取窗帘位置
 #define WT_CMDCODE_REVERSING            0x06  // 换向
 //specific
 #define WT_CMDCODE_CLEAR_TRIP           0x07  // 清除行程      众联B管状电机/开合帘电机
@@ -49,20 +51,20 @@ NOTE: 当控制器或电机进入地址设置模式时， 主机可以设置它�
 #define WT_CMDCODE_HAND_DISABLE         0x09  // 禁止手拉启动         众联B开合帘电机
 #define WT_CMDCODE_SET_OPEN_LIMIT_POINT 0x0a  // 把当前位置设置为开限点            众联B管状电机/开合帘电机
 #define WT_CMDCODE_SET_CLOSE_LIMIT_POINT 0x0b // 把当前位置设置为关限点            众联B管状电机/开合帘电机
-#define WT_CMDCODE_RUNTO_MID_POS1       0x0c   // 运行到中间停位点1            众联B管状电机(暂时无)/开合帘电机
-#define WT_CMDCODE_RUNTO_MID_POS2       0x0d   // 运行到中间停位点2            众联B管状电机(暂时无)/开合帘电机
+#define WT_CMDCODE_RUNTO_MID_POS1       0x0c  // 运行到中间停位点1            众联B管状电机(暂时无)/开合帘电机
+#define WT_CMDCODE_RUNTO_MID_POS2       0x0d  // 运行到中间停位点2            众联B管状电机(暂时无)/开合帘电机
 #define WT_CMDCODE_SET_MID_POS1         0x0e  // 把当前位置设置为中间停位点1               众联B管状电机(暂时无)/开合帘电机
 #define WT_CMDCODE_SET_MID_POS2         0x0f  // 把当前位置设置为中间停位点2               众联B管状电机(暂时无)/开合帘电机
 #define WT_CMDCODE_LEAF_UP              0x10  // 上点动/上翻叶          众联B管状电机
 #define WT_CMDCODE_LEAF_DOWN            0x11  // 下点动/下翻叶          众联B管状电机
 #define WT_CMDCODE_SET_ANGLE            0x14  // 角度控制       众联百叶电机
-#define WT_CMDCODE_GET_ANGLE            0x15  // 角度查询       众联百叶电机
+#define WT_CMDCODE_GET_ANGLE            0x15  // need rsp 角度查询       众联百叶电机
 #define WT_CMDCODE_GO_IP1               0x23  // 保留不用
 #define WT_CMDCODE_GO_IP2               0x24  // 保留不用
 #define WT_CMDCODE_SET_DEVID            0x81  //设置设备ID地址
-#define WT_CMDCODE_GET_DEVID            0x82  // 读设备ID地址
+#define WT_CMDCODE_GET_DEVID            0x82  // need rsp 读设备ID地址
 #define WT_CMDCODE_DEL_DEVID            0x83  // 删除备ID地址
-#define WT_CMDCODE_GET_MOTOSTATUS           0x84  // 读状态
+#define WT_CMDCODE_GET_MOTOSTATUS           0x84  // need rsp 读状态
 
 #define WT_CHANNEL_0    0x00
 #define WT_CHANNEL_1    0x01
@@ -87,7 +89,10 @@ NOTE: 当控制器或电机进入地址设置模式时， 主机可以设置它�
 #define WT_MOTO_STATUS_MID_POS1_BIT             ((uint8_t)1 << 2)  // 中间停位点1有效
 #define WT_MOTO_STATUS_MID_POS2_BIT             ((uint8_t)1 << 3)  // 中间停位点2有效
 
-#define WT_SEND(buf,lengh)
+// define 
+#define WT_SEND(buf,len)    Serial_WriteBuf(COM1,buf,len)
+#define WT_RCV(buf,len)     Serial_Read(COM1,buf,len)
+#define WT_RCVBUFLEN()      SerialRxValidAvail(COM1)
 
 /*
   parabuf：可为NULL
@@ -156,6 +161,9 @@ void wintom_getSingleDevID(uint8_t channel);
 /*
 @end */
 #define wintom_getMotoStatus(channel,moto_no) wintom_request(WT_CMDCODE_GET_MOTOSTATUS,channel,moto_no,NULL,0)
+
+void wintom_Init(void);
+void wintomTask(void);
 
 #endif
 

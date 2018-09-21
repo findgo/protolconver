@@ -2,8 +2,8 @@
 #include "loop.h"
 
 //for driver
-#include "usart.h"
 #include "dlinkzigbee.h"
+#include "wintom.h"
 
 #include "memalloc.h"
 #include "timers.h"
@@ -17,7 +17,8 @@
 static const pTaskFn_t taskArr[] =
 {
     dlinkTask,
-    timerTask,   
+    timerTask, 
+    wintomTask
 };
 static const uint8_t taskCnt = sizeof(taskArr) / sizeof(taskArr[0]);
 
@@ -33,12 +34,12 @@ static void tmCbF(void *arg);
 
 void loop_init_System(void)
 {
-    Usart_Configuration();
     ltl_GeneralAttributeInit();
 
     delay_ms(200);
     dl_registerParseCallBack(NULL, ltlApduParsing);
     dlink_init();
+    wintom_Init();
 
     tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
     timerStart(tmhandle, 1000);

@@ -1,7 +1,7 @@
 
 
 #include "dlinkzigbee.h"
-
+#include "usart.h"
 static uint8_t dl_buf[DL_PACKET_BUFF_MAX];
 static dl_basicInfo_t dl_basicInfo;
 static dl_apduParsepfn_t dl_info_cb = NULL;
@@ -394,6 +394,7 @@ void dlinkTask(void)
                     dl_fsm_state = DL_FSM_TAIL;
             }
             break;
+            
         case DL_FSM_ESCAPE:
             if(ch == DL_ESCAPE_ASSIT_CHAR1 || ch == DL_ESCAPE_ASSIT_CHAR2){
                 dl_packetbuf[dl_packetbytes] = (ch == DL_ESCAPE_ASSIT_CHAR1) ? DL_ESCAPE_CHAR1 : DL_ESCAPE_CHAR2;               
@@ -407,6 +408,7 @@ void dlinkTask(void)
                 dl_fsm_state = DL_FSM_HEAD;
             }
             break;
+            
         case DL_FSM_TAIL:
             if(ch == DL_PACKET_TAIL){
                 dl_parse(dl_packetbuf[0],dl_packetbuf[1],
@@ -414,6 +416,8 @@ void dlinkTask(void)
                             &dl_packetbuf[4],dl_packetlen - 4);
             }
             dl_fsm_state = DL_FSM_HEAD;
+            break;
+            
         default:          
             dl_fsm_state = DL_FSM_HEAD;
             break;
@@ -438,6 +442,7 @@ uint8_t dl_registerParseCallBack(dl_apduParsepfn_t info_cb, dl_apduParsepfn_t pa
 
 void dlink_init(void)
 {
+    SerialDrvInit(COM0, 115200, 8, DRV_PAR_NONE);
     // read zigbee device info
     dlink_discover_request(DL_LOCAL_ADD, 30);
     dlink_rd_local_basic_info(DL_BASIC_INFO_CMD_RD_ADD);  

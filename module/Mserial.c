@@ -332,8 +332,6 @@ uint16_t Serial_Read( uint8_t COM, uint8_t *buf, uint16_t len )
   * @brief  发送空中断调用函数
   * @param  None
   * @note   
-  * @note    
-  * @note   
   * @retval  None
   */
 void COM0_TXE_Isr_callback(void)
@@ -375,4 +373,51 @@ void COM0_RX_Isr_callback(void)
     SerialRxPut(&comcfg0,temp);
     isrEXIT_CRITICAL();
 }
+
+/**
+  * @brief  发送空中断调用函数
+  * @param  None
+  * @note   
+  * @retval  None
+  */
+void COM1_TXE_Isr_callback(void)
+{
+    uint8_t temp;
+    isrSaveCriticial_status_Variable;
+
+    isrENTER_CRITICAL();
+    if(SerialTxPop(&comcfg1,&temp)){
+        COM1PutByte(temp);
+    }else{
+        COM1TxIEDisable();
+    }
+    isrEXIT_CRITICAL();
+}
+/**
+  * @brief  发送完成中断回调函数
+  * @param  None
+  * @note   
+  * @retval  None
+  */
+void COM1_TXC_Isr_callback(void)
+{
+
+
+}
+/**
+  * @brief  接收中断回调函数
+  * @param  None
+  * @note   
+  * @retval  None
+  */
+void COM1_RX_Isr_callback(void)
+{
+    uint8_t temp = COM1GetByte();
+    isrSaveCriticial_status_Variable;
+
+    isrENTER_CRITICAL();    
+    SerialRxPut(&comcfg1,temp);
+    isrEXIT_CRITICAL();
+}
+
 

@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_MD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\common;..\dirver;..\module;..\user;..\util;..\dirver\connect;..\module\ltl;..\module\mo;..\dirver\bsp</IncludePath>
+              <IncludePath>..\common;..\dirver;..\module;..\user;..\util;..\dirver\connect;..\module\ltl;..\module\mo;..\dirver\bsp;..\dirver\dev</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

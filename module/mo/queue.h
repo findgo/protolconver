@@ -52,9 +52,9 @@ uint8_t queueIsQueueFull( const QueueHandle_t xQueue );
 /****************以下两个函数没有到非常了解,不得使用**************************************************************************************/
 //此API并没有引起拷贝数据,它只是先占好了放数据的位置,并返回指占位的指针,均是实际位置
 /* 使用方法,调用queueOnAlloc,然后直接转换,直接写数据,注意不得超过 uxItemSize 大小*/
-#define queueOnAlloc( xQueue, pvItemToQueue ) xQueueOnAlloc( xQueue, QUEUE_TO_BACK )
-#define queueOnAllocBack( xQueue, pvItemToQueue ) xQueueOnAlloc( xQueue, QUEUE_TO_BACK )
-#define queueOnAllocFront( xQueue, pvItemToQueue ) xQueueOnAlloc( xQueue, QUEUE_TO_FRONT )
+#define queueOnAlloc( xQueue ) xQueueOnAlloc( xQueue, QUEUE_TO_BACK )
+#define queueOnAllocBack( xQueue ) xQueueOnAlloc( xQueue, QUEUE_TO_BACK )
+#define queueOnAllocFront( xQueue ) xQueueOnAlloc( xQueue, QUEUE_TO_FRONT )
 //此API并没有读回数据,而只是获取当前要出队的数据指针,这些操作均在实际数据上操作
 /* 使用方法,调用queueOnPeek,然后直接转换,直接读数据,注意不要超过uxItemSize大小,使用完后,的确需要释放,调用queuePop并指定第二参数为NULL */
 void *queueOnPeek( QueueHandle_t xQueue );
