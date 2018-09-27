@@ -324,7 +324,7 @@ typedef LStatus_t (*ltlAuthorizeCB_t)(ltlAttrRec_t *pAttr, uint8_t oper );
  *
  * @param       starttrunkID -  trunk ID start
  * @param       endtrunkID -  trunk ID end
- * @param       pfnHdlr - function pointer to incoming message handler
+ * @param       pfnSpecificTrunkHdCB - function pointer to specific callback handler
  
  * @return      0 if OK
  */
