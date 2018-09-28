@@ -472,6 +472,11 @@
               <FileType>1</FileType>
               <FilePath>..\user\stm32f10x_it.c</FilePath>
             </File>
+            <File>
+              <FileName>curtain.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user\curtain\curtain.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
