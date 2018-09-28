@@ -1752,7 +1752,7 @@ void ltl_StrToAppString(char *pRawStr, char *pAppStr, uint8_t Applen )
     rawlen = MIN(rawlen, (Applen - OCTET_CHAR_HEADROOM_LEN));
 
     *pAppStr++ = rawlen; // for length    
-    memcpy(pAppStr,pRawStr,rawlen);
+    memcpy(pAppStr, pRawStr, rawlen);
 }
 /*********************************************************************
  * @brief  long string to app string (app string format: len | string)

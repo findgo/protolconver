@@ -27,7 +27,7 @@ static uint8_t serialnumberTab[16];
 static const uint8_t powersrc = POWERSOURCE_DC;
 
 
-const ltlAttrRec_t GeneralAttriList[] = {
+const ltlAttrRec_t GeneralBasicAttriList[] = {
     {
         ATTRID_BASIC_LTL_VERSION,
         LTL_DATATYPE_UINT8,
@@ -78,15 +78,14 @@ const ltlAttrRec_t GeneralAttriList[] = {
     },
 };
 
-
-void ltl_GeneralAttributeInit(void)
+void ltl_GeneralBasicAttriInit(void)
 {
     ltl_StrToAppString(MANUFACTURER_NAME, manufactTab, sizeof(manufactTab));
     buildDateCode = mver_getminorver();    
     SerialNumber();
    
     ltl_registerAttrList(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO,
-                    sizeof(GeneralAttriList)/sizeof(GeneralAttriList[0]), GeneralAttriList);
+                    sizeof(GeneralBasicAttriList)/sizeof(GeneralBasicAttriList[0]), GeneralBasicAttriList);
 }
 
 

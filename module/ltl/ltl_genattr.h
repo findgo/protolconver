@@ -42,7 +42,6 @@
 #define PRODUCT_IDENTIFIER    ( 1 )
 
 
-void ltl_GeneralAttributeInit(void);
 
 
 
