@@ -24,8 +24,13 @@
  *                                             Macros
  * ------------------------------------------------------------------------------------------------
  */
+ //转换成字符串宏
 #ifndef Mostr
 #define Mostr(s) #s
+#endif
+//连接a和b宏
+#ifndef Moconn
+#define Moconn(a ,b)  (a##b)
 #endif
 
 #ifndef BV

@@ -14,9 +14,9 @@ typedef struct {
     uint8_t dat[WINTOM_QUEUE_BUFF_SIZE];
 }wintomItem_t;
 
-static QueueHandle_t wintomqueueHandle = NULL;
-static QueueStatic_t wintomqueue;
-static uint8_t wintomStorage[WINTOM_QUEUE_ITEM_CAP * sizeof(wintomItem_t)];
+static QueueHandle_t wintomSendqueueHandle = NULL;
+static QueueStatic_t wintomSendqueue;
+static uint8_t wintomSendStorage[WINTOM_QUEUE_ITEM_CAP * sizeof(wintomItem_t)];
 
 static TimerHandle_t wintomTimerHandle = NULL;
 static TimerStatic_t wintomTimer;
@@ -94,7 +94,7 @@ void wintom_getSingleDevID(uint8_t channel)
     if(channel > WT_CHANNEL_15)
         return;
     
-    pItem = (wintomItem_t *)queueOnAlloc(wintomqueueHandle);
+    pItem = (wintomItem_t *)queueOnAlloc(wintomSendqueueHandle);
     if(pItem == NULL)
         return;
 
@@ -134,7 +134,7 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *pa
     uint8_t checksum = 0;
     wintomItem_t *pItem = NULL;
     
-    pItem = (wintomItem_t *)queueOnAlloc(wintomqueueHandle);
+    pItem = (wintomItem_t *)queueOnAlloc(wintomSendqueueHandle);
     if(pItem == NULL)
         return FALSE;
 
@@ -169,17 +169,17 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *pa
 }
 
 
-#define WT_FSM_HEAD0        0
-#define WT_FSM_HEAD1        1
-#define WT_FSM_LENGH        2
-#define WT_FSM_TOKEN        3
-#define WT_FSM_CHECKSUM     4
+#define WT_RCVFSM_HEAD0        0
+#define WT_RCVFSM_HEAD1        1
+#define WT_RCVFSM_LENGH        2
+#define WT_RCVFSM_TOKEN        3
+#define WT_RCVFSM_CHECKSUM     4
 
-static uint8_t wt_packetlen;
-static uint8_t wt_packetbuf[WINTOM_QUEUE_BUFF_SIZE];
-static uint8_t wt_packetbytes;
+static uint8_t wt_packetRcvlen;
+static uint8_t wt_packetRcvbuf[WINTOM_QUEUE_BUFF_SIZE];
+static uint8_t wt_packetRcvbytes;
 
-static uint8_t wt_fsm_state = WT_FSM_HEAD0;
+static uint8_t wt_rcvfsm_state = WT_RCVFSM_HEAD0;
 static int wintomProcessInRcv(void)
 {
     uint8_t ch;
@@ -188,49 +188,49 @@ static int wintomProcessInRcv(void)
     {
         WT_RCV(&ch, 1); //read one byte
 
-        switch (wt_fsm_state){
-        case WT_FSM_HEAD0:
+        switch (wt_rcvfsm_state){
+        case WT_RCVFSM_HEAD0:
             if (ch == WT_PACKET_HEAD_MSB)
-                wt_fsm_state = WT_FSM_HEAD1;
+                wt_rcvfsm_state = WT_RCVFSM_HEAD1;
             break;
           
-        case WT_FSM_HEAD1:
+        case WT_RCVFSM_HEAD1:
             if(ch == WT_PACKET_HEAD_LSB)
-                wt_fsm_state = WT_FSM_HEAD1;
+                wt_rcvfsm_state = WT_RCVFSM_HEAD1;
             break;
             
-        case WT_FSM_LENGH:
+        case WT_RCVFSM_LENGH:
             // out of max packet lengh
             if(ch > WINTOM_QUEUE_BUFF_SIZE){
-                wt_fsm_state = WT_FSM_HEAD0;
+                wt_rcvfsm_state = WT_RCVFSM_HEAD0;
                 return FALSE;
             }
             
-            wt_packetlen = ch;
-            wt_packetbytes = 0;
-            wt_fsm_state = WT_FSM_TOKEN;
+            wt_packetRcvlen = ch;
+            wt_packetRcvbytes = 0;
+            wt_rcvfsm_state = WT_RCVFSM_TOKEN;
             break;
 
-        case WT_FSM_TOKEN:
+        case WT_RCVFSM_TOKEN:
 
-            wt_packetbuf[wt_packetbytes] = ch;
-            ++wt_packetbytes;
-            if(wt_packetbytes >=  wt_packetlen)
-                wt_fsm_state = WT_FSM_CHECKSUM;
+            wt_packetRcvbuf[wt_packetRcvbytes] = ch;
+            ++wt_packetRcvbytes;
+            if(wt_packetRcvbytes >=  wt_packetRcvlen)
+                wt_rcvfsm_state = WT_RCVFSM_CHECKSUM;
             break;
             
-        case WT_FSM_CHECKSUM:
+        case WT_RCVFSM_CHECKSUM:
             
-            if(ch == checksum(wt_packetbuf, wt_packetlen)){
-                wintom_ProcessInApdu(wt_packetbuf[0], &wt_packetbuf[1], wt_packetlen - 1);
+            if(ch == checksum(wt_packetRcvbuf, wt_packetRcvlen)){
+                wintom_ProcessInApdu(wt_packetRcvbuf[0], &wt_packetRcvbuf[1], wt_packetRcvlen - 1);
                 return TRUE;
             }
-            wt_fsm_state = WT_FSM_HEAD0;
+            wt_rcvfsm_state = WT_RCVFSM_HEAD0;
             
             break;
             
         default:          
-            wt_fsm_state = WT_FSM_HEAD0;
+            wt_rcvfsm_state = WT_RCVFSM_HEAD0;
             break;
         }
     }
@@ -244,12 +244,13 @@ void wintomTask(void)
     wintomItem_t *pItem = NULL;
     
     if(wintom_state == 0){ // idle ,check any request on the list
-        pItem = (wintomItem_t *) queueOnPeek(wintomqueueHandle);
+        pItem = (wintomItem_t *) queueOnPeek(wintomSendqueueHandle);
         if(pItem == NULL) // no request in the list
             return;
 
+        memset(wt_packetRcvbuf, 0, sizeof(wt_packetRcvbuf));
         WT_SEND(pItem->dat, pItem->datlen);
-        queuePop(wintomqueueHandle, NULL); // pop past the data
+        queuePop(wintomSendqueueHandle, NULL); // pop past the data
 
         if(pItem->cmd == WT_CMDCODE_GET_POS || pItem->cmd == WT_CMDCODE_GET_ANGLE
             || pItem->cmd == WT_CMDCODE_GET_DEVID || pItem->cmd == WT_CMDCODE_GET_MOTOSTATUS){
@@ -273,7 +274,7 @@ void wintomTask(void)
 static void wintom_TimerCB(void *arg)
 {
     if(wintom_state == 1){ // rsp timeout
-        wt_fsm_state = WT_FSM_HEAD0;
+        wt_rcvfsm_state = WT_RCVFSM_HEAD0;
     }
     
     wintom_state = 0;
@@ -281,7 +282,7 @@ static void wintom_TimerCB(void *arg)
 
 void wintom_Init(void)
 {
-    wintomqueueHandle = queueAssign(&wintomqueue, WINTOM_QUEUE_ITEM_CAP  , sizeof(wintomItem_t)  , wintomStorage); 
+    wintomSendqueueHandle = queueAssign(&wintomSendqueue, WINTOM_QUEUE_ITEM_CAP  , sizeof(wintomItem_t)  , wintomSendStorage); 
     wintomTimerHandle = timerAssign(&wintomTimer,  wintom_TimerCB, NULL);
 
     SerialDrvInit(COM1, 9600, 0, DRV_PAR_NONE);
