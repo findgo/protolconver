@@ -13,11 +13,11 @@ static void mo_log_defaultlog_callback(void *ctx, log_level_t level, const char 
     (void)level;
 
     va_start(ap,format);
-	printf(format,va_arg(ap,char *));
+	printf(format,va_arg(ap, char *));
 	va_end(ap);
 }
 
-//将所以信息默
+//将所以信息默认不输出
 static void mo_log_nulllog_callback(void *ctx, log_level_t level, const char *format,...)
 {
     (void)ctx;
@@ -26,7 +26,7 @@ static void mo_log_nulllog_callback(void *ctx, log_level_t level, const char *fo
 }
 
 logger_t default_logger = {
-	MO_LEVEL_ERROR,
+	LOG_LEVEL_WARN,
     NULL,
 	mo_log_defaultlog_callback
 };
