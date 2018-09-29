@@ -1,7 +1,9 @@
 
 
 /*
- *  realize four level log module,it is error,warn,info,debug
+ *  realize four level log module,it is 
+ * error, warn, info, debug
+ * 默认输出级别最大warn
  *
  * */
 
@@ -14,10 +16,10 @@ extern "C" {
 #endif
 
 typedef enum {
-    MO_LEVEL_ERROR = 0,
-    MO_LEVEL_WARN,
-    MO_LEVEL_INFO,
-    MO_LEVEL_DEBUG
+    LOG_LEVEL_ERROR = 0,
+    LOG_LEVEL_WARN,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_DEBUG
 }log_level_t;
 
 typedef void (*log_FuncpfnCB_t)(void *ctx, log_level_t level, const char *format, ...);
@@ -30,28 +32,21 @@ typedef struct logger_s {
 
 extern logger_t default_logger;
 
-#define MO_LOG_BEGIN(LEVEL)                     \
-        do {                                    \
-            const int level = MO_LEVEL_##LEVEL;   \
-            if(default_logger.level >= level ){ \
-                void *ctx = default_logger.context
-
-#define MO_LOG_END() }}while(0)
-
-
-
 // for user 
 #define MO_LOG_DEFAULTLOG_CB  ( log_FuncpfnCB_t )1
 
 #define mo_log(LEVEL,format,args...)	\
-		MO_LOG_BEGIN(LEVEL);	\
-	    default_logger.log(ctx, (level),format,##args);  \
-	    MO_LOG_END()
+        do {                                    \
+            const int level = LOG_LEVEL_##LEVEL;   \
+            if(default_logger.level >= level ){ \
+                void *ctx = default_logger.context; \
+	            default_logger.log(ctx, (level),format,##args);  \
+          }}while(0)
 
-#define mo_log_set_max_log_level(LEVEL) (default_logger.level = (LEVEL))
+            
+#define mo_log_set_max_logger_level(LEVEL) (default_logger.level = (LEVEL))
 
 void mo_log_set_logger_callback(log_FuncpfnCB_t log_func);
-
 
 
 #ifdef __cplusplus
