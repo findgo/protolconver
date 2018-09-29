@@ -34,7 +34,7 @@ static void tmCbF(void *arg);
 
 void loop_init_System(void)
 {
-    ltl_GeneralAttributeInit();
+    ltl_GeneralBasicAttriInit();
 
     delay_ms(200);
     dl_registerParseCallBack(NULL, ltlApduParsing);

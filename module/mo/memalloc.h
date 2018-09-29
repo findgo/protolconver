@@ -6,6 +6,7 @@
 #ifndef __MO_MEMALLOC_H__
 #define __MO_MEMALLOC_H__
 
+#include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
