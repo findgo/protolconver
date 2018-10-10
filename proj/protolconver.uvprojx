@@ -311,7 +311,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>0</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -456,6 +456,16 @@
               <FileName>loop.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\dirver\loop.c</FilePath>
+            </File>
+            <File>
+              <FileName>lownv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\dirver\lownv.c</FilePath>
+            </File>
+            <File>
+              <FileName>nv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\dirver\nv.c</FilePath>
             </File>
           </Files>
         </Group>

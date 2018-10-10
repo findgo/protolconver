@@ -13,6 +13,7 @@
 #include "ltl_genattr.h"
 #include "prefix.h"
 
+#include "nv.h"
 
 static const pTaskFn_t taskArr[] =
 {
@@ -30,16 +31,26 @@ static TimerStatic_t tmstaticF;
 static TimerHandle_t tmhandleF = NULL;
 static void tmCbF(void *arg);
 
-
-
+uint32_t testVal = 0x55aa;
+uint32_t readVal;
 void loop_init_System(void)
 {
+    nvinit();
     ltl_GeneralBasicAttriInit();
 
     delay_ms(200);
     dl_registerParseCallBack(NULL, ltlApduParsing);
     dlink_init();
     wintom_Init();
+
+    nvItemInit( 0x0001, NULL, sizeof(uint32_t));
+    nvWrite(0x0001, 0, &testVal, sizeof(uint32_t));
+    nvRead(0x0001,0,&readVal,sizeof(uint32_t));
+    if(readVal == testVal){
+        testVal = 0x9999;
+        nvWrite(0x0001, 0, &testVal, sizeof(uint32_t)); 
+        nvRead(0x0001,0,&readVal,sizeof(uint32_t));        
+    }
 
     tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
     timerStart(tmhandle, 1000);
