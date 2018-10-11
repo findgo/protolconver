@@ -326,8 +326,6 @@ static void erasePage( uint8_t pg )
 }
 
 /*********************************************************************
- * @fn      compactPage
- *
  * @brief   Compacts the page specified.
  *
  * @param   srcPg - Valid NV page to erase.
@@ -560,11 +558,7 @@ static uint8_t initItem( uint8_t flag, uint16_t id, void *buf, uint16_t len )
 }
 
 /*********************************************************************
-<<<<<<< HEAD
  * @brief   Set an item status to mark its state.
-=======
- * @brief   Set an item Id or status to mark its state.
->>>>>>> 060a33ffa128b77308a0a8d4d4def3e4810b7279
  *
  * @param   pg - Valid NV page.
  * @param   ItemDataoffset - Valid offset into the page of the item data - the header
@@ -713,8 +707,6 @@ static void writeMulWord( uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t wo
     HalFlashWriteMulWord( pg, offset, buf, wordcnt );
 }
 /*********************************************************************
- * @fn      writeBuf
- *
  * @brief   Writes a data buffer to NV.
  *
  * @param   dstPg - A valid NV Flash page.
@@ -843,8 +835,6 @@ static uint8_t writeItem( uint8_t pg, uint16_t id, void *buf, uint16_t len, uint
 }
 
 /*********************************************************************
- * @fn      NV_init
- *
  * @brief   Initialize NV service.
  *
  * @return  none
@@ -855,8 +845,6 @@ void nvinit( void )
 }
 
 /*********************************************************************
- * @fn      nvItemlen
- *
  * @brief   Get the data length of the item stored in NV memory.
  *
  * @param   id  - Valid NV item Id.
@@ -877,16 +865,13 @@ uint16_t nvItemlen( uint16_t id )
 }
 
 /*********************************************************************
- * @fn      NV_write
- *
  * @brief   Write a data item to NV. Function can write an entire item to NV
  *
  * @param   id  - Valid NV item Id.
  * @param  *buf - Data to write.
  * @param   len - Length of data to write.
  *
- * @return  NV_SUCCESS if successful, NV_ITEM_UNINIT if item did not
- *          exist in NV and offset is non-zero, NV_OPER_FAILED if failure.
+ * @return  NV_SUCCESS if successful, NV_OPER_FAILED if failure.
  */
 uint8_t nvItemWrite( uint16_t id, void *buf, uint16_t len )
 {
@@ -1015,8 +1000,6 @@ uint8_t nvItemReadx( uint16_t id, uint16_t ndx, void *buf, uint16_t len )
 }
 
 /*********************************************************************
- * @fn      NV_delete
- *
  * @brief   Delete item from NV. This function will fail if the length
  *          parameter does not match the length of the item in NV.
  *

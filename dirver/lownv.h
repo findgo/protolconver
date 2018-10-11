@@ -41,7 +41,7 @@ void HalFlashRead(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t bytecnt);
 
 /**************************************************************************************************
 
- * @brief       This function reads 'cnt' bytes from the internal flash.
+ * @brief       This function write 'wordcnt' word into the internal flash.
  *
  * @param       pg - Valid HAL flash page number (ie < 128).
  * @param       offset - Valid HAL flash write offse into the apge:  quad-aligned.
@@ -52,11 +52,21 @@ void HalFlashRead(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t bytecnt);
  **************************************************************************************************
  */
 void HalFlashWriteMulWord(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t wordcnt);
+/**************************************************************************************************
 
+ * @brief       This function write a word into the internal flash.
+ *
+ * @param       pg - Valid HAL flash page number (ie < 128).
+ * @param       offset - Valid HAL flash write offse into the apge:  quad-aligned.
+ * @param       data- Valid data.
+ *
+ * @return      None.
+ **************************************************************************************************
+ */
 void HalFlashWriteHalfWord(uint8_t pg, uint16_t offset, uint16_t data);
 
 /**************************************************************************************************
- * @brief       This function erases 'cnt' pages of the internal flash.
+ * @brief       This function erases the pages of the internal flash.
  *
  * @param       pg - Valid HAL flash page number (ie < 128) to erase.
  *

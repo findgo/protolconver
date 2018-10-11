@@ -56,7 +56,7 @@ void loop_init_System(void)
     wintom_Init();
 
     nvItemWrite(0xfffe, &testVal, sizeof(test_t));
-    nvItemDelete(0xfffe);
+//    nvItemDelete(0xfffe);
     nvItemRead(0xfffe,&readVal,sizeof(test_t));
     if(readVal.a == testVal.a && readVal.b == testVal.b){
         testVal.a = 0x7777;

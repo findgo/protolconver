@@ -1,6 +1,8 @@
 
 
-/* ID 0x0000 和0xffff保留 */
+/* ID 0x0000 和0xffff保留 
+   nvItemWrite 写入相同的数据是不会引起对flash的操作,而是会直接略过.
+   */
 #ifndef __NV_H__
 #define __NV_H__
 
