@@ -22,8 +22,8 @@
 
 
 /* nv start page in Flash */
-#define HAL_NV_PAGE_BEG    (126)
-#define HAL_NV_PAGE_CNT     2
+#define HAL_NV_PAGE_BEG    (124)
+#define HAL_NV_PAGE_CNT     4
 
 
 /**************************************************************************************************
@@ -51,7 +51,7 @@ void HalFlashRead(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t bytecnt);
  * @return      None.
  **************************************************************************************************
  */
-void HalFlashWrite(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t wordcnt);
+void HalFlashWriteMulWord(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t wordcnt);
 
 void HalFlashWriteHalfWord(uint8_t pg, uint16_t offset, uint16_t data);
 

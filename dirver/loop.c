@@ -30,9 +30,21 @@ static void tmCb(void *arg);
 static TimerStatic_t tmstaticF;
 static TimerHandle_t tmhandleF = NULL;
 static void tmCbF(void *arg);
+typedef struct {
+    uint32_t a;
+    uint32_t b;
+        uint32_t c;
+    uint32_t d;
+        uint32_t e;
+    uint32_t f;
+        uint32_t g;
+    uint32_t h;
+        uint32_t i;
+    uint32_t j;
+}test_t;
 
-uint32_t testVal = 0x55aa;
-uint32_t readVal;
+test_t testVal = {0x1122,0x3344};
+test_t readVal;
 void loop_init_System(void)
 {
     nvinit();
@@ -43,13 +55,14 @@ void loop_init_System(void)
     dlink_init();
     wintom_Init();
 
-    nvItemInit( 0x0001, NULL, sizeof(uint32_t));
-    nvWrite(0x0001, 0, &testVal, sizeof(uint32_t));
-    nvRead(0x0001,0,&readVal,sizeof(uint32_t));
-    if(readVal == testVal){
-        testVal = 0x9999;
-        nvWrite(0x0001, 0, &testVal, sizeof(uint32_t)); 
-        nvRead(0x0001,0,&readVal,sizeof(uint32_t));        
+    nvItemWrite(0xfffe, &testVal, sizeof(test_t));
+    nvItemDelete(0xfffe);
+    nvItemRead(0xfffe,&readVal,sizeof(test_t));
+    if(readVal.a == testVal.a && readVal.b == testVal.b){
+        testVal.a = 0x7777;
+        testVal.b = 0x8888;
+        nvItemWrite(0xfffe, &testVal, sizeof(test_t)); 
+        nvItemRead(0xfffe,&readVal,sizeof(test_t));        
     }
 
     tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);

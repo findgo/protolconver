@@ -33,7 +33,7 @@ void HalFlashRead(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t bytecnt)
  * @return      None.
  **************************************************************************************************
  */
-void HalFlashWrite(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t wordcnt)
+void HalFlashWriteMulWord(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t wordcnt)
 {
     uint32_t temp;
     FLASH_Status sta;
@@ -50,7 +50,6 @@ void HalFlashWrite(uint8_t pg, uint16_t offset, uint8_t *buf, uint16_t wordcnt)
     }
     FLASH_Lock();
 }
-
 
 void HalFlashWriteHalfWord(uint8_t pg, uint16_t offset, uint16_t data)
 {
