@@ -44,11 +44,11 @@ void loop_init_System(void)
     wintom_Init();
 
     nvItemInit( 0x0001, NULL, sizeof(uint32_t));
-    nvWrite(0x0001, 0, &testVal, sizeof(uint32_t));
+    nvWrite(0x0001, &testVal, sizeof(uint32_t));
     nvRead(0x0001,0,&readVal,sizeof(uint32_t));
     if(readVal == testVal){
         testVal = 0x9999;
-        nvWrite(0x0001, 0, &testVal, sizeof(uint32_t)); 
+        nvWrite(0x0001, &testVal, sizeof(uint32_t)); 
         nvRead(0x0001,0,&readVal,sizeof(uint32_t));        
     }
 

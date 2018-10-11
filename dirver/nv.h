@@ -50,7 +50,7 @@ uint8_t nvRead( uint16_t id, uint16_t ndx, void *buf, uint16_t len );
 /*
  * Write an NV attribute
  */
-uint8_t nvWrite( uint16_t id, uint16_t ndx, void *buf, uint16_t len );
+uint8_t nvWrite( uint16_t id, void *buf, uint16_t len );
 
 /*
  * Get the length of an NV item.
