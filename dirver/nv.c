@@ -403,9 +403,6 @@ static uint8_t compactPage( uint8_t srcPg, uint16_t skipId )
                 /* Prevent excessive re-writes to item header caused by numerous, rapid, & successive
                 * OSAL_Nv interruptions caused by resets.
                 */
-//               if ( hdr.stat == NV_ERASED_ID ) {
-//                   setItemInvalid( srcPg, srcOff, eNvXfer );
-//                }
 
                 if ( writeItem( pgRes, hdr.id, NULL, hdr.len,  FALSE ) ) {
                     dstOff += NV_ITEM_HDR_SIZE;
@@ -485,6 +482,7 @@ static uint16_t findItem( uint16_t id )
  *                 is ok to use as a return value of the page number to be cleaned with
  *                 COMPACT_PAGE_CLEANUP().
  *                 (i.e. if invoked from NV_write() ).
+ * @param  *buf - Pointer to item initalization data. Set to NULL if none.
  * @param   id  - Valid NV item Id.
  * @param  *buf - Pointer to item initalization data. Set to NULL if none.
  * @param   len - Item data length.
@@ -562,7 +560,11 @@ static uint8_t initItem( uint8_t flag, uint16_t id, void *buf, uint16_t len )
 }
 
 /*********************************************************************
+<<<<<<< HEAD
  * @brief   Set an item status to mark its state.
+=======
+ * @brief   Set an item Id or status to mark its state.
+>>>>>>> 060a33ffa128b77308a0a8d4d4def3e4810b7279
  *
  * @param   pg - Valid NV page.
  * @param   ItemDataoffset - Valid offset into the page of the item data - the header
