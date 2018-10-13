@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_MD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\common;..\dirver;..\module;..\user;..\util;..\dirver\connect;..\module\ltl;..\module\mo;..\dirver\bsp;..\dirver\dev</IncludePath>
+              <IncludePath>..\common;..\dirver;..\module;..\user;..\util;..\dirver\connect;..\module\ltl;..\module\mo;..\dirver\bsp;..\dirver\dev;..\user\curtain</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -457,6 +457,11 @@
               <FileType>1</FileType>
               <FilePath>..\dirver\loop.c</FilePath>
             </File>
+            <File>
+              <FileName>hal_led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\dirver\hal_led.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -482,6 +487,11 @@
         <Group>
           <GroupName>module</GroupName>
           <Files>
+            <File>
+              <FileName>mleds.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\module\mleds.c</FilePath>
+            </File>
             <File>
               <FileName>delay.c</FileName>
               <FileType>1</FileType>

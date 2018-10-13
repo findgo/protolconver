@@ -4,6 +4,7 @@
 //for driver
 #include "dlinkzigbee.h"
 #include "wintom.h"
+#include "mleds.h"
 
 #include "memalloc.h"
 #include "timers.h"
@@ -13,6 +14,7 @@
 #include "ltl_genattr.h"
 #include "prefix.h"
 
+#include "curtain.h"
 
 static const pTaskFn_t taskArr[] =
 {
@@ -35,7 +37,10 @@ void loop_init_System(void)
     dl_registerParseCallBack(NULL, ltlApduParsing);
     dlink_init();
     wintom_Init();
-
+    halledInit();
+    mledInit();
+    mledset(MLED_1,MLED_MODE_FLASH);
+    
     tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
     timerStart(tmhandle, 1000);
 }
