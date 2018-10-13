@@ -4,6 +4,7 @@
 //for driver
 #include "dlinkzigbee.h"
 #include "wintom.h"
+#include "mleds.h"
 
 #include "memalloc.h"
 #include "timers.h"
@@ -30,21 +31,8 @@ static void tmCb(void *arg);
 static TimerStatic_t tmstaticF;
 static TimerHandle_t tmhandleF = NULL;
 static void tmCbF(void *arg);
-typedef struct {
-    uint32_t a;
-    uint32_t b;
-        uint32_t c;
-    uint32_t d;
-        uint32_t e;
-    uint32_t f;
-        uint32_t g;
-    uint32_t h;
-        uint32_t i;
-    uint32_t j;
-}test_t;
 
-test_t testVal = {0x1122,0x3344};
-test_t readVal;
+
 void loop_init_System(void)
 {
     nvinit();
@@ -54,17 +42,10 @@ void loop_init_System(void)
     dl_registerParseCallBack(NULL, ltlApduParsing);
     dlink_init();
     wintom_Init();
+    halledInit();
+    mledInit();
 
-    nvItemWrite(0xfffe, &testVal, sizeof(test_t));
-//    nvItemDelete(0xfffe);
-    nvItemRead(0xfffe,&readVal,sizeof(test_t));
-    if(readVal.a == testVal.a && readVal.b == testVal.b){
-        testVal.a = 0x7777;
-        testVal.b = 0x8888;
-        nvItemWrite(0xfffe, &testVal, sizeof(test_t)); 
-        nvItemRead(0xfffe,&readVal,sizeof(test_t));        
-    }
-
+    mledset(MLED_1, MLED_MODE_FLASH);
     tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
     timerStart(tmhandle, 1000);
     tmhandleF = timerAssign(&tmstaticF, tmCbF,(void *)&tmhandleF);
