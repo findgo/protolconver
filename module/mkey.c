@@ -30,7 +30,7 @@ static keyfifo_t tKeyDetectorQueue = {
     .tHead = 0,
     .tTail = 0,
     .tCounter = 0,
-    .tSize = 0
+    .tSize = KEY_QUEUE_MAX_SIZE
 };
 static keycfg_t *KeyHead = NULL;
 
