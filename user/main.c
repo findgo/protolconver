@@ -1,5 +1,4 @@
 #include "app_cfg.h"
-#include "systick.h"
 #include "loop.h"
 
 
@@ -10,7 +9,6 @@ int main(void)
 {   
     prvClockInit();
     prvnvicInit();
-    Systick_Configuration();
 
     // init sysytem
     loop_init_System();

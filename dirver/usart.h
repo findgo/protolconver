@@ -17,7 +17,7 @@ typedef enum
     DRV_PAR_EVEN                 /*!< Even parity. */
 }DRV_Parity_t;
 
-
+// for usart 1
 #define USART_USING1   					USART1
 #define USART_USING1_IRQ				USART1_IRQn
 
@@ -30,6 +30,7 @@ typedef enum
 #define USART_USING1_GPIO_PeriphClock_EN()  do{ RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE); }while(0)
 #define USART_USING1_PeriphClock_EN()	do{ RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);}while(0)
 
+// for usart 2
 #define USART_USING2   					USART2
 #define USART_USING2_IRQ				USART2_IRQn
 
@@ -41,6 +42,20 @@ typedef enum
 
 #define USART_USING2_GPIO_PeriphClock_EN()  do{ RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE); }while(0)
 #define USART_USING2_PeriphClock_EN()	do{ RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);}while(0)
+
+// for usart 3
+#define USART_USING3   					USART3
+#define USART_USING3_IRQ				USART3_IRQn
+
+#define USART_USING3_TX_PORT			GPIOB
+#define USART_USING3_TX_PIN				GPIO_Pin_10
+
+#define USART_USING3_RX_PORT			GPIOB
+#define USART_USING3_RX_PIN				GPIO_Pin_11
+
+#define USART_USING3_GPIO_PeriphClock_EN()  do{ RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE); }while(0)
+#define USART_USING3_PeriphClock_EN()	do{ RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);}while(0)
+
 
 int SerialDrvInit(uint8_t port, uint32_t ulBaudRate, uint8_t ucDataBits, DRV_Parity_t eParity);
 int SerialDrvPutByte(uint8_t port, char ucByte );

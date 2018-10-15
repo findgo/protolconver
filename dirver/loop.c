@@ -5,10 +5,12 @@
 #include "dlinkzigbee.h"
 #include "wintom.h"
 #include "mleds.h"
+#include "systick.h"
 
 #include "memalloc.h"
 #include "timers.h"
 #include "event_groups.h"
+#include "log.h"
 
 #include "ltl.h"
 #include "ltl_genattr.h"
@@ -23,6 +25,7 @@ static const pTaskFn_t taskArr[] =
     wintomTask
 };
 static const uint8_t taskCnt = sizeof(taskArr) / sizeof(taskArr[0]);
+static void logInit(void);
 
 static TimerStatic_t tmstatic;
 static TimerHandle_t tmhandle = NULL;
@@ -35,6 +38,10 @@ static void tmCbF(void *arg);
 
 void loop_init_System(void)
 {
+    Systick_Configuration();
+    logInit();
+    mo_logln(INFO,"loop_init_System init begin");
+    
     nvinit();
     ltl_GeneralBasicAttriInit();
 
@@ -50,6 +57,7 @@ void loop_init_System(void)
     timerStart(tmhandle, 1000);
     tmhandleF = timerAssign(&tmstaticF, tmCbF,(void *)&tmhandleF);
     timerStart(tmhandleF, 500);
+    mo_logln(INFO,"loop_init_System init end, and then start system");
 }
 
 void loop_Run_System(void)
@@ -114,6 +122,28 @@ static void tmCbF(void *arg)
         
         mo_free(reportcmd);
     }
+    
     timerRestart(*((TimerHandle_t *)arg), 500);
+}
+
+
+static void logInit(void)
+{
+    SerialDrvInit(COM2, 115200, 8, DRV_PAR_NONE);
+    mo_log_set_max_logger_level(LOG_LEVEL_DEBUG);
+}
+
+/* 重定向fputc 到输出，单片机一般为串口*/ 
+int fputc(int ch, FILE *f)
+{
+    /* e.g. write a character to the USART */
+    (void)Serial_WriteByte(COM2,ch);
+    
+//    (void)Serial_WriteByte(COM2,ch);
+//    USART_SendData(USART_USING2,ch);
+    /* Loop until the end of transmission */
+//    while(USART_GetFlagStatus(USART_USING2, USART_FLAG_TC) == RESET);
+    
+    return ch;
 }
 

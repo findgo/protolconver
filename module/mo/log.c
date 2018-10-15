@@ -5,7 +5,7 @@
 #include "log.h"
 
 // 默认输出到stdout
-static void mo_log_defaultlog_callback(void *ctx, log_level_t level, const char *format,...)
+static void mo_log_defaultlog_callback(void *ctx, int level, const char *format,...)
 {
     va_list ap;
     
@@ -18,7 +18,7 @@ static void mo_log_defaultlog_callback(void *ctx, log_level_t level, const char 
 }
 
 //将所以信息默认不输出
-static void mo_log_nulllog_callback(void *ctx, log_level_t level, const char *format,...)
+static void mo_log_nulllog_callback(void *ctx, int level, const char *format,...)
 {
     (void)ctx;
     (void)level;

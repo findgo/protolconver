@@ -21,7 +21,7 @@
 
 
 // 宏 控制支持的串口数量
-#define COM_USE_NUM     2
+#define COM_USE_NUM     3
 
 
 
@@ -34,7 +34,7 @@
 #define COM1_RX_MAX_SIZE   128
 #define COM1_TX_MAX_SIZE   128
 
-#define COM2_RX_MAX_SIZE   255
+#define COM2_RX_MAX_SIZE   1
 #define COM2_TX_MAX_SIZE   255
 
 #define COM3_RX_MAX_SIZE   255
@@ -50,10 +50,10 @@
 #define COM1TxIEEnable()    do{ USART_ITConfig(USART_USING2, USART_IT_TXE, ENABLE); }while(0)
 #define COM1TxIEDisable()   do{ USART_ITConfig(USART_USING2, USART_IT_TXE, DISABLE); }while(0)
 
-#define COM2PutByte(dat)  	
-#define COM2GetByte()     	
-#define COM2TxIEEnable()    	
-#define COM2TxIEDisable()   	
+#define COM2PutByte(dat)    (USART_SendData(USART_USING3, dat)) 	
+#define COM2GetByte()       ((uint8_t)USART_ReceiveData(USART_USING3))	
+#define COM2TxIEEnable()    do{ USART_ITConfig(USART_USING3, USART_IT_TXE, ENABLE); }while(0) 	
+#define COM2TxIEDisable()   do{ USART_ITConfig(USART_USING3, USART_IT_TXE, DISABLE); }while(0)	
 
 #define COM3PutByte(dat)  	
 #define COM3GetByte()     	
@@ -66,14 +66,6 @@ uint16_t Serial_Read(uint8_t COM,uint8_t *buf,uint16_t len);
 uint16_t SerialRxValidAvail(uint8_t COM);
 #define Serial_WriteStr(COM,str) Serial_WriteBuf(COM,(uint8_t *)str,strlen(str))
 
-
-void COM0_TXE_Isr_callback(void);
-void COM0_TXC_Isr_callback(void);
-void COM0_RX_Isr_callback(void);
-
-void COM1_TXE_Isr_callback(void);
-void COM1_TXC_Isr_callback(void);
-void COM1_RX_Isr_callback(void);
 
 #endif
 

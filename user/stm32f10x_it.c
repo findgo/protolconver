@@ -33,13 +33,6 @@ extern void mcu_systime_isr_callback(void);
   * @{
   */ 
 
-extern void COM0_TXE_Isr_callback(void);
-extern void COM0_TXC_Isr_callback(void);
-extern void COM0_RX_Isr_callback(void);
-
-extern void COM1_TXE_Isr_callback(void);
-extern void COM1_TXC_Isr_callback(void);
-extern void COM1_RX_Isr_callback(void);
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -151,47 +144,6 @@ void SysTick_Handler(void)
 }
 
 
-/**
-  * @brief  This function handles usart interrupt request.
-  * @param  None
-  * @retval None
-  */
-void USART1_IRQHandler(void)
-{
-    if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET){
-        COM0_TXE_Isr_callback();
-        USART_ClearITPendingBit(USART1, USART_IT_TXE);
-    }
-    
-    if(USART_GetITStatus(USART1,USART_IT_RXNE) != RESET){
-        COM0_RX_Isr_callback();
-        USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-    }
-    
-    if(USART_GetITStatus(USART1, USART_IT_TC) != RESET){
-        COM0_TXC_Isr_callback();
-        USART_ClearITPendingBit(USART1, USART_IT_TC);
-    }
-    NVIC_ClearPendingIRQ(USART1_IRQn);
-}
-void USART2_IRQHandler(void)
-{
-    if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET){
-        COM1_TXE_Isr_callback();
-        USART_ClearITPendingBit(USART2, USART_IT_TXE);
-    }
-    
-    if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET){
-        COM1_RX_Isr_callback();
-        USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-    }
-    
-    if(USART_GetITStatus(USART2, USART_IT_TC) != RESET){
-        COM1_TXC_Isr_callback();
-        USART_ClearITPendingBit(USART2, USART_IT_TC);
-    }
-    NVIC_ClearPendingIRQ(USART2_IRQn);
-}
 
 
 /******************************************************************************/

@@ -110,6 +110,46 @@ int SerialDrvInit(uint8_t port, uint32_t ulBaudRate, uint8_t ucDataBits, DRV_Par
         
         USART_Cmd(USART_USING2, ENABLE);//enable USART2
         break;
+         
+        case COM2:
+        USART_USING3_GPIO_PeriphClock_EN();
+        USART_USING3_PeriphClock_EN();
+        
+        //PB10 -- USAR1 TX, PB11 -- USART1 RX
+        GPIO_InitStructure.GPIO_Pin   = USART_USING3_TX_PIN;//TX AF mode
+        GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF_PP;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_Init(USART_USING3_TX_PORT, &GPIO_InitStructure);
+        
+        GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_IN_FLOATING;
+        GPIO_InitStructure.GPIO_Pin   = USART_USING3_RX_PIN;//RX AF mode
+        GPIO_Init(USART_USING3_RX_PORT, &GPIO_InitStructure);
+        
+        
+        NVIC_InitStructure.NVIC_IRQChannel = USART_USING3_IRQ;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority  =  2;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        NVIC_Init(&NVIC_InitStructure);
+        
+        USART_ClockStructInit(&USART_ClockInitStructure);
+        USART_ClockInit(USART_USING3, &USART_ClockInitStructure);
+        
+        USART_InitStructure.USART_BaudRate = ulBaudRate;
+        USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+        USART_InitStructure.USART_HardwareFlowControl = DISABLE;
+        USART_InitStructure.USART_Parity = USART_Parity_No;
+        USART_InitStructure.USART_StopBits = USART_StopBits_1;
+        USART_InitStructure.USART_WordLength = USART_WordLength_8b;// 8 bit
+        USART_Init(USART_USING3, &USART_InitStructure);
+        
+        USART_ClearFlag(USART_USING3, USART_FLAG_TXE | USART_IT_RXNE | USART_FLAG_TC);
+        USART_ITConfig(USART_USING3, USART_IT_TXE,  DISABLE);
+        USART_ITConfig(USART_USING3, USART_IT_TC, DISABLE);
+        USART_ITConfig(USART_USING3, USART_IT_RXNE, ENABLE);
+        
+        USART_Cmd(USART_USING3, ENABLE);//enable USART2
+        break;       
         
      default:
         return FALSE;
@@ -133,6 +173,9 @@ int SerialDrvPutByte(uint8_t port, char ucByte )
     case COM1:
         USART_SendData(USART2, ucByte);
         break;
+    case COM2:
+        USART_SendData(USART3, ucByte);
+        break;
     default:
         return FALSE;
     }
@@ -153,6 +196,9 @@ int SerialDrvGetByte(uint8_t port, char *pucByte )
         break;
     case COM1:
         *pucByte = USART_ReceiveData(USART2);
+        break;
+    case COM2:
+        *pucByte = USART_ReceiveData(USART3);
         break;
     default:
         return FALSE;
@@ -208,6 +254,26 @@ void SerialDrvEnable(uint8_t port, uint8_t xRxEnable, uint8_t xTxEnable)
             USART_ITConfig(USART2, USART_IT_TC, DISABLE);
         }
         break;
+        
+     case COM2:
+        if(xRxEnable){
+            USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+            //MAX485 rts ping disable enable receive 
+            GPIO_ResetBits(GPIOD, GPIO_Pin_9);
+        }
+        else{
+            USART_ITConfig(USART3, USART_IT_RXNE, DISABLE); 
+            //MAX485 rts pin enable enable send 
+            GPIO_SetBits(GPIOD, GPIO_Pin_9);
+        }
+
+        if(xTxEnable){
+            USART_ITConfig(USART3, USART_IT_TC, ENABLE);
+        }
+        else{
+            USART_ITConfig(USART3, USART_IT_TC, DISABLE);
+        }
+        break;    
         
      default:
         break;
