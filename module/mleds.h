@@ -82,7 +82,7 @@ typedef enum
 
 void mledInit(void);
 void mledset(uint8_t leds, MledMode_t mode);
-void mledsetblink(uint8_t leds, uint8_t numBlinks, uint8_t duty, uint16_t period);
+void mledsetblink(uint8_t leds, uint8_t numBlinks, uint8_t duty, uint32_t period);
 uint8_t mledGetstatus(uint8_t which);
 
 #endif

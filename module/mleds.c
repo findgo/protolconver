@@ -6,7 +6,7 @@ typedef struct ledcontrol_s{
     uint8_t     mode;
     uint8_t     todo;       /* 眨现次数，如果设置为0xff，表明无限闪烁*/
     uint8_t     onPct;      /* 占空比*/
-    uint16_t    cycle;      /*开/关总周期 */    
+    uint32_t    cycle;      /*开/关总周期 */    
     uint32_t    next;       /* 下一次改变的时间/与流逝时间相关 ，与时基绑定*/
 }ledcontrol_t;
 
@@ -134,7 +134,7 @@ void mledset(uint8_t leds, MledMode_t mode)
   * @retval  None
   */
 
-void mledsetblink(uint8_t leds, uint8_t numBlinks, uint8_t duty, uint16_t period)
+void mledsetblink(uint8_t leds, uint8_t numBlinks, uint8_t duty, uint32_t period)
 {
 #if configBLINK_LED > 0
 
@@ -232,7 +232,7 @@ static void mledupdateCB(void *arg)
                   }
                   
                   if (sts->mode & MLED_MODE_BLINK) {
-                        wait = (((uint32_t)pct * (uint32_t)sts->cycle) / 100);
+                        wait = (((uint32_t)pct * sts->cycle) / 100);
                         sts->next = curtime + wait;
                   }
                   else{
