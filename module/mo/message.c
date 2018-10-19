@@ -67,7 +67,10 @@ uint8_t msg_send_front( uint16_t id, uint8_t *msg_ptr )
     return msg_put(id, msg_ptr, TRUE);
 }
 
-
+uint16_t msg_id(uint8_t * msg_ptr)
+{
+    return MSG_HDR_ID(msg_ptr);
+}
 uint8_t *msg_receive( uint16_t id )
 {
     msg_hdr_t *listHdr;

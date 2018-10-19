@@ -18,12 +18,13 @@ static QueueHandle_t wintomSendqueueHandle = NULL;
 static QueueStatic_t wintomSendqueue;
 static uint8_t wintomSendStorage[WINTOM_QUEUE_ITEM_CAP * sizeof(wintomItem_t)];
 
+static wt_apduParsepfn_t wt_processInApdu_cb = NULL;
+
 static TimerHandle_t wintomTimerHandle = NULL;
 static TimerStatic_t wintomTimer;
 
 static void wintom_TimerCB(void *arg);
 static int wintomProcessInRcv(void);
-static void wintom_ProcessInApdu(uint8_t command, uint8_t *apdu, uint16_t apdu_len);
 
 /*********************************************************************
  * @brief       电机运行到任意位置停位
@@ -183,7 +184,8 @@ static uint8_t wt_rcvfsm_state = WT_RCVFSM_HEAD0;
 static int wintomProcessInRcv(void)
 {
     uint8_t ch;
-
+    uint16_t bytesInRxBuffer;
+    
     while(WT_RCVBUFLEN())
     {
         WT_RCV(&ch, 1); //read one byte
@@ -196,7 +198,7 @@ static int wintomProcessInRcv(void)
           
         case WT_RCVFSM_HEAD1:
             if(ch == WT_PACKET_HEAD_LSB)
-                wt_rcvfsm_state = WT_RCVFSM_HEAD1;
+                wt_rcvfsm_state = WT_RCVFSM_LENGH;
             break;
             
         case WT_RCVFSM_LENGH:
@@ -213,16 +215,31 @@ static int wintomProcessInRcv(void)
 
         case WT_RCVFSM_TOKEN:
 
-            wt_packetRcvbuf[wt_packetRcvbytes] = ch;
-            ++wt_packetRcvbytes;
-            if(wt_packetRcvbytes >=  wt_packetRcvlen)
+            wt_packetRcvbuf[wt_packetRcvbytes++] = ch;
+
+            bytesInRxBuffer = WT_RCVBUFLEN();
+
+            /* If the remain of the data is there, read them all, otherwise, just read enough */
+            if (bytesInRxBuffer <= ( wt_packetRcvlen - wt_packetRcvbytes )){
+                if(bytesInRxBuffer != 0){
+                    WT_RCV(&wt_packetRcvbuf[wt_packetRcvbytes], bytesInRxBuffer);
+                    wt_packetRcvbytes += bytesInRxBuffer;
+                }
+            }
+            else{
+                WT_RCV(&wt_packetRcvbuf[wt_packetRcvbytes], bytesInRxBuffer);
+                wt_packetRcvlen += wt_packetRcvlen - wt_packetRcvbytes;
+            }
+
+            if(wt_packetRcvbytes == wt_packetRcvlen)
                 wt_rcvfsm_state = WT_RCVFSM_CHECKSUM;
+
             break;
             
         case WT_RCVFSM_CHECKSUM:
             
-            if(ch == checksum(wt_packetRcvbuf, wt_packetRcvlen)){
-                wintom_ProcessInApdu(wt_packetRcvbuf[0], &wt_packetRcvbuf[1], wt_packetRcvlen - 1);
+            if(ch == checksum(wt_packetRcvbuf, wt_packetRcvlen) && wt_processInApdu_cb){
+                wt_processInApdu_cb(wt_packetRcvbuf[0], &wt_packetRcvbuf[1], wt_packetRcvlen - 1);
                 return TRUE;
             }
             wt_rcvfsm_state = WT_RCVFSM_HEAD0;
@@ -288,7 +305,18 @@ void wintom_Init(void)
     SerialDrvInit(COM1, 9600, 0, DRV_PAR_NONE);
 }
 
-static void wintom_ProcessInApdu(uint8_t command, uint8_t *apdu, uint16_t apdu_len)
+/*********************************************************************
+* @brief  注册APDU解析回调函数
+*
+* @param   info_cb - 消息回调
+* @param   passthrough_cb - 透传回调
+*
+* @return 
+*/
+uint8_t wintom_registerParseCallBack(wt_apduParsepfn_t processInApdu_cb)
 {
-          
+    wt_processInApdu_cb = processInApdu_cb;
+
+    return TRUE;
 }
+

@@ -25,6 +25,7 @@ uint8_t *msg_allocate( uint16_t len );
 uint8_t msg_deallocate( void *msg_ptr );
 uint8_t msg_send( uint16_t id, uint8_t *msg_ptr );
 uint8_t msg_send_front( uint16_t id, uint8_t *msg_ptr );
+uint16_t msg_id(uint8_t *msg_ptr);
 uint8_t *msg_receive( uint16_t id );
 
 #ifdef __cplusplus

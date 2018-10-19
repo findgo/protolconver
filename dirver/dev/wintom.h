@@ -12,6 +12,7 @@
  *    包头      命令长度            命令      命令参数0     ... checksum
  *   2 (55 aa)  cmdlength      cmd   cmd_para0 ... checksum   
  *   NOTE: 命令长度 = 命令长度后 checksum前的字节数
+ *   NOTE: APDU = cmd_para0 ...
  *   起始标记头固定为0x55 0xaa 先发MSB 再发LSB
  */
 /*
@@ -89,6 +90,11 @@ NOTE: 当控制器或电机进入地址设置模式时， 主机可以设置它�
 #define WT_MOTO_STATUS_MID_POS1_BIT             ((uint8_t)1 << 2)  // 中间停位点1有效
 #define WT_MOTO_STATUS_MID_POS2_BIT             ((uint8_t)1 << 3)  // 中间停位点2有效
 
+//@brief  apdu解析回调函数
+//command: command, apdu: pointer adpu, apdu_len: apdu length 
+typedef void (*wt_apduParsepfn_t)(uint8_t command, uint8_t *apdu, uint16_t apdu_len);
+
+
 // define 
 #define WT_SEND(buf,len)    Serial_WriteBuf(COM1,buf,len)
 #define WT_RCV(buf,len)     Serial_Read(COM1,buf,len)
@@ -163,6 +169,7 @@ void wintom_getSingleDevID(uint8_t channel);
 #define wintom_getMotoStatus(channel,moto_no) wintom_request(WT_CMDCODE_GET_MOTOSTATUS,channel,moto_no,NULL,0)
 
 void wintom_Init(void);
+uint8_t wintom_registerParseCallBack(wt_apduParsepfn_t processInApdu_cb);
 void wintomTask(void);
 
 #endif
