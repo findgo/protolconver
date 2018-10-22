@@ -156,13 +156,13 @@ static uint8_t msg_put( uint16_t id, uint8_t *msg_ptr, uint8_t bpos )
 
     MSG_HDR_ID( msg_ptr ) = id;
 
-    msg_queueput(&msg_qhead,  msg_ptr, bpos);
+    msg_queueGenericput(&msg_qhead,  msg_ptr, bpos);
 
     // Signal the event
     return ( MSG_SUCCESS );
 }
 
-void msg_queueput( msg_q_t *q_ptr, void *msg_ptr, uint8_t isfront )
+void msg_queueGenericput( msg_q_t *q_ptr, void *msg_ptr, uint8_t isfront )
 {
     void *list;
     

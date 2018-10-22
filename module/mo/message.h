@@ -40,11 +40,15 @@ uint8_t *msg_receive( uint16_t id );
 uint16_t msg_id(uint8_t * msg_ptr);
 uint16_t msg_len(uint8_t * msg_ptr);
 
-void msg_queueput( msg_q_t *q_ptr, void *msg_ptr, uint8_t isfront );
+#define msg_queuecput(q_ptr, msg_ptr)       msg_queueGenericput(q_ptr, msg_ptr, FALSE)
+#define msg_queuecput_front(q_ptr, msg_ptr) msg_queueGenericput(q_ptr, msg_ptr, TRUE)
 void *msg_queuepop( msg_q_t *q_ptr );
 // 以下方法仅在自定义消息队列时使用,也就是方法2
 uint8_t msg_setid(uint8_t * msg_ptr, uint16_t id);
 uint8_t msg_setlen(uint8_t * msg_ptr, uint16_t len);
+
+// 内部API
+void msg_queueGenericput( msg_q_t *q_ptr, void *msg_ptr, uint8_t isfront );
 
 
 #ifdef __cplusplus
