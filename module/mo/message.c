@@ -15,12 +15,10 @@ typedef struct
 
 // local function
 static uint8_t msg_put( uint16_t id, uint8_t *msg_ptr, uint8_t bpos );
-static void msg_queueput( void **q_ptr, void *msg_ptr, uint8_t bpos );
-static void *msg_queuepop( void **q_ptr );
-static void msg_queueextract( void **q_ptr, void *msg_ptr, void *prev_ptr );
+static void msg_queueextract(msg_q_t *q_ptr, void *msg_ptr, void *prev_ptr );
 
 // local variable
-static void * msg_qhead = NULL;
+static msg_q_t msg_qhead = NULL;
 
 
 uint8_t *msg_allocate( uint16_t len )
@@ -69,8 +67,40 @@ uint8_t msg_send_front( uint16_t id, uint8_t *msg_ptr )
 
 uint16_t msg_id(uint8_t * msg_ptr)
 {
+    if(msg_ptr == NULL)
+        return MSG_ID_NO_USED;
+    
     return MSG_HDR_ID(msg_ptr);
 }
+uint16_t msg_len(uint8_t * msg_ptr)
+{
+    if(msg_ptr == NULL)
+        return 0;
+
+    return MSG_HDR_LEN(msg_ptr);
+}
+
+uint8_t msg_setid(uint8_t * msg_ptr, uint16_t id)
+{
+    if ( msg_ptr == NULL ) {
+        return ( MSG_INVALID_POINTER );
+    }
+    
+    MSG_HDR_ID(msg_ptr) = id;
+    
+    return MSG_SUCCESS;
+}
+uint8_t msg_setlen(uint8_t * msg_ptr, uint16_t len)
+{
+    if ( msg_ptr == NULL ) {
+        return ( MSG_INVALID_POINTER );
+    }
+
+    MSG_HDR_LEN(msg_ptr) = len;
+    
+    return MSG_SUCCESS;
+}
+
 uint8_t *msg_receive( uint16_t id )
 {
     msg_hdr_t *listHdr;
@@ -132,7 +162,7 @@ static uint8_t msg_put( uint16_t id, uint8_t *msg_ptr, uint8_t bpos )
     return ( MSG_SUCCESS );
 }
 
-static void msg_queueput( void **q_ptr, void *msg_ptr, uint8_t isfront )
+void msg_queueput( msg_q_t *q_ptr, void *msg_ptr, uint8_t isfront )
 {
     void *list;
     
@@ -158,7 +188,7 @@ static void msg_queueput( void **q_ptr, void *msg_ptr, uint8_t isfront )
     }
 }
 
-static void *msg_queuepop( void **q_ptr )
+void *msg_queuepop( msg_q_t *q_ptr )
 {
     void *msg_ptr = NULL;
 
@@ -173,7 +203,7 @@ static void *msg_queuepop( void **q_ptr )
   return msg_ptr;
 }
 
-static void msg_queueextract( void **q_ptr, void *msg_ptr, void *prev_ptr )
+static void msg_queueextract( msg_q_t *q_ptr, void *msg_ptr, void *prev_ptr )
 {
     if ( msg_ptr == *q_ptr ) {
         // remove from first
