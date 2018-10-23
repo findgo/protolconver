@@ -14,14 +14,14 @@ typedef struct
 } msg_hdr_t;
 
 // local function
-static uint8_t msg_put( uint16_t id, uint8_t *msg_ptr, uint8_t bpos );
+static uint8_t msg_put( uint16_t id, void *msg_ptr, uint8_t bpos );
 static void msg_queueextract(msg_q_t *q_ptr, void *msg_ptr, void *prev_ptr );
 
 // local variable
 static msg_q_t msg_qhead = NULL;
 
 
-uint8_t *msg_allocate( uint16_t len )
+void *msg_allocate( uint16_t len )
 {
     msg_hdr_t *hdr;
 
@@ -35,10 +35,10 @@ uint8_t *msg_allocate( uint16_t len )
         hdr->len = len;
         hdr->id = MSG_ID_NO_USED;
         
-        return ( (uint8_t *) (hdr + 1) ); // point to the data
+        return ( (void *) (hdr + 1) ); // point to the data
     }
 
-    return ( NULL );
+    return (void *)( NULL );
 }
 
 uint8_t msg_deallocate( void *msg_ptr )
@@ -55,50 +55,22 @@ uint8_t msg_deallocate( void *msg_ptr )
     return ( MSG_SUCCESS );
 }
 
-uint8_t msg_send( uint16_t id, uint8_t *msg_ptr )
+uint8_t msg_send( uint16_t id, void *msg_ptr )
 {
     return msg_put(id, msg_ptr, FALSE);
 }
 
-uint8_t msg_send_front( uint16_t id, uint8_t *msg_ptr )
+uint8_t msg_send_front( uint16_t id, void *msg_ptr )
 {
     return msg_put(id, msg_ptr, TRUE);
 }
 
-uint16_t msg_id(uint8_t * msg_ptr)
-{
-    if(msg_ptr == NULL)
-        return MSG_ID_NO_USED;
-    
-    return MSG_HDR_ID(msg_ptr);
-}
-uint16_t msg_len(uint8_t * msg_ptr)
+uint16_t msg_len(void * msg_ptr)
 {
     if(msg_ptr == NULL)
         return 0;
 
     return MSG_HDR_LEN(msg_ptr);
-}
-
-uint8_t msg_setid(uint8_t * msg_ptr, uint16_t id)
-{
-    if ( msg_ptr == NULL ) {
-        return ( MSG_INVALID_POINTER );
-    }
-    
-    MSG_HDR_ID(msg_ptr) = id;
-    
-    return MSG_SUCCESS;
-}
-uint8_t msg_setlen(uint8_t * msg_ptr, uint16_t len)
-{
-    if ( msg_ptr == NULL ) {
-        return ( MSG_INVALID_POINTER );
-    }
-
-    MSG_HDR_LEN(msg_ptr) = len;
-    
-    return MSG_SUCCESS;
 }
 
 uint8_t *msg_receive( uint16_t id )
@@ -135,7 +107,7 @@ uint8_t *msg_receive( uint16_t id )
 }
 
 
-static uint8_t msg_put( uint16_t id, uint8_t *msg_ptr, uint8_t bpos )
+static uint8_t msg_put( uint16_t id, void *msg_ptr, uint8_t bpos )
 {
     if ( msg_ptr == NULL ) {
         return ( MSG_INVALID_POINTER );
@@ -201,6 +173,10 @@ void *msg_queuepop( msg_q_t *q_ptr )
     }
 
   return msg_ptr;
+}
+void *msg_queuepeek( msg_q_t *q_ptr )
+{
+    return (void *)(*q_ptr);    
 }
 
 static void msg_queueextract( msg_q_t *q_ptr, void *msg_ptr, void *prev_ptr )
