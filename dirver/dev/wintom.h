@@ -90,15 +90,22 @@ NOTE: 当控制器或电机进入地址设置模式时， 主机可以设置它�
 #define WT_MOTO_STATUS_MID_POS1_BIT             ((uint8_t)1 << 2)  // 中间停位点1有效
 #define WT_MOTO_STATUS_MID_POS2_BIT             ((uint8_t)1 << 3)  // 中间停位点2有效
 
-//@brief  apdu解析回调函数
-//command: command, apdu: pointer adpu, apdu_len: apdu length 
-typedef void (*wt_apduParsepfn_t)(uint8_t command, uint8_t *apdu, uint16_t apdu_len);
-
-
 // define 
 #define WT_SEND(buf,len)    Serial_WriteBuf(COM1,buf,len)
 #define WT_RCV(buf,len)     Serial_Read(COM1,buf,len)
 #define WT_RCVBUFLEN()      SerialRxValidAvail(COM1)
+
+/* pos: 0 - ff 总行程分为256等分 */
+typedef void (*wintom_RspgetPos_t) (uint8_t moto_no, uint8_t devID, uint8_t pos );
+/* 电机状态值 */
+typedef void (*wintom_RspgetMotoStatus_t) (uint8_t channel, uint8_t moto_no, uint8_t status );
+
+typedef struct
+{
+    wintom_RspgetPos_t         pfnRspgetPos;          // 获得位置信息
+    wintom_RspgetMotoStatus_t  pfnRspgetMotoStatus;   // 获得电机状态
+} wintom_rspCallbacks_t;
+
 
 /*
   parabuf：可为NULL
@@ -120,7 +127,7 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1, uint8_t *p
  * NOTE:   1.读取窗帘位置操作前必须先设置好开限制点和关限制点,设置方法下有详解。
  *         2.此功能只对管状电机和开合帘电机有效。
 @begin */
-void wintom_runtoPos( uint8_t devID, uint8_t pos );
+uint8_t wintom_runtoPos( uint8_t devID, uint8_t pos );
 #define wintom_getPos( devID ) wintom_request(WT_CMDCODE_GET_POS,WT_MOTO_NO_GENERAL,devID,NULL,0)
 #define wintom_cleartrip( devID ) wintom_request(WT_CMDCODE_CLEAR_TRIP,WT_MOTO_NO_GENERAL,devID,NULL,0)
 /* 
@@ -153,24 +160,24 @@ void wintom_runtoPos( uint8_t devID, uint8_t pos );
 
 /* NOTE: 此功能对百叶电机的控制有效。
 @begin */
-void wintom_setAngle(uint8_t moto_no, uint8_t devID,uint8_t angle);
+uint8_t wintom_setAngle(uint8_t moto_no, uint8_t devID,uint8_t angle);
 #define wintom_getAngle(moto_no,devID) wintom_request(WT_CMDCODE_GET_ANGLE,moto_no,devID,NULL,0)
 /*
 @end */
 
 /* NOTE:创明众联 B 电机及控制器处于地址设置模式时才有用！
 @begin */
-void wintom_setDevID(uint8_t channel, uint8_t moto_no, uint8_t devID);
+uint8_t wintom_setDevID(uint8_t channel, uint8_t moto_no, uint8_t devID);
 #define wintom_getMultiDevID(channel,moto_no) wintom_request(WT_CMDCODE_GET_DEVID,channel,moto_no,NULL,0)
-void wintom_getSingleDevID(uint8_t channel);
+uint8_t wintom_getSingleDevID(uint8_t channel);
 #define wintom_delDevID(channel,moto_no) wintom_request(WT_CMDCODE_DEL_DEVID,channel,moto_no,NULL,0)
 /*
 @end */
 #define wintom_getMotoStatus(channel,moto_no) wintom_request(WT_CMDCODE_GET_MOTOSTATUS,channel,moto_no,NULL,0)
 
 void wintom_Init(void);
-uint8_t wintom_registerParseCallBack(wt_apduParsepfn_t processInApdu_cb);
 void wintomTask(void);
+void wintom_registerRspCallBack(wintom_rspCallbacks_t *rspCB);
 
 #endif
 

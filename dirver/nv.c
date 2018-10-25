@@ -991,7 +991,7 @@ uint8_t nvItemReadx( uint16_t id, uint16_t ndx, void *buf, uint16_t len )
 
     offset = findItem(id);
     if (offset == NV_ITEM_NULL) {
-        return NV_OPER_FAILED;
+        return NV_ITEM_UNINIT;
     }
     
     HalFlashRead(findPg, offset + ndx, buf, len);

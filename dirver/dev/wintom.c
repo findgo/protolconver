@@ -3,28 +3,37 @@
 #include "wintom.h"
 #include "usart.h"
 #include "queue.h"
+#include "message.h"
 #include "timers.h"
 
-#define WINTOM_QUEUE_ITEM_CAP     5
-#define WINTOM_QUEUE_BUFF_SIZE    16
+// 定义消息最大存储8条
+#define WT_MSG_Q_MAX     8
+// 定义应答命令等待超时时间
+#define WT_RSP_TIMEOUT    50  // 30ms
+// 定义无应答命令转换时间
+#define WT_TRANSFER_DELAY_TIMEOUT   15  // 15 ms Transfer delay
 
 typedef struct {
     uint8_t cmd;
-    uint8_t datlen;
-    uint8_t dat[WINTOM_QUEUE_BUFF_SIZE];
-}wintomItem_t;
+    uint8_t dat[];
+}Wtreq_t;
 
-static QueueHandle_t wintomSendqueueHandle = NULL;
-static QueueStatic_t wintomSendqueue;
-static uint8_t wintomSendStorage[WINTOM_QUEUE_ITEM_CAP * sizeof(wintomItem_t)];
 
-static wt_apduParsepfn_t wt_processInApdu_cb = NULL;
+// 消息队列
+static msg_q_t wtmsg_q = NULL;
+// 消息计数
+static uint8_t wtmsgq_cnt = 0;
 
+// 时间句柄
 static TimerHandle_t wintomTimerHandle = NULL;
+// 静态分配时间结构
 static TimerStatic_t wintomTimer;
+
+static wintom_rspCallbacks_t *wintom_rspCB = NULL;
 
 static void wintom_TimerCB(void *arg);
 static int wintomProcessInRcv(void);
+static void wintomPrarseRspInApdu(uint8_t command, uint8_t *apdu, uint16_t apdu_len);
 
 /*********************************************************************
  * @brief       电机运行到任意位置停位
@@ -35,11 +44,9 @@ static int wintomProcessInRcv(void);
  *
  * @return     
  */
-void wintom_runtoPos(uint8_t devID, uint8_t pos)
+uint8_t wintom_runtoPos(uint8_t devID, uint8_t pos)
 {
-    uint8_t tpos = pos;
-
-    wintom_request(WT_CMDCODE_GO_POS,WT_MOTO_NO_GENERAL, devID, &tpos, 1);
+    return wintom_request(WT_CMDCODE_GO_POS,WT_MOTO_NO_GENERAL, devID, &pos, 1);
 }
 /*********************************************************************
  * @brief       设置角度
@@ -50,13 +57,11 @@ void wintom_runtoPos(uint8_t devID, uint8_t pos)
  *
  * @return     
  */
-void wintom_setAngle(uint8_t moto_no, uint8_t devID, uint8_t angle)
+uint8_t wintom_setAngle(uint8_t moto_no, uint8_t devID, uint8_t angle)
 {
-    uint8_t tangle = angle;
+    angle = angle > 100 ? 100 : angle;
 
-    tangle = angle > 100 ? 100 : angle;
-
-    wintom_request(WT_CMDCODE_GO_POS, moto_no, devID, &tangle, 1);
+    return wintom_request(WT_CMDCODE_GO_POS, moto_no, devID, &angle, 1);
 }
 /*  special command */
 /*********************************************************************
@@ -68,15 +73,13 @@ void wintom_setAngle(uint8_t moto_no, uint8_t devID, uint8_t angle)
  *
  * @return     
  */
-void wintom_setDevID(uint8_t channel, uint8_t moto_no, uint8_t devID)
+uint8_t wintom_setDevID(uint8_t channel, uint8_t moto_no, uint8_t devID)
 {
-    uint8_t tdevID = devID;
-
     // channel out of range
     if(channel > WT_CHANNEL_15)
-        return;
+        return FALSE;
 
-    wintom_request(WT_CMDCODE_SET_DEVID, channel, moto_no, &tdevID, 1);
+    return wintom_request(WT_CMDCODE_SET_DEVID, channel, moto_no, &devID, 1);
 }
 /*********************************************************************
  * @brief       设置设备ID
@@ -85,34 +88,44 @@ void wintom_setDevID(uint8_t channel, uint8_t moto_no, uint8_t devID)
  *
  * @return     
  */
-void wintom_getSingleDevID(uint8_t channel)
+uint8_t wintom_getSingleDevID(uint8_t channel)
 {
-    uint8_t wt_len = 0;
+    uint8_t size;
     uint8_t checksum = 0;
-    wintomItem_t *pItem = NULL;   
+    Wtreq_t *reqmsg;
+    uint8_t *pbuf;
 
     // channel out of range
     if(channel > WT_CHANNEL_15)
-        return;
+        return FALSE;
     
-    pItem = (wintomItem_t *)queueOnAlloc(wintomSendqueueHandle);
-    if(pItem == NULL)
-        return;
+    if(wtmsgq_cnt > WT_MSG_Q_MAX) // too much message on the list
+        return FALSE;
+    
+    size = 2 + 1 + 1 + 1  + 1; // head(2) + len(1) + cmdcode(1) + para0(1) + checksum
+    reqmsg = (Wtreq_t *)msg_allocate(sizeof(Wtreq_t) + size);
+    if(reqmsg == NULL)
+        return FALSE;
 
-    pItem->dat[wt_len++] = WT_PACKET_HEAD_MSB;
-    pItem->dat[wt_len++] = WT_PACKET_HEAD_LSB;
-    pItem->dat[wt_len++] = 2;
+    reqmsg->cmd = WT_CMDCODE_GET_DEVID; // ID use store the frame code
+    
+    pbuf = reqmsg->dat;
+    *pbuf++ = WT_PACKET_HEAD_MSB;
+    *pbuf++ = WT_PACKET_HEAD_LSB;
+    *pbuf++ = 2;
 
-    // save command    
-    pItem->cmd = WT_CMDCODE_GET_DEVID;
-
-    pItem->dat[wt_len++] = WT_CMDCODE_GET_DEVID;
+    *pbuf++ = WT_CMDCODE_GET_DEVID;
     checksum += WT_CMDCODE_GET_DEVID;
-    pItem->dat[wt_len++] = channel;
+    *pbuf++ = channel;
     checksum += channel;
 
-    pItem->dat[wt_len++] = checksum;
-    pItem->datlen = wt_len;
+    *pbuf++ = checksum;
+    
+    msg_queuecput(&wtmsg_q, reqmsg);
+    wtmsgq_cnt++;
+    
+    return TRUE;
+
 }
 
 
@@ -130,42 +143,47 @@ static uint8_t checksum(uint8_t *dat,uint16_t length)
 
 uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *paraleftbuf, uint8_t paraleftlen)
 {
-    uint8_t i;
-    uint8_t wt_len = 0;
+    uint8_t size;
     uint8_t checksum = 0;
-    wintomItem_t *pItem = NULL;
+    Wtreq_t *reqmsg;
+    uint8_t *pbuf;
     
-    pItem = (wintomItem_t *)queueOnAlloc(wintomSendqueueHandle);
-    if(pItem == NULL)
+    if(wtmsgq_cnt > WT_MSG_Q_MAX) // too much message on the list
+        return FALSE;
+    
+    size = 2 + 1 + 1 + 1 + 1 + ( paraleftbuf == NULL ? 0 : paraleftlen ) + 1; // head(2) + len(1) + cmdcode(1) + para0(1) + para1(1) + otherpara + checksum
+    reqmsg = (Wtreq_t *)msg_allocate(sizeof(Wtreq_t) + size);
+    if(reqmsg == NULL)
         return FALSE;
 
-    pItem->dat[wt_len++] = WT_PACKET_HEAD_MSB;
-    pItem->dat[wt_len++] = WT_PACKET_HEAD_LSB;
-    pItem->dat[wt_len++] = 3 + ( paraleftbuf == NULL ? 0 : paraleftlen );
+    reqmsg->cmd = WT_CMDCODE_GET_DEVID; // ID use store the frame code
 
-    // save command 
-    pItem->cmd = cmdCode;
+    pbuf = reqmsg->dat;
+    *pbuf++ = WT_PACKET_HEAD_MSB;
+    *pbuf++ = WT_PACKET_HEAD_LSB;
+    *pbuf++ = 3 + ( paraleftbuf == NULL ? 0 : paraleftlen );
     
-    pItem->dat[wt_len++] = cmdCode;
+    *pbuf++ = cmdCode;
     checksum += cmdCode;
-    pItem->dat[wt_len++] = para0;
+    *pbuf++ = para0;
     checksum += para0;
-    pItem->dat[wt_len++] = para1;
+    *pbuf++ = para1;
     checksum += para1;
     
     if(paraleftbuf != NULL){
-        for(i = 0;i < paraleftlen; i++){
-            pItem->dat[wt_len] = *paraleftbuf;
+        for(size = 0;size < paraleftlen; size++){
+            *pbuf = *paraleftbuf;
             checksum += *paraleftbuf;
             paraleftbuf++;
-            wt_len++;
+            pbuf++;
         }
     }
 
-    pItem->dat[wt_len++] = checksum;
+    *pbuf++ = checksum;
 
-    pItem->datlen = wt_len; // store the payload length
-
+    msg_queuecput(&wtmsg_q, reqmsg);
+    wtmsgq_cnt++;
+    
     return TRUE;
 }
 
@@ -177,7 +195,7 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *pa
 #define WT_RCVFSM_CHECKSUM     4
 
 static uint8_t wt_packetRcvlen;
-static uint8_t wt_packetRcvbuf[WINTOM_QUEUE_BUFF_SIZE];
+static uint8_t *wt_packetRcvbufptr = NULL;
 static uint8_t wt_packetRcvbytes;
 
 static uint8_t wt_rcvfsm_state = WT_RCVFSM_HEAD0;
@@ -202,11 +220,7 @@ static int wintomProcessInRcv(void)
             break;
             
         case WT_RCVFSM_LENGH:
-            // out of max packet lengh
-            if(ch > WINTOM_QUEUE_BUFF_SIZE){
-                wt_rcvfsm_state = WT_RCVFSM_HEAD0;
-                return FALSE;
-            }
+            wt_packetRcvbufptr = (uint8_t *)mo_malloc(ch);
             
             wt_packetRcvlen = ch;
             wt_packetRcvbytes = 0;
@@ -215,20 +229,20 @@ static int wintomProcessInRcv(void)
 
         case WT_RCVFSM_TOKEN:
 
-            wt_packetRcvbuf[wt_packetRcvbytes++] = ch;
+            wt_packetRcvbufptr[wt_packetRcvbytes++] = ch;
 
             bytesInRxBuffer = WT_RCVBUFLEN();
 
             /* If the remain of the data is there, read them all, otherwise, just read enough */
             if (bytesInRxBuffer <= ( wt_packetRcvlen - wt_packetRcvbytes )){
                 if(bytesInRxBuffer != 0){
-                    WT_RCV(&wt_packetRcvbuf[wt_packetRcvbytes], bytesInRxBuffer);
+                    WT_RCV(&wt_packetRcvbufptr[wt_packetRcvbytes], bytesInRxBuffer);
                     wt_packetRcvbytes += bytesInRxBuffer;
                 }
             }
             else{
-                WT_RCV(&wt_packetRcvbuf[wt_packetRcvbytes], bytesInRxBuffer);
-                wt_packetRcvlen += wt_packetRcvlen - wt_packetRcvbytes;
+                WT_RCV(&wt_packetRcvbufptr[wt_packetRcvbytes], wt_packetRcvlen - wt_packetRcvbytes);
+                wt_packetRcvbytes += wt_packetRcvlen - wt_packetRcvbytes;
             }
 
             if(wt_packetRcvbytes == wt_packetRcvlen)
@@ -238,10 +252,17 @@ static int wintomProcessInRcv(void)
             
         case WT_RCVFSM_CHECKSUM:
             
-            if(ch == checksum(wt_packetRcvbuf, wt_packetRcvlen) && wt_processInApdu_cb){
-                wt_processInApdu_cb(wt_packetRcvbuf[0], &wt_packetRcvbuf[1], wt_packetRcvlen - 1);
+            if(ch == checksum(wt_packetRcvbufptr, wt_packetRcvlen)){
+                wintomPrarseRspInApdu(wt_packetRcvbufptr[0], &wt_packetRcvbufptr[1], wt_packetRcvlen - 1);
+                mo_free(wt_packetRcvbufptr);
+                wt_packetRcvbufptr = NULL;
+                
                 return TRUE;
             }
+            
+            mo_free(wt_packetRcvbufptr);
+            wt_packetRcvbufptr = NULL;
+            
             wt_rcvfsm_state = WT_RCVFSM_HEAD0;
             
             break;
@@ -258,29 +279,31 @@ static int wintomProcessInRcv(void)
 static uint8_t wintom_state = 0;
 void wintomTask(void)
 {
-    wintomItem_t *pItem = NULL;
+    Wtreq_t *reqmsg = NULL;
+    uint8_t cmd;
     
     if(wintom_state == 0){ // idle ,check any request on the list
-        pItem = (wintomItem_t *) queueOnPeek(wintomSendqueueHandle);
-        if(pItem == NULL) // no request in the list
+        // check any request on the list ? 
+        if((wtmsgq_cnt == 0) || ((reqmsg = msg_queuepop(&wtmsg_q)) == NULL))
             return;
 
-        memset(wt_packetRcvbuf, 0, sizeof(wt_packetRcvbuf));
-        WT_SEND(pItem->dat, pItem->datlen);
-        queuePop(wintomSendqueueHandle, NULL); // pop past the data
+        wtmsgq_cnt--;
+        WT_SEND(reqmsg->dat, msg_len(reqmsg) - 1);
+        cmd = reqmsg->cmd;
 
-        if(pItem->cmd == WT_CMDCODE_GET_POS || pItem->cmd == WT_CMDCODE_GET_ANGLE
-            || pItem->cmd == WT_CMDCODE_GET_DEVID || pItem->cmd == WT_CMDCODE_GET_MOTOSTATUS){
-            timerStart(wintomTimerHandle, 10); // rsp time out
+        msg_deallocate(reqmsg);
+        
+        if(cmd == WT_CMDCODE_GET_POS || cmd == WT_CMDCODE_GET_ANGLE
+            || cmd == WT_CMDCODE_GET_DEVID || cmd == WT_CMDCODE_GET_MOTOSTATUS){
+            timerStart(wintomTimerHandle, WT_RSP_TIMEOUT); // start a rsp time out
             wintom_state = 1;
         }
         else {
-            timerStart(wintomTimerHandle, 10); // Transfer delay
+            timerStart(wintomTimerHandle, WT_TRANSFER_DELAY_TIMEOUT); // Transfer delay
             wintom_state = 2;
         }
-
     }
-    else if(wintom_state == 1){
+    else if(wintom_state == 1){ // wait for rsp
         if(wintomProcessInRcv()){      
             timerStop(wintomTimerHandle);
             wintom_state = 0;  
@@ -291,6 +314,10 @@ void wintomTask(void)
 static void wintom_TimerCB(void *arg)
 {
     if(wintom_state == 1){ // rsp timeout
+        if(wt_packetRcvbufptr){
+            mo_free(wt_packetRcvbufptr);
+            wt_packetRcvbufptr = NULL;
+        }
         wt_rcvfsm_state = WT_RCVFSM_HEAD0;
     }
     
@@ -299,24 +326,39 @@ static void wintom_TimerCB(void *arg)
 
 void wintom_Init(void)
 {
-    wintomSendqueueHandle = queueAssign(&wintomSendqueue, WINTOM_QUEUE_ITEM_CAP  , sizeof(wintomItem_t)  , wintomSendStorage); 
     wintomTimerHandle = timerAssign(&wintomTimer,  wintom_TimerCB, NULL);
 
     SerialDrvInit(COM1, 9600, 0, DRV_PAR_NONE);
 }
 
+static void wintomPrarseRspInApdu(uint8_t command, uint8_t *apdu, uint16_t apdu_len)
+{
+    if(wintom_rspCB == NULL)
+        return;
+    
+    switch (command){
+    case WT_CMDCODE_GET_POS:
+        if(wintom_rspCB->pfnRspgetPos)
+            wintom_rspCB->pfnRspgetPos(apdu[0],apdu[1],apdu[2]);
+        break;
+        
+    case WT_CMDCODE_GET_MOTOSTATUS:
+        if(wintom_rspCB->pfnRspgetMotoStatus)
+            wintom_rspCB->pfnRspgetMotoStatus(apdu[0],apdu[1],apdu[2]);
+        break;
+    default:
+        break;
+    }
+}
+
 /*********************************************************************
-* @brief  注册APDU解析回调函数
+* @brief  注册wintomrsp信息
 *
-* @param   info_cb - 消息回调
-* @param   passthrough_cb - 透传回调
+* @param   rspCB
 *
 * @return 
 */
-uint8_t wintom_registerParseCallBack(wt_apduParsepfn_t processInApdu_cb)
+void wintom_registerRspCallBack(wintom_rspCallbacks_t *rspCB)
 {
-    wt_processInApdu_cb = processInApdu_cb;
-
-    return TRUE;
+    wintom_rspCB = rspCB;
 }
-

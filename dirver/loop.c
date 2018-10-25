@@ -2,10 +2,12 @@
 #include "loop.h"
 
 //for driver
-#include "dlinkzigbee.h"
+//#include "dlinkzigbee.h"
+#include "ebyteZB.h"
 #include "wintom.h"
 #include "mleds.h"
 #include "systick.h"
+#include "nwk.h"
 
 #include "memalloc.h"
 #include "timers.h"
@@ -20,7 +22,8 @@
 
 static const pTaskFn_t taskArr[] =
 {
-    dlinkTask,
+    ebyteZBTask,
+    nwkTask,
     timerTask, 
     wintomTask
 };
@@ -30,11 +33,6 @@ static void logInit(void);
 static TimerStatic_t tmstatic;
 static TimerHandle_t tmhandle = NULL;
 static void tmCb(void *arg);
-
-static TimerStatic_t tmstaticF;
-static TimerHandle_t tmhandleF = NULL;
-static void tmCbF(void *arg);
-
 
 void loop_init_System(void)
 {
@@ -46,8 +44,9 @@ void loop_init_System(void)
     ltl_GeneralBasicAttriInit();
 
     delay_ms(200);
-    dl_registerParseCallBack(NULL, ltlApduParsing);
-    dlink_init();
+//    dl_registerParseCallBack(NULL, ltlApduParsing);
+//    dlink_init();
+    nwkInit();
     wintom_Init();
     halledInit();
     mledInit();
@@ -55,8 +54,6 @@ void loop_init_System(void)
     mledset(MLED_1, MLED_MODE_FLASH);
     tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
     timerStart(tmhandle, 1000);
-    tmhandleF = timerAssign(&tmstaticF, tmCbF,(void *)&tmhandleF);
-    timerStart(tmhandleF, 500);
     mo_logln(INFO,"loop_init_System init end, and then start system");
 }
 
@@ -77,7 +74,7 @@ void loop_Run_System(void)
 
 static void tmCb(void *arg)
 {
-    uint16_t dst_addr = DL_BROADCAST_ADD;
+    uint16_t dst_addr = 0x0000;
 
     ltlReport_t *lreport;
     ltlAttrRec_t attrirecord;
@@ -97,33 +94,7 @@ static void tmCb(void *arg)
         
         mo_free(reportcmd);
     }
-    timerRestart(*((TimerHandle_t *)arg), 300);
-}
-
-static void tmCbF(void *arg)
-{
-    uint16_t dst_addr = DL_BROADCAST_ADD;
-
-    ltlReport_t *lreport;
-    ltlAttrRec_t attrirecord;
-    ltlReportCmd_t *reportcmd;
-
-    if(ltlFindAttrRec(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, ATTRID_BASIC_MANUFACTURER_NAME, &attrirecord)){
- 
-        reportcmd = (ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1);
-        reportcmd->numAttr = 1;
-        lreport = &(reportcmd->attrList[0]);
-        lreport->attrID = attrirecord.attrId;
-        lreport->dataType = attrirecord.dataType;
-        lreport->attrData = attrirecord.dataPtr;
-
-        ltl_SendReportCmd(&dst_addr, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, 
-                        LTL_FRAMECTL_DIR_CLIENT_SERVER, LTL_MANU_CODE_SPECIFIC_LTL, TRUE,reportcmd);
-        
-        mo_free(reportcmd);
-    }
-    
-    timerRestart(*((TimerHandle_t *)arg), 500);
+    timerRestart(*((TimerHandle_t *)arg), 1000);
 }
 
 

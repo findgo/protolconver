@@ -2,7 +2,7 @@
 #define __LTL_H_
 
 #include "ltldef.h"
-
+#include "prefix.h"
 // define in frame control field
 //bit mask
 #define LTL_FRAMECTL_TYPE_MASK             0x03
@@ -169,13 +169,6 @@ typedef struct
     ltlFrameHdrctl_t fc;
 } ltlFrameHdr_t;
 
-//传进来的APDU包
-typedef struct
-{
-    void *refer; 
-    uint16_t apduLength; /* apdu length */
-    uint8_t *apduData;  /* apdu pointer */
-}MoIncomingMsgPkt_t;
 //解析完包头的APDU包
 typedef struct 
 {

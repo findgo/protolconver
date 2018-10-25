@@ -49,7 +49,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\Objects\</OutputDirectory>
-          <OutputName>stm32f1_demo</OutputName>
+          <OutputName>protolconver</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_MD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\common;..\dirver;..\module;..\user;..\util;..\dirver\connect;..\module\ltl;..\module\mo;..\dirver\bsp;..\dirver\dev</IncludePath>
+              <IncludePath>..\common;..\dirver;..\module;..\user;..\util;..\dirver\connect;..\module\ltl;..\module\mo;..\dirver\bsp;..\dirver\dev;..\module\crypto</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -446,6 +446,57 @@
               <FileName>dlinkzigbee.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\dirver\connect\dlinkzigbee.c</FilePath>
+              <FileOption>
+                <CommonProperty>
+                  <UseCPPCompiler>2</UseCPPCompiler>
+                  <RVCTCodeConst>0</RVCTCodeConst>
+                  <RVCTZI>0</RVCTZI>
+                  <RVCTOtherData>0</RVCTOtherData>
+                  <ModuleSelection>0</ModuleSelection>
+                  <IncludeInBuild>0</IncludeInBuild>
+                  <AlwaysBuild>2</AlwaysBuild>
+                  <GenerateAssemblyFile>2</GenerateAssemblyFile>
+                  <AssembleAssemblyFile>2</AssembleAssemblyFile>
+                  <PublicsOnly>2</PublicsOnly>
+                  <StopOnExitCode>11</StopOnExitCode>
+                  <CustomArgument></CustomArgument>
+                  <IncludeLibraryModules></IncludeLibraryModules>
+                  <ComprImg>1</ComprImg>
+                </CommonProperty>
+                <FileArmAds>
+                  <Cads>
+                    <interw>2</interw>
+                    <Optim>0</Optim>
+                    <oTime>2</oTime>
+                    <SplitLS>2</SplitLS>
+                    <OneElfS>2</OneElfS>
+                    <Strict>2</Strict>
+                    <EnumInt>2</EnumInt>
+                    <PlainCh>2</PlainCh>
+                    <Ropi>2</Ropi>
+                    <Rwpi>2</Rwpi>
+                    <wLevel>0</wLevel>
+                    <uThumb>2</uThumb>
+                    <uSurpInc>2</uSurpInc>
+                    <uC99>2</uC99>
+                    <uGnu>2</uGnu>
+                    <useXO>2</useXO>
+                    <v6Lang>0</v6Lang>
+                    <v6LangP>0</v6LangP>
+                    <vShortEn>2</vShortEn>
+                    <vShortWch>2</vShortWch>
+                    <v6Lto>2</v6Lto>
+                    <v6WtE>2</v6WtE>
+                    <v6Rtti>2</v6Rtti>
+                    <VariousControls>
+                      <MiscControls></MiscControls>
+                      <Define></Define>
+                      <Undefine></Undefine>
+                      <IncludePath></IncludePath>
+                    </VariousControls>
+                  </Cads>
+                </FileArmAds>
+              </FileOption>
             </File>
             <File>
               <FileName>wintom.c</FileName>
@@ -471,6 +522,16 @@
               <FileName>hal_led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\dirver\hal_led.c</FilePath>
+            </File>
+            <File>
+              <FileName>nwk.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\dirver\nwk.c</FilePath>
+            </File>
+            <File>
+              <FileName>ebyteZB.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\dirver\connect\ebyteZB.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -577,6 +638,11 @@
               <FileName>mkey.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\module\mkey.c</FilePath>
+            </File>
+            <File>
+              <FileName>mcrc16.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\module\crypto\mcrc16.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -18,15 +18,16 @@
 #include "common_def.h"
 #include "common_type.h"
 #include "port_atom.h"
-
+#include "mclock.h"
 //!< util
 //#include "util_bits.h"
 //!< for delay
 #include "delay.h"
 //!< 
 #include <stdio.h>
-
-
+#include "log.h"
+// 定义NV表
+#define NV_ID_EBYTE 0x0001
 
 
 #endif
