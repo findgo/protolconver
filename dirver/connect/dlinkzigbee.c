@@ -442,6 +442,8 @@ uint8_t dl_registerParseCallBack(dl_apduParsepfn_t info_cb, dl_apduParsepfn_t pa
 
 void dlink_init(void)
 {
+    delay_ms(100); // 使设备初始化完全
+
     SerialDrvInit(COM0, 115200, 8, DRV_PAR_NONE);
     // read zigbee device info
     dlink_discover_request(DL_LOCAL_ADD, 30);

@@ -18,11 +18,8 @@ typedef struct {
     uint8_t dat[];
 }Wtreq_t;
 
-
-// 消息句柄
-static msgboxhandle_t wtmsghandle;
-// 消息静态
-static msgboxstatic_t wtmsgpbuf;
+// 消息静态句柄缓存
+static msgboxstatic_t wtmsgboxHandlebuf = MSGBOX_STATIC_INIT(WT_MSG_Q_MAX);
 
 // 时间句柄
 static TimerHandle_t wintomTimerHandle = NULL;
@@ -99,7 +96,7 @@ uint8_t wintom_getSingleDevID(uint8_t channel)
     if(channel > WT_CHANNEL_15)
         return FALSE;
     
-    if(msgBoxIdle(wtmsghandle) < 1) // full on message on the list
+    if(msgBoxIdle(&wtmsgboxHandlebuf) < 1) // full on message on the list
         return FALSE;
     
     size = 2 + 1 + 1 + 1  + 1; // head(2) + len(1) + cmdcode(1) + para0(1) + checksum
@@ -121,7 +118,7 @@ uint8_t wintom_getSingleDevID(uint8_t channel)
 
     *pbuf++ = checksum;
 
-    if(msgBoxpost(wtmsghandle, reqmsg) < 0){
+    if(msgBoxpost(&wtmsgboxHandlebuf, reqmsg) < 0){
         msgdealloc(reqmsg);
         return FALSE;
     }
@@ -149,7 +146,7 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *pa
     Wtreq_t *reqmsg;
     uint8_t *pbuf;
     
-    if(msgBoxIdle(wtmsghandle) < 1) // full on message on the list
+    if(msgBoxIdle(&wtmsgboxHandlebuf) < 1) // full on message on the list
         return FALSE;
     
     size = 2 + 1 + 1 + 1 + 1 + ( paraleftbuf == NULL ? 0 : paraleftlen ) + 1; // head(2) + len(1) + cmdcode(1) + para0(1) + para1(1) + otherpara + checksum
@@ -182,7 +179,7 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *pa
 
     *pbuf++ = checksum;
 
-    if(msgBoxpost(wtmsghandle, reqmsg) < 0){
+    if(msgBoxpost(&wtmsgboxHandlebuf, reqmsg) < 0){
         msgdealloc(reqmsg);
         return FALSE;
     }
@@ -288,7 +285,7 @@ void wintomTask(void)
     if(wintom_state == 0){ // idle ,check any request on the list
         // check any request on the list ? 
 
-        if((reqmsg = msgBoxaccept(wtmsghandle)) == NULL)
+        if((reqmsg = msgBoxaccept(&wtmsgboxHandlebuf)) == NULL)
             return;
 
         WT_SEND(reqmsg->dat, msglen(reqmsg) - 1);
@@ -330,7 +327,6 @@ static void wintom_TimerCB(void *arg)
 void wintom_Init(void)
 {
     wintomTimerHandle = timerAssign(&wintomTimer,  wintom_TimerCB, NULL);
-    wtmsghandle = msgBoxAssign(&wtmsgpbuf, WT_MSG_Q_MAX);
     SerialDrvInit(COM1, 9600, 0, DRV_PAR_NONE);
 }
 

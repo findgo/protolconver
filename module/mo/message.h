@@ -29,6 +29,19 @@ extern "C" {
 #define MSG_BUFFER_NOT_AVAIL    (-2)  // 表明释放时,消息处于队列上,不可释放
 #define MSG_QBOX_FULL           (-3)  // 消息邮箱满
 
+/*********************** 仅暴露给消息队列使用**********************************************/
+#define MSG_HDR_NEXT(msg_ptr)      (((msg_hdr_t *) (msg_ptr) - 1)->next)
+
+// 消息头部
+typedef struct
+{
+    uint8_t mark;
+    uint8_t spare;
+    uint16_t len;
+    void   *next;
+} msg_hdr_t;
+/*********************** 仅暴露给消息队列使用**********************************************/
+
 typedef struct {
     uint16_t dumy0; 
     uint16_t dumy1;
@@ -126,7 +139,7 @@ void *msgBoxpeek( msgboxhandle_t msgbox );
  */
 #define msgBoxpostFront(msgbox, msg_ptr)   msgBoxGenericpost(msgbox, msg_ptr, TRUE)
 
-// 消息队列
+/*********************** 消息队列**********************************************/
 // 可用于扩展消息功能时使用
 /**
  * @brief   取出消息队列第一条消息
@@ -162,6 +175,7 @@ void *msgQpeek( msg_q_t *q_ptr );
  * @return  返回错误码
  */
 void msgQextract( msg_q_t *q_ptr, void *msg_ptr, void *premsg_ptr );
+/*********************** 消息队列**********************************************/
 
 // 内部API
 /**

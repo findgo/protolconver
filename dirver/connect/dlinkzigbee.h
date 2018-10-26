@@ -22,6 +22,7 @@ NOTE：如果不知道波特率，将Band reset 引脚连着到GND，这样可�
 #include "mserial.h"
 
 #define DL_LOCAL_ADD        0x0000 
+#define DL_COORDINATOR      0x0001
 #define DL_BROADCAST_ADD    0xffff
 #define DL_PAIND_INVALID    0xffff
 //!<@  port define 
@@ -44,7 +45,7 @@ NOTE：如果不知道波特率，将Band reset 引脚连着到GND，这样可�
 #define DL_BASIC_INFO_CMD_WR_PANID       0x12    // not set 0xffff
 #define DL_BASIC_INFO_CMD_WR_CHANNEL     0x13    // range 0x0b to 0x1a
 #define DL_BASIC_INFO_CMD_WR_BAND        0x14    // range 0x00 to 0x0c
-#define DL_BASIC_INFO_UPDATE_INFO_RESET  0x10
+#define DL_BASIC_INFO_UPDATE_INFO_RESET  0x10   // 必须发送重启命令才生效
 
 // read command response packet
 #define DL_BASIC_INFO_RD_RSP_ADD         0x21

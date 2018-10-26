@@ -26,6 +26,7 @@
 //!< 
 #include <stdio.h>
 #include "log.h"
+#include "memalloc.h"
 // 定义NV表
 #define NV_ID_EBYTE 0x0001
 
