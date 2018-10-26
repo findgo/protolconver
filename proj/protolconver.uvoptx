@@ -135,7 +135,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGTARM</Key>
-          <Name>(1010=-1,-1,-1,-1,0)(1007=-1,-1,-1,-1,0)(1008=-1,-1,-1,-1,0)(1009=-1,-1,-1,-1,0)</Name>
+          <Name>(1010=-1,-1,-1,-1,0)(1007=-1,-1,-1,-1,0)(1008=-1,-1,-1,-1,0)(1009=-934,14,-676,602,0)</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -157,9 +157,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>445</LineNumber>
+          <LineNumber>479</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134227336</Address>
+          <Address>134226182</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -168,71 +168,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\dirver\connect\ebyteZB.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\protolconver\../dirver/connect/ebyteZB.c\445</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>50</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134226454</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\dirver\connect\ebyteZB.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\protolconver\../dirver/connect/ebyteZB.c\50</Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>342</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134226646</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\dirver\connect\ebyteZB.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\protolconver\../dirver/connect/ebyteZB.c\342</Expression>
-        </Bp>
-        <Bp>
-          <Number>3</Number>
-          <Type>0</Type>
-          <LineNumber>347</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134226714</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\dirver\connect\ebyteZB.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\protolconver\../dirver/connect/ebyteZB.c\347</Expression>
-        </Bp>
-        <Bp>
-          <Number>4</Number>
-          <Type>0</Type>
-          <LineNumber>492</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134226242</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\dirver\connect\ebyteZB.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\protolconver\../dirver/connect/ebyteZB.c\492</Expression>
+          <Expression>\\protolconver\../dirver/connect/ebyteZB.c\479</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -256,12 +192,17 @@
           <WinNumber>1</WinNumber>
           <ItemText>msg</ItemText>
         </Ww>
+        <Ww>
+          <count>4</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>eb_seqstate</ItemText>
+        </Ww>
       </WatchWindow1>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x2000079e</ItemText>
+          <ItemText>0x200007b4</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow1>
@@ -269,7 +210,7 @@
         <Mm>
           <WinNumber>2</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x200007dc</ItemText>
+          <ItemText>0x200007A8</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow2>
@@ -597,8 +538,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\module\crypto\mcrc16.c</PathWithFileName>
-      <FilenameWithoutPath>mcrc16.c</FilenameWithoutPath>
+      <PathWithFileName>..\module\crypto\verify.c</PathWithFileName>
+      <FilenameWithoutPath>verify.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -674,7 +615,7 @@
 
   <Group>
     <GroupName>mo</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -806,7 +747,7 @@
 
   <Group>
     <GroupName>::Device</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>1</RteFlg>

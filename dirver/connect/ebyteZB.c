@@ -11,12 +11,12 @@
 
 #define EBYTE_RESPONSE_TIMEOUT    500 // 回复超时设定
 
-#define EBYTE_MSG_Q_MAX            8
+#define EBYTE_MSG_BOX_CAP_MAX      8
 
 typedef struct {
     uint8_t headcmd;
     uint8_t cmd;
-    
+    uint16_t len;
     uint8_t dat[];
 }ebytereq_t;
 
@@ -25,7 +25,9 @@ static void eb_CfgHandle(uint8_t *dat, uint8_t len);
 static void eb_specificHandle(uint16_t speVal);
 
 static ebyte_info_t ebyteinfo;
-static msg_q_t ebyte_msgq = NULL;
+
+static msgboxhandle_t ebytemsghandle;
+static msgboxstatic_t ebytemsgbuf;
 
 static const ebyteNvPara_t ebytedefaltinfo = {
     EBYTE_NODE_DEVTYPE,
@@ -43,8 +45,9 @@ static const ebyteNvPara_t ebytedefaltinfo = {
 
 void ebyteZBInit(void)
 {
+    ebytemsghandle = msgBoxAssign(&ebytemsgbuf, EBYTE_MSG_BOX_CAP_MAX);
     SerialDrvInit(COM0, 115200, 8, DRV_PAR_NONE);
-    
+        
     memset(&ebyteinfo, 0, sizeof(ebyteinfo));
     ebyteinfo.nwk_state = EBYTE_NWK_STATE_OFF;
     ebyteinfo.valid = FALSE;
@@ -63,6 +66,8 @@ uint16_t ebyte_nwkAddr(void)
    return ebyteinfo.nwkaddr;
 }
 
+
+// 返回读回复除去帧头的数据长度
 static uint8_t ebyte_rdrsplen(uint8_t cmd)
 {
     switch(cmd){
@@ -99,6 +104,7 @@ static uint8_t ebyte_rdrsplen(uint8_t cmd)
     }
 }
 
+// 返回写回复除去帧头的数据长度
 static uint8_t ebyte_wrrsplen(uint8_t cmd)
 {
     switch(cmd){
@@ -134,7 +140,7 @@ uint8_t ebyte_OSPFreq(uint16_t dstaddr, uint8_t *dat, uint8_t dat_len)
 {
     uint8_t len = 0;
     uint8_t *pbuf;
-    uint16_t tmpcrc;
+    uint16_t tmpxor;
 
 //    if(!ebyte_NetAvailable())
 //        return FALSE;
@@ -142,12 +148,12 @@ uint8_t ebyte_OSPFreq(uint16_t dstaddr, uint8_t *dat, uint8_t dat_len)
     if(dat_len > EBYTE_PACKET_DATA_LEN - 4)
         return FALSE;
 
-    pbuf = (uint8_t *)mo_malloc( 2 + 4 + 5 + dat_len);
+    pbuf = (uint8_t *)mo_malloc( 2 + 4 + (FLOW_SF_HEAD_LEN + FLOW_F_DATALEN_LEN + FLOW_F_XOR_LEN) + dat_len); 
     if(pbuf == NULL)
         return FALSE;
     
     pbuf[EBYTE_PACKET_HEAD_OFS] = EBYTE_PACKET_HEAD_CMD_DATA;
-    pbuf[EBYTE_PACKET_LENGH_OFS] = dat_len + 4 + FLOW_FRAME_HEAD_LEN + FLOW_FRAME_DATALEN_LEN + FLOW_FRAME_CRC_LEN;
+    pbuf[EBYTE_PACKET_LENGH_OFS] = dat_len + 4 + FLOW_SF_HEAD_LEN + FLOW_F_DATALEN_LEN + FLOW_F_XOR_LEN;
     len += 2;
     pbuf[len++] = EBYTE_UNICAST;
     pbuf[len++] = EBYTE_UNICAST_MODE_OSPF;
@@ -156,14 +162,12 @@ uint8_t ebyte_OSPFreq(uint16_t dstaddr, uint8_t *dat, uint8_t dat_len)
 
     // data 域  
     // for ospf flow解析
-    pbuf[len++] = FLOW_PREAMBLE1;
-    pbuf[len++] = FLOW_PREAMBLE2;
+    pbuf[len++] = FLOW_SF_PREAMBLE;
     pbuf[len++] = dat_len;
     memcpy(&pbuf[len], dat, dat_len);
     len += dat_len;
-    tmpcrc = mCRC16(dat, dat_len);
-    pbuf[len++] = LO_UINT16(tmpcrc);
-    pbuf[len++] = HI_UINT16(tmpcrc);
+    tmpxor = mXOR(dat, dat_len);
+    pbuf[len++] = tmpxor;
     
     EBYTE_SEND(pbuf, len);
 
@@ -185,17 +189,20 @@ uint8_t ebyte_cfgReq(uint8_t Headcmd, uint8_t cmd, uint8_t *premain, uint8_t rea
 {
     ebytereq_t *msg;
     uint8_t *pbuf;
+    uint8_t size;
     
     if(reaminlen > EBYTE_PACKET_DATA_LEN)
         return FALSE;
 
-    reaminlen = ((premain == NULL) ? 0 : reaminlen);
-    msg = (ebytereq_t *)msg_allocate( sizeof(ebytereq_t) + 1 + 1 + 1 + reaminlen + 1);// headcmd + cmd + datalength + datalen + tail
+    reaminlen = (premain == NULL) ? 0 : reaminlen;
+    size = 1 + 1 + 1 + reaminlen + 1;// headcmd + datalength + cmd + reaminlen + tail
+    msg = (ebytereq_t *)msgalloc( sizeof(ebytereq_t) + size);
     if(msg == NULL)
         return FALSE;
 
     msg->headcmd = Headcmd; //save head command
     msg->cmd = cmd;  // save rd wr cmd
+    msg->len = size;
     pbuf = msg->dat;
 
     // data to send
@@ -207,7 +214,10 @@ uint8_t ebyte_cfgReq(uint8_t Headcmd, uint8_t cmd, uint8_t *premain, uint8_t rea
     pbuf += reaminlen;
     *pbuf = EBYTE_PACKET_TAIL;
 
-    msg_queuecput(&ebyte_msgq, msg);
+    if(msgBoxpost(ebytemsghandle, msg) < 0){
+        msgdealloc(msg);
+        return FALSE;
+    }
     
     return TRUE;
 }
@@ -284,18 +294,18 @@ uint8_t ebyte_wrAllInfo(ebyteNvPara_t *cfg)
     return TRUE;
 }
 
-#define EBYTE_FSM_HEAD0             0
-#define EBYTE_FSM_HEAD1             1
-#define EBYTE_FSM_SPECIAL           2
-#define EBYTE_FSM_CFG_TOKEN         3
-#define EBYTE_FSM_OSPF_LEN          4
-#define EBYTE_FSM_OSPF_TOKEN        5
+#define EBYTE_FSM_HEAD              0
+#define EBYTE_FSM_SPECIAL           1
+#define EBYTE_FSM_CFG_TOKEN         2
+#define EBYTE_FSM_OSPF_LEN          3
+#define EBYTE_FSM_OSPF_TOKEN        4
+#define EBYTE_FSM_OSPF_XOR          5
 
 static uint8_t *eb_pbuf = NULL;
 static uint8_t eb_packetlen;
 static uint8_t eb_packetbytes;
 static uint16_t eb_specific;
-static uint8_t eb_fsm_state = EBYTE_FSM_HEAD0;
+static uint8_t eb_fsm_state = EBYTE_FSM_HEAD;
 
 static uint8_t eb_reqHeadcmd = 0xff;
 static uint8_t eb_reqcmd = 0xff;
@@ -304,20 +314,20 @@ static uint8_t eb_seqstate = FALSE;
 static void __ebyte_InReqRspCheck(uint8_t ch)
 {
     if(eb_seqstate){
-        // get read rsp or write rsp length 
-        eb_packetlen = 1 +   ((ch == EBYTE_PACKET_HEAD_CMD_RD_RSP ) ? ebyte_rdrsplen(eb_reqHeadcmd) : ebyte_wrrsplen(eb_reqHeadcmd));    
+        // headcmd +  get read rsp or write rsp length 
+        eb_packetlen = 1 +   ((ch == EBYTE_PACKET_HEAD_CMD_RD_RSP ) ? ebyte_rdrsplen(eb_reqcmd) : ebyte_wrrsplen(eb_reqcmd));    
         eb_packetbytes = 0;
-        eb_pbuf = (uint8_t *)mo_malloc(eb_packetlen + 1);
+        eb_pbuf = (uint8_t *)mo_malloc(eb_packetlen);
         if(eb_pbuf){
             eb_pbuf[eb_packetbytes++] = ch; // save head?
             eb_fsm_state =  EBYTE_FSM_CFG_TOKEN;
         }
         else{
-            eb_fsm_state =  EBYTE_FSM_HEAD0;
+            eb_fsm_state =  EBYTE_FSM_HEAD;
         }
     }
     else {
-        eb_fsm_state = EBYTE_FSM_HEAD0;
+        eb_fsm_state = EBYTE_FSM_HEAD;
     }
 }
 
@@ -332,44 +342,20 @@ void ebyteZBTask(void)
         EBYTE_RCV(&ch, 1); //read one byte
         
         switch (eb_fsm_state){
-        case EBYTE_FSM_HEAD0:
-            if(ch == FLOW_PREAMBLE1){ // OSPF head0
-            
-                mo_logln(DEBUG, "OSPF state!");
-                eb_fsm_state = EBYTE_FSM_HEAD1;
+        case EBYTE_FSM_HEAD:
+            if(ch == FLOW_SF_PREAMBLE){ // OSPF head
+                eb_fsm_state = EBYTE_FSM_OSPF_LEN;
             }
             else if ( ch == EBYTE_PACKET_HEAD_CMD_RD_RSP || ch == EBYTE_PACKET_HEAD_CMD_WR_RSP ){ 
-                
-                mo_logln(DEBUG, "rsp state!");
                 __ebyte_InReqRspCheck(ch);
             }
             else if(ch == EBYTE_PACKET_HEAD_CMD_UART_ERR || ch == EBYTE_PACKET_HEAD_CMD_SPECIFIC){
-                
-                mo_logln(DEBUG, "specific state!");
                 eb_specific =  ch;
                 eb_fsm_state = EBYTE_FSM_SPECIAL;
             }
             else{
+                mo_logln(DEBUG, "invalid state!");
                 // do nothing
-            }
-            break;
-
-        case EBYTE_FSM_HEAD1:
-            if(ch == FLOW_PREAMBLE2 ){ // is ospf 
-                eb_fsm_state = EBYTE_FSM_OSPF_LEN;
-            }
-            else if(ch == FLOW_PREAMBLE1){ // ospf head0 again??            
-                break;
-            }
-            else if( ch == EBYTE_PACKET_HEAD_CMD_RD_RSP || ch == EBYTE_PACKET_HEAD_CMD_WR_RSP ){
-                __ebyte_InReqRspCheck(ch);
-            }
-            else if(ch == EBYTE_PACKET_HEAD_CMD_UART_ERR || ch == EBYTE_PACKET_HEAD_CMD_SPECIFIC){
-                eb_specific = ch;
-                eb_fsm_state = EBYTE_FSM_SPECIAL;
-            }
-            else{
-                eb_fsm_state = EBYTE_FSM_HEAD0;
             }
             break;
             
@@ -379,16 +365,16 @@ void ebyteZBTask(void)
             if(eb_specific ==  EBYTE_JOININ_NET|| eb_specific ==   EBYTE_NO_NET
                 || eb_specific == EBYTE_COOR_SETUP || eb_specific ==   EBYTE_UART_FORMAT_ERR) {
                 eb_specificHandle(eb_specific);
-                eb_fsm_state = EBYTE_FSM_HEAD0;
+                eb_fsm_state = EBYTE_FSM_HEAD;
             } 
-            else if(ch == FLOW_PREAMBLE1){
-                eb_fsm_state = EBYTE_FSM_HEAD1;
+            else if(ch == FLOW_SF_PREAMBLE){
+                eb_fsm_state = EBYTE_FSM_OSPF_LEN;
             }
             else if( ch == EBYTE_PACKET_HEAD_CMD_RD_RSP || ch == EBYTE_PACKET_HEAD_CMD_WR_RSP ){
                 __ebyte_InReqRspCheck(ch);
             }
             else{
-                eb_fsm_state = EBYTE_FSM_HEAD0;
+                eb_fsm_state = EBYTE_FSM_HEAD;
             }
             break;
             
@@ -410,23 +396,24 @@ void ebyteZBTask(void)
             }
 
             if(eb_packetbytes == eb_packetlen){
+                mo_logln(DEBUG, "rsp handle!");
                 eb_CfgHandle(eb_pbuf, eb_packetlen);
                 eb_seqstate = FALSE;
-                eb_fsm_state = EBYTE_FSM_HEAD0;
+                eb_fsm_state = EBYTE_FSM_HEAD;
                 mo_free(eb_pbuf);
             }
             break;
             
         case EBYTE_FSM_OSPF_LEN:
-            eb_packetlen = ch + FLOW_FRAME_CRC_LEN;
+            eb_packetlen = ch;
             eb_packetbytes = 0;
 
-            eb_pbuf = (uint8_t *)msg_allocate(eb_packetlen);
+            eb_pbuf = (uint8_t *)msgalloc(eb_packetlen);
             if(eb_pbuf){
                 eb_fsm_state = EBYTE_FSM_OSPF_TOKEN;
             }
             else{               
-                eb_fsm_state = EBYTE_FSM_HEAD0;
+                eb_fsm_state = EBYTE_FSM_HEAD;
             }
             break;
 
@@ -435,33 +422,37 @@ void ebyteZBTask(void)
 
             bytesInRxBuffer = EBYTE_RCVBUFLEN();
             /* If the remain of the data is there, read them all, otherwise, just read enough */
-            if (bytesInRxBuffer <= ( eb_packetlen - eb_packetbytes )){
-                if(bytesInRxBuffer != 0){
+            
+            if(bytesInRxBuffer != 0){
+                if (bytesInRxBuffer <= ( eb_packetlen - eb_packetbytes )){
                     EBYTE_RCV (&eb_pbuf[eb_packetbytes], bytesInRxBuffer);
                     eb_packetbytes += bytesInRxBuffer;
                 }
-            }
-            else{
-                EBYTE_RCV (&eb_pbuf[eb_packetbytes], eb_packetlen - eb_packetbytes);
-                eb_packetlen += eb_packetlen - eb_packetbytes;
+                else{
+                    EBYTE_RCV (&eb_pbuf[eb_packetbytes], eb_packetlen - eb_packetbytes);
+                    eb_packetlen += eb_packetlen - eb_packetbytes;
+                }
             }
 
             if(eb_packetlen == eb_packetbytes){
-                if(mCRC16(eb_pbuf, eb_packetlen) == 0){
-                    
-                    mo_logln(DEBUG, "OSPF sendto nwk!");
-                    nwkmsgsend(eb_pbuf);
-                }
-                else{
-                    msg_deallocate(eb_pbuf);
-                }
-                
-                eb_fsm_state = EBYTE_FSM_HEAD0;
+                eb_fsm_state = EBYTE_FSM_OSPF_XOR;
             }                
             break;
             
+        case EBYTE_FSM_OSPF_XOR:
+            if(mXOR(eb_pbuf, eb_packetlen) == ch){
+                mo_logln(DEBUG, "OSPF sendto nwk!");
+                if(nwkmsgsend(eb_pbuf) < 0)
+                    msgdealloc(eb_pbuf);
+            }
+            else{
+                msgdealloc(eb_pbuf);
+            }
+            eb_fsm_state = EBYTE_FSM_HEAD;
+            break;
+            
         default:          
-            eb_fsm_state = EBYTE_FSM_HEAD0;
+            eb_fsm_state = EBYTE_FSM_HEAD;
             break;
         }
     }  
@@ -472,26 +463,25 @@ static void eb_processSequeue(void)
 {
     ebytereq_t *msg;
     static ctimer_t ebtm;
-
+    
     // in rsp sequeue
     if(eb_seqstate == TRUE){
         if(ctimerExpired(ebtm, EBYTE_RESPONSE_TIMEOUT)){
-            eb_seqstate = 0;
+            eb_seqstate = FALSE;
             mo_logln(DEBUG, "ebyte rsp timeout!");
         }
-        else{
-            return;
-        }
+        
+        return;
     }
 
-    msg = (ebytereq_t *)msg_queuepop(&ebyte_msgq);
-    if(msg == NULL)
+    if((msg = (ebytereq_t *)msgBoxaccept(ebytemsghandle)) == NULL)
         return;
 
-    mo_logln(DEBUG, "ebyte request send!");
+    eb_reqHeadcmd = msg->headcmd;
     eb_reqcmd = msg->cmd;
-    EBYTE_SEND(msg->dat, msg_len(msg) - 2);  
-    msg_deallocate(msg);
+    mo_logln(DEBUG, "ebyte request send! %x %x", eb_reqHeadcmd, eb_reqcmd);
+    EBYTE_SEND(msg->dat,  msg->len);  
+    msgdealloc(msg);
     eb_seqstate = TRUE;
     ctimerStart(ebtm);
 }
@@ -499,16 +489,17 @@ static void eb_processSequeue(void)
 
 static void eb_specificHandle(uint16_t speVal)
 {
+    mo_logln(DEBUG,"specific Handle value: 0x%x",speVal);
     if(speVal == EBYTE_COOR_SETUP){
         #if EBYTE_NODE_DEVTYPE == EBYTE_DEVTYPE_COOR
             ebyteinfo.nwk_state = EBYTE_NWK_STATE_AVAILABLE;      // ff aa 设备加入网络会提示信息
             // 协调器启动一个信息获取序列
-            ebyte_rdAllInfo();
+            //ebyte_rdAllInfo();
         #endif
     }
 #if EBYTE_NODE_DEVTYPE != EBYTE_DEVTYPE_COOR
-    else if (speVal == EBYTE_JOININ_NET){ // ff ff 协调器设备建立网络提示
-            ebyteinfo.nwk_state = EBYTE_NWK_STATE_AVAILABLE;      // ff aa 设备加入网络会提示信息
+    else if (speVal == EBYTE_JOININ_NET){ // ff aa 设备加入网络会提示信息
+            ebyteinfo.nwk_state = EBYTE_NWK_STATE_AVAILABLE;      
             //启动一个获取信息序列
             ebyte_rdAllInfo();
     }
@@ -525,8 +516,8 @@ static void eb_CfgHandle(uint8_t *dat, uint8_t len)
 {
     uint8_t lens;
     // read rsp
-    if(dat[0] == EBYTE_PACKET_HEAD_CMD_RD_RSP){
-        switch (dat[1]){
+    if(dat[0] == EBYTE_PACKET_HEAD_CMD_RD_RSP && eb_reqHeadcmd == EBYTE_PACKET_HEAD_CMD_RD){
+        switch (eb_reqcmd){
         case EBYTE_CMD_ALLINFO:
             lens = 2;
             ebyteinfo.devType = dat[lens++];

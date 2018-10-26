@@ -640,9 +640,9 @@
               <FilePath>..\module\mkey.c</FilePath>
             </File>
             <File>
-              <FileName>mcrc16.c</FileName>
+              <FileName>verify.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\crypto\mcrc16.c</FilePath>
+              <FilePath>..\module\crypto\verify.c</FilePath>
             </File>
           </Files>
         </Group>

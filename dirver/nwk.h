@@ -20,10 +20,7 @@ typedef struct {
 }nwk_msg_t;
 
 
-
-void *nwkmsgallocate(uint16_t len);
-void nwkmsgsend(void *msg_ptr);
-void nwkmsgdeallocate(void *msg_ptr);
+int nwkmsgsend(void *msg_ptr);
 
 uint8_t nwkHdrLen(void);
 uint8_t *nwkDataBuildHdr(uint8_t *pDat, uint16_t dstaddr);

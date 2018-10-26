@@ -83,16 +83,18 @@ static void tmCb(void *arg)
     if(ltlFindAttrRec(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, ATTRID_BASIC_SERIAL_NUMBER, &attrirecord)){
  
         reportcmd = (ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1);
-        reportcmd->numAttr = 1;
-        lreport = &(reportcmd->attrList[0]);
-        lreport->attrID = attrirecord.attrId;
-        lreport->dataType = attrirecord.dataType;
-        lreport->attrData = attrirecord.dataPtr;
+        if(reportcmd){
+            reportcmd->numAttr = 1;
+            lreport = &(reportcmd->attrList[0]);
+            lreport->attrID = attrirecord.attrId;
+            lreport->dataType = attrirecord.dataType;
+            lreport->attrData = attrirecord.dataPtr;
 
-        ltl_SendReportCmd(&dst_addr, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, 
-                        LTL_FRAMECTL_DIR_CLIENT_SERVER, LTL_MANU_CODE_SPECIFIC_LTL, TRUE,reportcmd);
-        
-        mo_free(reportcmd);
+            ltl_SendReportCmd(&dst_addr, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, 
+                            LTL_FRAMECTL_DIR_CLIENT_SERVER, LTL_MANU_CODE_SPECIFIC_LTL, TRUE,reportcmd);
+            
+            mo_free(reportcmd);
+        }
     }
     timerRestart(*((TimerHandle_t *)arg), 1000);
 }

@@ -1,7 +1,5 @@
 #include "message.h"
 
-#if configSUPPORT_MSG == 1
-
 #define MSGBOX_CNT(msgbox_ptr)      (((msgbox_t *) (msgbox_ptr))->count)
 #define MSGBOX_CAP(msgbox_ptr)      (((msgbox_t *) (msgbox_ptr))->capacity)
 #define MSGBOX_QHEAD(msgbox_ptr)      (((msgbox_t *) (msgbox_ptr))->qhead)
@@ -70,6 +68,7 @@ uint16_t msglen(void * msg_ptr)
 
     return MSG_HDR_LEN(msg_ptr);
 }
+
 int msgsetspare(void * msg_ptr, uint8_t val)
 {
     if ( msg_ptr == NULL )
@@ -123,6 +122,7 @@ uint16_t msgBoxcnt( msgboxhandle_t msgbox )
 
     return MSGBOX_CNT(msgbox);
 }
+
 uint16_t msgBoxIdle( msgboxhandle_t msgbox )
 {
     if ( msgbox == NULL )
@@ -131,6 +131,7 @@ uint16_t msgBoxIdle( msgboxhandle_t msgbox )
     
     return (MSGBOX_CAP(msgbox) - MSGBOX_CNT(msgbox));
 }
+
 void *msgBoxaccept( msgboxhandle_t msgbox )
 {
     // no message on the list
@@ -170,7 +171,6 @@ int msgBoxGenericpost(msgboxhandle_t msgbox, void *msg_ptr, uint8_t isfront )
 
     return ( MSG_SUCCESS );
 }
-
 
 void msgQGenericput( msg_q_t *q_ptr, void *msg_ptr, uint8_t isfront )
 {
@@ -263,5 +263,4 @@ void msgQextract( msg_q_t *q_ptr, void *msg_ptr, void *premsg_ptr )
     MSG_HDR_MARK( msg_ptr ) = FALSE;
 }
 
-#endif
 

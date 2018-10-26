@@ -19,10 +19,10 @@ typedef struct {
 }Wtreq_t;
 
 
-// 消息队列
-static msg_q_t wtmsg_q = NULL;
-// 消息计数
-static uint8_t wtmsgq_cnt = 0;
+// 消息句柄
+static msgboxhandle_t wtmsghandle;
+// 消息静态
+static msgboxstatic_t wtmsgpbuf;
 
 // 时间句柄
 static TimerHandle_t wintomTimerHandle = NULL;
@@ -99,11 +99,11 @@ uint8_t wintom_getSingleDevID(uint8_t channel)
     if(channel > WT_CHANNEL_15)
         return FALSE;
     
-    if(wtmsgq_cnt > WT_MSG_Q_MAX) // too much message on the list
+    if(msgBoxIdle(wtmsghandle) < 1) // full on message on the list
         return FALSE;
     
     size = 2 + 1 + 1 + 1  + 1; // head(2) + len(1) + cmdcode(1) + para0(1) + checksum
-    reqmsg = (Wtreq_t *)msg_allocate(sizeof(Wtreq_t) + size);
+    reqmsg = (Wtreq_t *)msgalloc(sizeof(Wtreq_t) + size);
     if(reqmsg == NULL)
         return FALSE;
 
@@ -120,12 +120,13 @@ uint8_t wintom_getSingleDevID(uint8_t channel)
     checksum += channel;
 
     *pbuf++ = checksum;
-    
-    msg_queuecput(&wtmsg_q, reqmsg);
-    wtmsgq_cnt++;
-    
-    return TRUE;
 
+    if(msgBoxpost(wtmsghandle, reqmsg) < 0){
+        msgdealloc(reqmsg);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -148,11 +149,11 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *pa
     Wtreq_t *reqmsg;
     uint8_t *pbuf;
     
-    if(wtmsgq_cnt > WT_MSG_Q_MAX) // too much message on the list
+    if(msgBoxIdle(wtmsghandle) < 1) // full on message on the list
         return FALSE;
     
     size = 2 + 1 + 1 + 1 + 1 + ( paraleftbuf == NULL ? 0 : paraleftlen ) + 1; // head(2) + len(1) + cmdcode(1) + para0(1) + para1(1) + otherpara + checksum
-    reqmsg = (Wtreq_t *)msg_allocate(sizeof(Wtreq_t) + size);
+    reqmsg = (Wtreq_t *)msgalloc(sizeof(Wtreq_t) + size);
     if(reqmsg == NULL)
         return FALSE;
 
@@ -181,8 +182,10 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *pa
 
     *pbuf++ = checksum;
 
-    msg_queuecput(&wtmsg_q, reqmsg);
-    wtmsgq_cnt++;
+    if(msgBoxpost(wtmsghandle, reqmsg) < 0){
+        msgdealloc(reqmsg);
+        return FALSE;
+    }
     
     return TRUE;
 }
@@ -284,14 +287,14 @@ void wintomTask(void)
     
     if(wintom_state == 0){ // idle ,check any request on the list
         // check any request on the list ? 
-        if((wtmsgq_cnt == 0) || ((reqmsg = msg_queuepop(&wtmsg_q)) == NULL))
+
+        if((reqmsg = msgBoxaccept(wtmsghandle)) == NULL)
             return;
 
-        wtmsgq_cnt--;
-        WT_SEND(reqmsg->dat, msg_len(reqmsg) - 1);
+        WT_SEND(reqmsg->dat, msglen(reqmsg) - 1);
         cmd = reqmsg->cmd;
 
-        msg_deallocate(reqmsg);
+        msgdealloc(reqmsg);
         
         if(cmd == WT_CMDCODE_GET_POS || cmd == WT_CMDCODE_GET_ANGLE
             || cmd == WT_CMDCODE_GET_DEVID || cmd == WT_CMDCODE_GET_MOTOSTATUS){
@@ -327,7 +330,7 @@ static void wintom_TimerCB(void *arg)
 void wintom_Init(void)
 {
     wintomTimerHandle = timerAssign(&wintomTimer,  wintom_TimerCB, NULL);
-
+    wtmsghandle = msgBoxAssign(&wtmsgpbuf, WT_MSG_Q_MAX);
     SerialDrvInit(COM1, 9600, 0, DRV_PAR_NONE);
 }
 

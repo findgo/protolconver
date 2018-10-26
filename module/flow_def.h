@@ -17,18 +17,16 @@
 
 #include "verify.h" 
 
-//frame head offset
-#define FLOW_FRAME_HEAD_PREAMBLE1_OFFSET  0  
-#define FLOW_FRAME_HEAD_PREAMBLE2_OFFSET  1
-// frame data length offset
-#define FLOW_FRAME_DATALEN_OFFSET     2
 
-#define FLOW_FRAME_HEAD_LEN               2  // frame head len
-#define FLOW_FRAME_DATALEN_LEN            1  // frame data length len
-#define FLOW_FRAME_CRC_LEN                2  // CRC
+#define FLOW_DF_HEAD_LEN               2  // double frame head len
+#define FLOW_SF_HEAD_LEN               1  // single frame head len
+#define FLOW_F_DATALEN_LEN            1  // frame data length len
+#define FLOW_F_XOR_LEN                1  // XOR
+#define FLOW_F_CRC_LEN                2  // CRC
                                   //ascii
-#define FLOW_PREAMBLE1       '$'  // 0x24
-#define FLOW_PREAMBLE2       'M'  // 0x4d
+#define FLOW_DF_PREAMBLE1       '$'  // 0x24
+#define FLOW_DF_PREAMBLE2       'M'  // 0x4d
 
+#define FLOW_SF_PREAMBLE        0xf0
 #endif
 

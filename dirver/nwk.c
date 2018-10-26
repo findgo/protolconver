@@ -4,8 +4,7 @@
 #include "ebyteZB.h"
 #include "prefix.h"
 
-#define nwkmsgreceive() msg_queuepop(&nwk_msgq)
-#define nwkmsglen(msg_ptr) msg_len(msg_ptr)
+static msgboxstatic_t nwkmsgboxHandlebuf = MSGBOX_STATIC_INIT(MSGBOX_UNLIMITED_CAP);
 
 typedef struct {
     uint8_t fc;
@@ -19,29 +18,14 @@ static uint8_t *nwkParseHdr(nwk_Hdr_t *hdr, uint8_t *pDat);
 extern void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt);
 static void nwk_ProcessInNpdu(MoIncomingMsgPkt_t *pkt);
 
-
-
-
-
-static msg_q_t nwk_msgq = NULL;
-
-
 void nwkInit(void)
 {
     ebyteZBInit();
 }
 
-void *nwkmsgallocate(uint16_t len)
+int nwkmsgsend(void *msg_ptr)
 {
-    return msg_allocate(len);
-}
-void nwkmsgsend(void *msg_ptr)
-{
-    msg_queuecput(&nwk_msgq, msg_ptr);
-}
-void nwkmsgdeallocate(void *msg_ptr)
-{
-    msg_deallocate(msg_ptr);  
+    return msgBoxpost(&nwkmsgboxHandlebuf, msg_ptr);
 }
 
 uint8_t nwkHdrLen(void)
@@ -86,14 +70,14 @@ void nwkTask(void)
     MoIncomingMsgPkt_t pkt;
     nwk_Hdr_t hdr;
     
-    msg = nwkmsgreceive();
+    msg = msgBoxaccept(&nwkmsgboxHandlebuf);
 
     while(msg)
     {
         mo_logln(DEBUG, "OSPF msg process!");
         // process you message
         pkt.apduData = nwkParseHdr(&hdr, msg);
-        pkt.apduLength = nwkmsglen(msg) - nwkHdrLen();
+        pkt.apduLength = msglen(msg) - nwkHdrLen();
         if(hdr.fc == NWK_FC_DATA){
             pkt.refer = (void *)&(hdr.srcaddr);
             ltl_ProcessInApdu(&pkt);
@@ -106,8 +90,8 @@ void nwkTask(void)
             // drop it
         }
         
-        msg_deallocate(msg);
-        msg = nwkmsgreceive();
+        msgdealloc(msg);
+        msg = msgBoxaccept(&nwkmsgboxHandlebuf);
     } 
 }
 

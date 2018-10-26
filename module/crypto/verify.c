@@ -67,4 +67,15 @@ uint16_t mCRC16( uint8_t * pucFrame, uint16_t usLen )
     
     return ( uint16_t )( ucCRCHi << 8 | ucCRCLo );
 }
-
+//异或校验
+uint8_t mXOR(uint8_t *src , uint8_t len)
+{
+    uint8_t i ;
+    uint8_t __sum =0;
+    
+	for(i = 0; i < len; i++){
+		__sum ^= src[i];
+	}
+    
+	return __sum;
+}
