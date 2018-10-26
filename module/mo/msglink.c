@@ -1,4 +1,4 @@
-#include "message.h"
+#include "msglink.h"
 
 #define MSGBOX_CNT(msgbox_ptr)      (((msgbox_t *) (msgbox_ptr))->count)
 #define MSGBOX_CAP(msgbox_ptr)      (((msgbox_t *) (msgbox_ptr))->capacity)
@@ -17,18 +17,18 @@ typedef struct
     msg_q_t qhead;
 } msgbox_t;
 
-void *msgalloc( uint16_t len )
+void *msgalloc( uint16_t msglen )
 {
     msg_hdr_t *hdr;
 
-    if ( len == 0 )
+    if ( msglen == 0 )
         return (void *)( NULL );
 
-    hdr = ( msg_hdr_t *) mo_malloc( (size_t)(sizeof( msg_hdr_t ) + len ) );
+    hdr = ( msg_hdr_t *) mo_malloc( (size_t)(sizeof( msg_hdr_t ) + msglen ) );
     if ( hdr ) {
         //init it
         hdr->next = NULL;
-        hdr->len = len;
+        hdr->len = msglen;
         hdr->mark = FALSE; // not on qbox list
         hdr->spare = 0;
         

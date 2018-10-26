@@ -3,7 +3,7 @@
 #include "wintom.h"
 #include "usart.h"
 #include "queue.h"
-#include "message.h"
+#include "msglink.h"
 #include "timers.h"
 
 // 定义消息最大存储8条
