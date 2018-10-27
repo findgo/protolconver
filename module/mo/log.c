@@ -13,7 +13,7 @@ static void mo_log_defaultlog_callback(void *ctx, int level, const char *format,
     (void)level;
 
     va_start(ap,format);
-	printf(format,va_arg(ap, char *));
+	vprintf(format,ap);
 	va_end(ap);
 }
 
