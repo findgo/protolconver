@@ -17,13 +17,14 @@
 #include "ltl.h"
 #include "ltl_genattr.h"
 #include "prefix.h"
-
+#include "mt_npi.h"
 #include "nv.h"
 
 static const pTaskFn_t taskArr[] =
 {
-    ebyteZBTask,
-    nwkTask,
+//    ebyteZBTask,
+//    nwkTask,
+    npiTask,
     timerTask, 
     wintomTask
 };
@@ -46,7 +47,9 @@ void loop_init_System(void)
     delay_ms(200);
 //    dl_registerParseCallBack(NULL, ltlApduParsing);
 //    dlink_init();
-    nwkInit();
+//    nwkInit();
+    npiInit();
+
     wintom_Init();
     halledInit();
     mledInit();

@@ -12,7 +12,7 @@
  */
 uint8_t ltlprefixsize(uint8_t *refer)
 {
-    return nwkHdrLen();
+    return 0;//nwkHdrLen();
 }
 
 /*********************************************************************
@@ -25,11 +25,11 @@ uint8_t ltlprefixsize(uint8_t *refer)
  */
 uint8_t *ltlPrefixBuildHdr( uint8_t *refer, uint8_t *pDat )
 {
-    return nwkDataBuildHdr(pDat, *((uint16_t *)refer));
+    return pDat;//nwkDataBuildHdr(pDat, *((uint16_t *)refer));
 }
 
 uint8_t ltlrequest(void *refer, uint8_t *pbuf,uint16_t buflen)
 {
-    return nwkreq(*((uint16_t *)refer), pbuf, buflen);
+    return 0;//nwkreq(*((uint16_t *)refer), pbuf, buflen);
 }
 

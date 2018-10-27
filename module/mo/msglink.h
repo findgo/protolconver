@@ -29,18 +29,6 @@ extern "C" {
 #define MSG_BUFFER_NOT_AVAIL    (-2)  // 表明释放时,信息处于队列上,不可释放
 #define MSG_QBOX_FULL           (-3)  // 信息邮箱满
 
-/*********************** 仅暴露给信息队列使用**********************************************/
-#define MSG_HDR_NEXT(msg_ptr)      (((msg_hdr_t *) (msg_ptr) - 1)->next)
-
-// 信息头部
-typedef struct
-{
-    uint8_t mark;
-    uint8_t spare;
-    uint16_t len;
-    void   *next;
-} msg_hdr_t;
-/*********************** 仅暴露给信息队列使用**********************************************/
 
 typedef struct {
     uint16_t dumy0; 
@@ -175,9 +163,47 @@ void *msgQpeek( msg_q_t *q_ptr );
  * @return  返回错误码
  */
 void msgQextract( msg_q_t *q_ptr, void *msg_ptr, void *premsg_ptr );
+// scan msgQ each message
+#define msgQ_for_each_msg(q_ptr, listmsg) for(listmsg = *(q_ptr); listmsg != NULL;listmsg = msgQnext(listmsg)) 
+// how to take a messge from the list
+/*
+{
+    void *prev = NULL;
+    void *srch;
+
+    msgQ_for_each_msg(q_ptr, srch){
+        if(message find){
+            //take out the list
+            msgQextract(q_ptr, srch, prev);
+           // do you job
+        }
+        else{
+            prev = srch; // save previous message
+        }        
+    } 
+}
+//or
+{
+    void *prev = NULL;
+    void *srch;
+
+    msgQ_for_each_msg(q_ptr, srch){
+        if(message find)
+            break;
+        prev = srch; // save previous message     
+    } 
+
+    if(srh){
+        //take out the list
+        msgQextract(q_ptr, srch, prev);
+    }
+    
+}
+
+*/
 /*********************** 信息队列**********************************************/
 
-// 内部API
+/*********************** 内部API,不可独立调用**********************************************/
 /**
  * @brief   向信息邮箱 发送一条信息
  * @param   msgboxhandle_t - 信息邮箱句柄
@@ -194,6 +220,13 @@ int msgBoxGenericpost(msgboxhandle_t msgbox, void * msg_ptr, uint8_t isfront);
  * @return  返回错误码
  */
 void msgQGenericput( msg_q_t *q_ptr, void *msg_ptr, uint8_t isfront );
+/**
+ * @brief   从信息获得下一条信息        ( 信息必需在队列上,这属于内部API,不得调用 )
+ * @param   msg_ptr - 信息指针
+ * @return  下一条消息指针
+ */
+void *msgQnext(void *msg_ptr);
+/*********************** 内部API,不可独立调用**********************************************/
 
 
 #ifdef __cplusplus

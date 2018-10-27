@@ -7,7 +7,16 @@
 #define MSG_HDR_MARK(msg_ptr)      (((msg_hdr_t *) (msg_ptr) - 1)->mark)
 #define MSG_HDR_SPARE(msg_ptr)      (((msg_hdr_t *) (msg_ptr) - 1)->spare)
 #define MSG_HDR_LEN(msg_ptr)      (((msg_hdr_t *) (msg_ptr) - 1)->len)
+#define MSG_HDR_NEXT(msg_ptr)      (((msg_hdr_t *) (msg_ptr) - 1)->next)
 
+// 信息头部
+typedef struct
+{
+    uint8_t mark;
+    uint8_t spare;
+    uint16_t len;
+    void   *next;
+} msg_hdr_t;
 
 // 消息队列结构体
 typedef struct
@@ -211,37 +220,6 @@ void *msgQpeek( msg_q_t *q_ptr )
     return (void *)(*q_ptr);    
 }
 
-/*
-void *findthe message you want(msg_q_t *q_ptr,...)
-{
-    void *list;
-    void *prev = NULL;
-
-
-    // find corresponding id message
-    // Point to the top of the queue
-    list = *q_ptr;
-
-    // Look through the queue for a message that belongs to the asking task
-    while ( list != NULL )
-    {
-        if ( ) {//message you find  
-            break;
-        }
-        
-        prev = list;
-        list = MSG_HDR_NEXT( list );
-    }
-
-    // Did we find a message?
-    if ( list != NULL ) {
-        // Take out of the link list
-        msgQextract( q_ptr, list, prev );
-    }
-    
-    return ( ( uint8_t *) list );
-}
-*/
 //ok
 // Take out of the link list
 void msgQextract( msg_q_t *q_ptr, void *msg_ptr, void *premsg_ptr )
@@ -257,5 +235,8 @@ void msgQextract( msg_q_t *q_ptr, void *msg_ptr, void *premsg_ptr )
     MSG_HDR_NEXT( msg_ptr ) = NULL;
     MSG_HDR_MARK( msg_ptr ) = FALSE;
 }
-
-
+// get next message
+void *msgQnext(void *msg_ptr)
+{
+    return MSG_HDR_NEXT( msg_ptr );
+}
