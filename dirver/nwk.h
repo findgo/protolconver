@@ -1,11 +1,11 @@
 #ifndef __NWK_H__
 #define __NWK_H__
 
-#include "common_type.h"
-#include "ebyteZB.h"
-
 #define NWK_FC_DATA     0x00
 #define NWK_FC_CMD      0x01
+
+
+
 
 
 
