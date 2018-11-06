@@ -4,7 +4,7 @@
   * @author  
   * @version 
   * @date    
-  * @brief      FIFO·Ç×èÈû´®¿ÚÍ¨ÐÅ£¬ÓÃÓÚÊý¾ÝÁ÷´«Êä
+  * @brief      FIFOéžé˜»å¡žä¸²å£é€šä¿¡ï¼Œç”¨äºŽæ•°æ®æµä¼ è¾“
   ******************************************************************************
   * @attention      V1.2 jgb        201704023
   * @attention      V1.2.1 jgb        201808003  ä¿®æ”¹bug
@@ -20,14 +20,14 @@
 #include "usart.h"
 
 
-// ºê ¿ØÖÆÖ§³ÖµÄ´®¿ÚÊýÁ¿
+// å® æŽ§åˆ¶æ”¯æŒçš„ä¸²å£æ•°é‡
 #define COM_USE_NUM     3
 
 
 
 
 
-//ºê ÓÃÓÚ¿ØÖÆ·Ç×èÈû·½Ê½ÏÂ£¬ÉèÖÃ·¢ËÍ£¬½ÓÊÕ×î´ó»º³åÇø
+//å® ç”¨äºŽæŽ§åˆ¶éžé˜»å¡žæ–¹å¼ä¸‹ï¼Œè®¾ç½®å‘é€ï¼ŒæŽ¥æ”¶æœ€å¤§ç¼“å†²åŒº
 #define COM0_RX_MAX_SIZE   512
 #define COM0_TX_MAX_SIZE   255
 

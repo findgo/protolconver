@@ -5,52 +5,56 @@
 
 typedef struct {
     uint8_t *ptxbuf;
-    uint16_t txHead;    //·¢ËÍ»º³åÇøÍ·
-    uint16_t txTail;    //·¢ËÍ»º³åÇøÎ²
-    uint16_t txcount;   //·¢ËÍ»º³åÓĞĞ§¸öÊı
-    uint16_t txsize;    //·¢ËÍ»º³åÇø´óĞ¡
+    uint16_t txHead;    //å‘é€ç¼“å†²åŒºå¤´
+    uint16_t txTail;    //å‘é€ç¼“å†²åŒºå°¾
+    uint16_t txcount;   //å‘é€ç¼“å†²æœ‰æ•ˆä¸ªæ•°
+    uint16_t txsize;    //å‘é€ç¼“å†²åŒºå¤§å°
 
     uint8_t *prxbuf;
-    uint16_t rxHead;    //½ÓÊÕ»º³åÇøÍ·
-    uint16_t rxTail;    //½ÓÊÕ»º³åÇøÎ²
-    uint16_t rxcount;   //½ÓÊÕ»º³åÓĞĞ§¸öÊı
-    uint16_t rxsize;    //½ÓÊÕ»º³åÇø´óĞ¡
+    uint16_t rxHead;    //æ¥æ”¶ç¼“å†²åŒºå¤´
+    uint16_t rxTail;    //æ¥æ”¶ç¼“å†²åŒºå°¾
+    uint16_t rxcount;   //æ¥æ”¶ç¼“å†²æœ‰æ•ˆä¸ªæ•°
+    uint16_t rxsize;    //æ¥æ”¶ç¼“å†²åŒºå¤§å°
 }comcfg_t;
 
-//·¢ËÍ»º³åÇø¿ÕÏĞ×Ö½ÚÊı
+//å‘é€ç¼“å†²åŒºç©ºé—²å­—èŠ‚æ•°
 #define SERIAL_TX_IDLE_AVAIL(ptr)   (ptr->txsize - ptr->txcount)
-//·¢ËÍ»º³åÇøÓĞĞ§½ÚÊı
+//å‘é€ç¼“å†²åŒºæœ‰æ•ˆèŠ‚æ•°
 #define SERIAL_TX_VALID_AVAIL(ptr)  (ptr->txcount)
-//·¢ËÍ»º³åÇøÊÇ·ñÓĞ¿É¶ÁÊı¾İ
+//å‘é€ç¼“å†²åŒºæ˜¯å¦æœ‰å¯è¯»æ•°æ®
 #define IS_SERIAL_TX_VALID(ptr) (ptr->txcount > 0)
 
-//½ÓÊÕ»º³åÇø¿ÕÏĞ×Ö½ÚÊı
+//æ¥æ”¶ç¼“å†²åŒºç©ºé—²å­—èŠ‚æ•°
 #define SERIAL_RX_IDLE_AVAIL(ptr)   (ptr->rxsize - ptr->rxcount)
-//½ÓÊÕ»º³åÇøÓĞĞ§×Ö½ÚÊı   
+//æ¥æ”¶ç¼“å†²åŒºæœ‰æ•ˆå­—èŠ‚æ•°   
 #define SERIAL_RX_VALID_AVAIL(ptr)  (ptr->rxcount)
-//½ÓÊÕ»º³åÇøÊÇ·ñÓĞ¿É¶ÁÊı¾İ
+//æ¥æ”¶ç¼“å†²åŒºæ˜¯å¦æœ‰å¯è¯»æ•°æ®
 #define IS_SERIAL_RX_VALID(ptr) (ptr->rxcount > 0)
 
 //private 
 #if COM_USE_NUM >= 1
-static uint8_t Com0TxBuf[COM0_TX_MAX_SIZE]; //·¢ËÍ»º³åÇø
-static uint8_t Com0RxBuf[COM0_RX_MAX_SIZE]; //½ÓÊÕ»º³åÇø
-static comcfg_t comcfg0 = {&Com0TxBuf[0], 0, 0, 0, COM0_TX_MAX_SIZE, &Com0RxBuf[0], 0, 0, 0, COM0_RX_MAX_SIZE}; // serial¶ÔÏóÊµÀı
+static uint8_t Com0TxBuf[COM0_TX_MAX_SIZE]; //å‘é€ç¼“å†²åŒº
+static uint8_t Com0RxBuf[COM0_RX_MAX_SIZE]; //æ¥æ”¶ç¼“å†²åŒº
+static comcfg_t comcfg0 = {&Com0TxBuf[0], 0, 0, 0, COM0_TX_MAX_SIZE, &
+Com0RxBuf[0], 0, 0, 0, COM0_RX_MAX_SIZE}; // serialå¯¹è±¡å®ä¾‹
 #endif
 #if COM_USE_NUM >= 2
-static uint8_t Com1TxBuf[COM1_TX_MAX_SIZE]; //·¢ËÍ»º³åÇø
-static uint8_t Com1RxBuf[COM1_RX_MAX_SIZE]; //½ÓÊÕ»º³åÇø
-static comcfg_t comcfg1 = {&Com1TxBuf[0], 0, 0, 0, COM1_TX_MAX_SIZE, &Com1RxBuf[0], 0, 0, 0, COM1_RX_MAX_SIZE}; // serial¶ÔÏóÊµÀı
+static uint8_t Com1TxBuf[COM1_TX_MAX_SIZE]; //å‘é€ç¼“å†²åŒº
+static uint8_t Com1RxBuf[COM1_RX_MAX_SIZE]; //æ¥æ”¶ç¼“å†²åŒº
+static comcfg_t comcfg1 = {&Com1TxBuf[0], 0, 0, 0, COM1_TX_MAX_SIZE, &
+Com1RxBuf[0], 0, 0, 0, COM1_RX_MAX_SIZE}; // serialå¯¹è±¡å®ä¾‹
 #endif
 #if COM_USE_NUM >= 3
-static uint8_t Com2TxBuf[COM2_TX_MAX_SIZE]; //·¢ËÍ»º³åÇø
-static uint8_t Com2RxBuf[COM2_RX_MAX_SIZE]; //½ÓÊÕ»º³åÇø
-static comcfg_t comcfg2 = {&Com2TxBuf[0], 0, 0, 0, COM2_TX_MAX_SIZE, &Com2RxBuf[0], 0, 0, 0, COM2_RX_MAX_SIZE}; // serial¶ÔÏóÊµÀı
+static uint8_t Com2TxBuf[COM2_TX_MAX_SIZE]; //å‘é€ç¼“å†²åŒº
+static uint8_t Com2RxBuf[COM2_RX_MAX_SIZE]; //æ¥æ”¶ç¼“å†²åŒº
+static comcfg_t comcfg2 = {&Com2TxBuf[0], 0, 0, 0, COM2_TX_MAX_SIZE, &
+Com2RxBuf[0], 0, 0, 0, COM2_RX_MAX_SIZE}; // serialå¯¹è±¡å®ä¾‹
 #endif
 #if COM_USE_NUM >= 4
-static uint8_t Com3TxBuf[COM3_TX_MAX_SIZE]; //·¢ËÍ»º³åÇø
-static uint8_t Com3RxBuf[COM3_RX_MAX_SIZE]; //½ÓÊÕ»º³åÇø
-static comcfg_t comcfg3 = {&Com3TxBuf[0], 0, 0, 0, COM3_TX_MAX_SIZE, &Com3RxBuf[0], 0, 0, 0, COM3_RX_MAX_SIZE}; // serial¶ÔÏóÊµÀı
+static uint8_t Com3TxBuf[COM3_TX_MAX_SIZE]; //å‘é€ç¼“å†²åŒº
+static uint8_t Com3RxBuf[COM3_RX_MAX_SIZE]; //æ¥æ”¶ç¼“å†²åŒº
+static comcfg_t comcfg3 = {&Com3TxBuf[0], 0, 0, 0, COM3_TX_MAX_SIZE, &
+Com3RxBuf[0], 0, 0, 0, COM3_RX_MAX_SIZE}; // serialå¯¹è±¡å®ä¾‹
 #endif
 
 
@@ -83,8 +87,9 @@ static comcfg_t *GetUseCom(uint8_t COM)
 
 
 /**
-  * @brief  Ïò·¢ËÍ»º³åÇø´æ¶à¸öÊı¾İ
-  * @param  buf: Òª´æÈë»º³åÇøµÄÊı¾İ Len: ´æÈë»º³åÇøµÄÊı¾İ³¤¶È 
+  * @brief  å‘å‘é€ç¼“å†²åŒºå­˜å¤šä¸ªæ•°æ®
+  * @param  buf: è¦å­˜å…¥ç¼“å†²åŒºçš„æ•°æ® Len: 
+å­˜å…¥ç¼“å†²åŒºçš„æ•°æ®é•¿åº¦ 
   * @note   
   * @retval number successful put into buf
   */
@@ -107,15 +112,15 @@ static uint16_t SerialTxPut( comcfg_t *cfg, uint8_t *buf, uint16_t len )
     return len;
 }
 /**
-  * @brief  ·¢ËÍ»º³åÇøÈ¡³öÒ»¸ö×Ö½ÚÊı¾İ
-  * @param  dat: ÒªÈ¡»º³åÇøµÄÊı¾İµØÖ·
+  * @brief  å‘é€ç¼“å†²åŒºå–å‡ºä¸€ä¸ªå­—èŠ‚æ•°æ®
+  * @param  dat: è¦å–ç¼“å†²åŒºçš„æ•°æ®åœ°å€
   * @note   
-  * @retval ·µ»ØÈ¡³öµÄ×Ö½ÚÊı
-  * @note       ÖĞ¶Ï·¢ËÍÈ¡Êı¾İÊ±ĞèÒªµ÷ÓÃ
+  * @retval è¿”å›å–å‡ºçš„å­—èŠ‚æ•°
+  * @note       ä¸­æ–­å‘é€å–æ•°æ®æ—¶éœ€è¦è°ƒç”¨
   */
 uint16_t SerialTxPop( comcfg_t *cfg, uint8_t *dat )
 {
-    if(IS_SERIAL_TX_VALID(cfg)){//æ˜¯å¦æœ‰æœ‰æ•ˆæ•°æ®
+    if(IS_SERIAL_TX_VALID(cfg)){//é„îˆšæƒéˆå¤‹æ¹éå ŸæšŸé¹?
         *dat = cfg->ptxbuf[cfg->txHead];
         cfg->txcount--;
         if(++cfg->txHead >= cfg->txsize){
@@ -127,10 +132,10 @@ uint16_t SerialTxPop( comcfg_t *cfg, uint8_t *dat )
     return 0;
 }
 /**
-  * @brief  ¶Á·¢ËÍ»º³åÇøÓĞĞ§×Ö½ÚÊı
+  * @brief  è¯»å‘é€ç¼“å†²åŒºæœ‰æ•ˆå­—èŠ‚æ•°
   * @param  
   * @note   
-  * @retval ·µ»Ø·¢ËÍ»º³åÇøÓĞĞ§×Ö½ÚÊı
+  * @retval è¿”å›å‘é€ç¼“å†²åŒºæœ‰æ•ˆå­—èŠ‚æ•°
   * @note       
   */
 uint16_t SerialTxValidAvail( uint8_t COM )
@@ -142,11 +147,11 @@ uint16_t SerialTxValidAvail( uint8_t COM )
 }
 
 /**
-  * @brief  Ïò½ÓÊÕ»º³åÇø´æÈëÒ»¸öÊı¾İ
-  * @param  dat:´æÈëµÄÊı¾İ
+  * @brief  å‘æ¥æ”¶ç¼“å†²åŒºå­˜å…¥ä¸€ä¸ªæ•°æ®
+  * @param  dat:å­˜å…¥çš„æ•°æ®
   * @note   
   * @retval     ture or false
-  * @note       ÖĞ¶Ï½ÓÊÕ´æÊı¾İÊ±ÖĞ¶Ïµ÷ÓÃ
+  * @note       ä¸­æ–­æ¥æ”¶å­˜æ•°æ®æ—¶ä¸­æ–­è°ƒç”¨
   */
 bool SerialRxPut( comcfg_t *cfg, uint8_t dat )
 {
@@ -163,18 +168,18 @@ bool SerialRxPut( comcfg_t *cfg, uint8_t dat )
 }
 
 /**
-  * @brief  ´Ó½ÓÊÕ»º³åÇøÈ¡³ölen¸öÊı¾İ
-  * @param  buf:È¡³öÊı¾İµÄ»º³åÇø,len: Êı¾İ³¤¶È
+  * @brief  ä»æ¥æ”¶ç¼“å†²åŒºå–å‡ºlenä¸ªæ•°æ®
+  * @param  buf:å–å‡ºæ•°æ®çš„ç¼“å†²åŒº,len: æ•°æ®é•¿åº¦
   * @note   
-  * @retval  ·µ»ØÈ¡³öÊı¾İµÄÊµ¼Ê¸öÊı
+  * @retval  è¿”å›å–å‡ºæ•°æ®çš„å®é™…ä¸ªæ•°
   */
 static uint16_t SerialRxPop( comcfg_t *cfg, uint8_t *buf, uint16_t len )
 {
     uint16_t cnt = 0;
     
-    while(IS_SERIAL_RX_VALID(cfg) && (cnt < len))//½ÓÊÕ»º´æÇøÓĞÊı¾İ
+    while(IS_SERIAL_RX_VALID(cfg) && (cnt < len))//æ¥æ”¶ç¼“å­˜åŒºæœ‰æ•°æ®
     {
-        *buf++ = cfg->prxbuf[cfg->rxHead];//´Ó½ÓÊÕ»º³åÇøÌáÈ¡Êı¾İ
+        *buf++ = cfg->prxbuf[cfg->rxHead];//ä»æ¥æ”¶ç¼“å†²åŒºæå–æ•°æ®
         cfg->rxcount--;
         if(++cfg->rxHead >= cfg->rxsize){
             cfg->rxHead = 0;
@@ -185,10 +190,10 @@ static uint16_t SerialRxPop( comcfg_t *cfg, uint8_t *buf, uint16_t len )
     return cnt;
 }
 /**
-  * @brief  ´Ó½ÓÊÕ»º³åÇøÈ¡³ölen¸öÊı¾İ
-  * @param  buf:È¡³öÊı¾İµÄ»º³åÇø,len: Êı¾İ³¤¶È
+  * @brief  ä»æ¥æ”¶ç¼“å†²åŒºå–å‡ºlenä¸ªæ•°æ®
+  * @param  buf:å–å‡ºæ•°æ®çš„ç¼“å†²åŒº,len: æ•°æ®é•¿åº¦
   * @note   
-  * @retval  ·µ»ØÈ¡³öÊı¾İµÄÊµ¼Ê¸öÊı
+  * @retval  è¿”å›å–å‡ºæ•°æ®çš„å®é™…ä¸ªæ•°
   */
 uint16_t SerialRxValidAvail( uint8_t COM )
 {
@@ -198,11 +203,11 @@ uint16_t SerialRxValidAvail( uint8_t COM )
     return SERIAL_RX_VALID_AVAIL(cfg);
 }
 
-//Æô¶¯Ò»¸ö·¢ËÍ¿ÕÖĞ¶Ï
+//å¯åŠ¨ä¸€ä¸ªå‘é€ç©ºä¸­æ–­
 static void Start_TXEtransmit( uint8_t COM, comcfg_t *cfg )
 {
-    //²ÉÓÃ·¢ËÍÍê³É¿ÕÖĞ¶Ï
-    if(IS_SERIAL_TX_VALID(cfg)){//ÓĞÊı¾İ
+    //é‡‡ç”¨å‘é€å®Œæˆç©ºä¸­æ–­
+    if(IS_SERIAL_TX_VALID(cfg)){//æœ‰æ•°æ®
         switch(COM){
 #if COM_USE_NUM >= 1
             case COM0:
@@ -230,7 +235,7 @@ static void Start_TXEtransmit( uint8_t COM, comcfg_t *cfg )
         }
     }
 }
-//Æô¶¯Ò»¸ö·¢ËÍÍê³ÉÖĞ¶Ï
+//å¯åŠ¨ä¸€ä¸ªå‘é€å®Œæˆä¸­æ–­
 static void Start_TXCtransmit(uint8_t COM,comcfg_t *cfg)
 {
     uint8_t temp;
@@ -265,8 +270,8 @@ static void Start_TXCtransmit(uint8_t COM,comcfg_t *cfg)
    
 }
 /**
-  * @brief  TXÊä³ö³¤¶ÈÎªlenµÄÊı¾İ
-  * @param  buf:Êä³öÊı¾İ»º³åÇø,len:Êä³öÊı¾İ³¤¶È
+  * @brief  TXè¾“å‡ºé•¿åº¦ä¸ºlençš„æ•°æ®
+  * @param  buf:è¾“å‡ºæ•°æ®ç¼“å†²åŒº,len:è¾“å‡ºæ•°æ®é•¿åº¦
   * @note   
   * @retval  number write
   */
@@ -278,10 +283,10 @@ uint16_t Serial_WriteBuf(uint8_t COM,uint8_t *buf,uint16_t len)
     cfg = GetUseCom(COM);
     taskENTER_CRITICAL();
     count = SerialTxPut(cfg,buf, len);
-        //²ÉÓÃ·¢ËÍÍê³ÉÖĞ¶Ï has some bug
+        //é‡‡ç”¨å‘é€å®Œæˆä¸­æ–­ has some bug
 //    Start_TXCtransmit(COM,cfg);
 
-    //²ÉÓÃ·¢ËÍÍê³É¿ÕÖĞ¶Ï
+    //é‡‡ç”¨å‘é€å®Œæˆç©ºä¸­æ–­
     Start_TXEtransmit(COM,cfg);
     taskEXIT_CRITICAL();
     
@@ -299,7 +304,7 @@ uint16_t Serial_WriteByte( uint8_t COM, uint8_t dat )
     taskENTER_CRITICAL();
     count = SerialTxPut( cfg, &dat, 1 );
     
-    //²ÉÓÃ·¢ËÍÍê³ÉÖĞ¶Ï has some bug
+    //é‡‡ç”¨å‘é€å®Œæˆä¸­æ–­ has some bug
 //    Start_TXCtransmit(COM,cfg);
     Start_TXEtransmit(COM,cfg);
 
@@ -309,10 +314,10 @@ uint16_t Serial_WriteByte( uint8_t COM, uint8_t dat )
 }
 
 /**
-  * @brief  ´Ó½ÓÊÕÈ¡³ölen¸öÊı¾İ
-  * @param  buf:¶ÁÈëÊı¾İ»º³åÇø,len:¶ÁÈëÊı¾İ³¤¶È
+  * @brief  ä»æ¥æ”¶å–å‡ºlenä¸ªæ•°æ®
+  * @param  buf:è¯»å…¥æ•°æ®ç¼“å†²åŒº,len:è¯»å…¥æ•°æ®é•¿åº¦
   * @note   
-  * @retval  ·µ»ØÈ¡µ½Êı¾İµÄÊµ¼Ê¸öÊı
+  * @retval  è¿”å›å–åˆ°æ•°æ®çš„å®é™…ä¸ªæ•°
   */
 uint16_t Serial_Read( uint8_t COM, uint8_t *buf, uint16_t len )
 {
@@ -329,7 +334,7 @@ uint16_t Serial_Read( uint8_t COM, uint8_t *buf, uint16_t len )
 
 /***********only for Isr callback***********/
 /**
-  * @brief  ·¢ËÍ¿ÕÖĞ¶Ïµ÷ÓÃº¯Êı
+  * @brief  å‘é€ç©ºä¸­æ–­è°ƒç”¨å‡½æ•°
   * @param  None
   * @note   
   * @retval  None
@@ -348,7 +353,7 @@ void COM0_TXE_Isr_callback(void)
     isrEXIT_CRITICAL();
 }
 /**
-  * @brief  ·¢ËÍÍê³ÉÖĞ¶Ï»Øµ÷º¯Êı
+  * @brief  å‘é€å®Œæˆä¸­æ–­å›è°ƒå‡½æ•°
   * @param  None
   * @note   
   * @retval  None
@@ -359,7 +364,7 @@ void COM0_TXC_Isr_callback(void)
 
 }
 /**
-  * @brief  ½ÓÊÕÖĞ¶Ï»Øµ÷º¯Êı
+  * @brief  æ¥æ”¶ä¸­æ–­å›è°ƒå‡½æ•°
   * @param  None
   * @note   
   * @retval  None
@@ -375,7 +380,7 @@ void COM0_RX_Isr_callback(void)
 }
 
 /**
-  * @brief  ·¢ËÍ¿ÕÖĞ¶Ïµ÷ÓÃº¯Êı
+  * @brief  å‘é€ç©ºä¸­æ–­è°ƒç”¨å‡½æ•°
   * @param  None
   * @note   
   * @retval  None
@@ -394,7 +399,7 @@ void COM1_TXE_Isr_callback(void)
     isrEXIT_CRITICAL();
 }
 /**
-  * @brief  ·¢ËÍÍê³ÉÖĞ¶Ï»Øµ÷º¯Êı
+  * @brief  å‘é€å®Œæˆä¸­æ–­å›è°ƒå‡½æ•°
   * @param  None
   * @note   
   * @retval  None
@@ -405,7 +410,7 @@ void COM1_TXC_Isr_callback(void)
 
 }
 /**
-  * @brief  ½ÓÊÕÖĞ¶Ï»Øµ÷º¯Êı
+  * @brief  æ¥æ”¶ä¸­æ–­å›è°ƒå‡½æ•°
   * @param  None
   * @note   
   * @retval  None
@@ -419,10 +424,8 @@ void COM1_RX_Isr_callback(void)
     SerialRxPut(&comcfg1,temp);
     isrEXIT_CRITICAL();
 }
-
-
 /**
-  * @brief  ·¢ËÍ¿ÕÖĞ¶Ïµ÷ÓÃº¯Êı
+  * @brief  é”Ÿæ–¤æ‹·é”Ÿé…µåŒ¡æ‹·é”Ÿå«æ–­ç¢‰æ‹·é”ŸçŸ«çŒ´æ‹·é”Ÿæ–¤æ‹·
   * @param  None
   * @note   
   * @retval  None
@@ -441,7 +444,7 @@ void COM2_TXE_Isr_callback(void)
     isrEXIT_CRITICAL();
 }
 /**
-  * @brief  ·¢ËÍÍê³ÉÖĞ¶Ï»Øµ÷º¯Êı
+  * @brief  é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·å¸åŒ£æ°é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿ?
   * @param  None
   * @note   
   * @retval  None
@@ -452,7 +455,7 @@ void COM2_TXC_Isr_callback(void)
 
 }
 /**
-  * @brief  ½ÓÊÕÖĞ¶Ï»Øµ÷º¯Êı
+  * @brief  é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·é”Ÿå«æ–­å›ç¢‰æ‹·é”Ÿæ–¤æ‹·é”Ÿæ–¤æ‹·
   * @param  None
   * @note   
   * @retval  None
@@ -466,7 +469,6 @@ void COM2_RX_Isr_callback(void)
 //    SerialRxPut(&comcfg2,temp);
 //    isrEXIT_CRITICAL();
 }
-
 
 /**
   * @brief  This function handles usart interrupt request.

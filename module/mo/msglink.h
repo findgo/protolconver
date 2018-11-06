@@ -13,7 +13,6 @@
 #define __MSGLINK_H__
 
 #include "common_type.h"
-#include "common_def.h"
 #include "memalloc.h"
 
 #ifdef __cplusplus
@@ -199,7 +198,6 @@ void msgQextract( msg_q_t *q_ptr, void *msg_ptr, void *premsg_ptr );
     }
     
 }
-
 */
 /*********************** 信息队列**********************************************/
 

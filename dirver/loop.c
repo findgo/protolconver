@@ -20,10 +20,12 @@
 
 #include "nv.h"
 
+#include "mt_npi.h"
+
 static const pTaskFn_t taskArr[] =
 {
-    ebyteZBTask,
     nwkTask,
+    npiTask,
     timerTask, 
     wintomTask
 };
@@ -44,17 +46,18 @@ void loop_init_System(void)
     ltl_GeneralBasicAttriInit();
 
     delay_ms(200);
-//    dl_registerParseCallBack(NULL, ltlApduParsing);
-//    dlink_init();
     nwkInit();
     wintom_Init();
     halledInit();
     mledInit();
-
+    npiInit();
     mledset(MLED_1, MLED_MODE_FLASH);
     tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
     timerStart(tmhandle, 1000);
     mo_logln(INFO,"loop_init_System init end, and then start system");
+
+    NPISendAsynchData(0x00, 0xaa, NULL, 0);
+    
 }
 
 void loop_Run_System(void)

@@ -534,7 +534,7 @@
                   <RVCTZI>0</RVCTZI>
                   <RVCTOtherData>0</RVCTOtherData>
                   <ModuleSelection>0</ModuleSelection>
-                  <IncludeInBuild>0</IncludeInBuild>
+                  <IncludeInBuild>1</IncludeInBuild>
                   <AlwaysBuild>2</AlwaysBuild>
                   <GenerateAssemblyFile>2</GenerateAssemblyFile>
                   <AssembleAssemblyFile>2</AssembleAssemblyFile>
@@ -942,6 +942,16 @@
               <FileName>mt_npi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\dirver\npi\mt_npi.c</FilePath>
+            </File>
+            <File>
+              <FileName>mt_zdo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\dirver\npi\mt_zdo.c</FilePath>
+            </File>
+            <File>
+              <FileName>mt_sapi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\dirver\npi\mt_sapi.c</FilePath>
             </File>
           </Files>
         </Group>

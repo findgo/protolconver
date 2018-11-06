@@ -288,7 +288,11 @@ LStatus_t ltl_SendCommand(void *refer, uint16_t trunkID,uint8_t nodeNO,uint8_t s
     uint8_t *pbuf;
     uint16_t msglen;
     uint16_t prefixlen;
-   
+    LStatus_t status;
+    
+    if(!nwkIsOnNet())
+       return LTL_FAILURE;
+    
     memset((uint8_t *)&hdr,0,sizeof(ltlFrameHdr_t));
     
     ltlEncodeHdr(&hdr, trunkID, nodeNO, seqNum, 
@@ -298,7 +302,7 @@ LStatus_t ltl_SendCommand(void *refer, uint16_t trunkID,uint8_t nodeNO,uint8_t s
     msglen = ltlHdrSize(&hdr);
 
     //获得前置预留长度
-    prefixlen = ltlprefixsize(refer);
+    prefixlen = ltlprefixHdrsize(refer);
     msglen += prefixlen + cmdFormatLen;
 
     msgbuf = (uint8_t *)mo_malloc(msglen);
@@ -310,10 +314,10 @@ LStatus_t ltl_SendCommand(void *refer, uint16_t trunkID,uint8_t nodeNO,uint8_t s
     pbuf = ltlBuildHdr(&hdr, pbuf);
     memcpy(pbuf, cmdFormat, cmdFormatLen);
 
-    ltlrequest(refer, msgbuf, msglen);
+    status = ltlPrefixrequest(msgbuf, msglen);
     mo_free(msgbuf);
     
-    return LTL_SUCCESS;
+    return status;
 }
 
 /*********************************************************************
@@ -1725,7 +1729,7 @@ void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt)
         }
     }
 
-    if(ApduMsg.hdr.fc.disableDefaultRsp == LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF ){
+    if(ApduMsg.pkt->isbroadcast == FALSE && ApduMsg.hdr.fc.disableDefaultRsp == LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF ){
         defaultRspCmd.commandID = ApduMsg.hdr.commandID;
         defaultRspCmd.statusCode = status;
         // send default response
