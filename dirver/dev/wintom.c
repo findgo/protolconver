@@ -324,7 +324,7 @@ static void wintom_TimerCB(void *arg)
     wintom_state = 0;
 }
 
-void wintom_Init(void)
+void wintomInit(void)
 {
     wintomTimerHandle = timerAssign(&wintomTimer,  wintom_TimerCB, NULL);
     SerialDrvInit(COM1, 9600, 0, DRV_PAR_NONE);

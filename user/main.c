@@ -14,7 +14,10 @@ int main(void)
     loop_init_System();
 
     // run system
-    loop_Run_System();
+    while(1)
+    {
+        loop_Run_System();
+    }
     
     //Should never reach this point!
 }

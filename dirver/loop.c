@@ -2,12 +2,10 @@
 #include "loop.h"
 
 //for driver
-//#include "dlinkzigbee.h"
-#include "ebyteZB.h"
 #include "wintom.h"
 #include "mleds.h"
+#include "hal_key.h"
 #include "systick.h"
-#include "nwk.h"
 
 #include "memalloc.h"
 #include "timers.h"
@@ -16,91 +14,135 @@
 
 #include "ltl.h"
 #include "ltl_genattr.h"
-#include "prefix.h"
 
-#include "nv.h"
+#include "curtain.h"
+#include "nwk.h"
 
 #include "mt_npi.h"
 
-static const pTaskFn_t taskArr[] =
+
+#if LOOP_TASKS_EVENT_ENABLE > 0
+// 事件触发,为未来低功耗节能
+static const pTaskFn_t tasksArr[] =
+{
+};
+static const uint8_t tasksCnt = sizeof(tasksArr) / sizeof(tasksArr[0]);
+static uint16_t *tasksEvents;
+#endif
+// 轮询
+static const pPollFn_t pollsArr[] =
 {
     nwkTask,
-    npiTask,
     timerTask, 
-    wintomTask
+    wintomTask,
+    npiTask,
+    keyTask
 };
-static const uint8_t taskCnt = sizeof(taskArr) / sizeof(taskArr[0]);
-static void logInit(void);
+static const uint8_t poolsCnt = sizeof(pollsArr) / sizeof(pollsArr[0]);
 
-static TimerStatic_t tmstatic;
-static TimerHandle_t tmhandle = NULL;
-static void tmCb(void *arg);
+
+static void logInit(void);
 
 void loop_init_System(void)
 {
+#if LOOP_TASKS_EVENT_ENABLE > 0
+    uint8_t taskID = 0;
+    
+    tasksEvents = (uint16_t *)mo_malloc( sizeof( uint16_t ) * tasksCnt);
+    memset( tasksEvents, 0, (sizeof( uint16_t ) * tasksCnt));
+#endif
+
     Systick_Configuration();
     logInit();
     mo_logln(INFO,"loop_init_System init begin");
     
-    nvinit();
-    ltl_GeneralBasicAttriInit();
-
-    delay_ms(200);
-    nwkInit();
-    wintom_Init();
+// driver init 
+    // led
     halledInit();
     mledInit();
-    npiInit();
-    mledset(MLED_1, MLED_MODE_FLASH);
-    tmhandle = timerAssign(&tmstatic, tmCb,(void *)&tmhandle);
-    timerStart(tmhandle, 1000);
-    mo_logln(INFO,"loop_init_System init end, and then start system");
-
-    NPISendAsynchData(0x00, 0xaa, NULL, 0);
+    // key
+    halkeyInit();
     
-}
+    nwkInit();
+    // curtain    
+    wintomInit();
+   
+    ltl_GeneralBasicAttriInit();
+    curtainAttriInit();
+    // blink 3 ,show init success
+    mledsetblink(MLED_1, 6, 50 , MLED_FLASH_CYCLE_TIME);
 
+    mo_logln(INFO,"loop_init_System init end, and then start system");
+}
+    
 void loop_Run_System(void)
 {
     uint8_t idx = 0;
+    uint16_t events;
 
-    while(1)
-    {     
-        if(taskArr[idx]){
-            taskArr[idx]();
-        }
-        ++idx;
-        idx = (idx < taskCnt) ? idx : 0;
+    for(idx = 0; idx < poolsCnt; ++idx){
+        pollsArr[idx]();
     }
+    
+#if LOOP_TASKS_EVENT_ENABLE > 0
+    // 移植的TI OSAL
+    for(idx = 0;idx < tasksCnt; ++idx)
+    {
+        if (tasksEvents[idx]){ // Task is highest priority that is ready.
+            break;
+        }
+    }
+    
+    if (idx < tasksCnt) {
+    
+        taskENTER_CRITICAL();
+        events = tasksEvents[idx];
+        tasksEvents[idx] = 0;  // Clear the Events for this task.
+        taskEXIT_CRITICAL();
+    
+        events = (tasksArr[idx])( idx, events );
+    
+        taskENTER_CRITICAL();
+        tasksEvents[idx] |= events;  // Add back unprocessed events to the current task.
+        taskEXIT_CRITICAL();
+    }
+#if defined( POWER_SAVING )
+    else { // Complete pass through all task events with no activity?
+        powerconserve();  // Put the processor/system into sleep
+    }
+#endif
+#endif
+
 }
-
-
-static void tmCb(void *arg)
+#if LOOP_TASKS_EVENT_ENABLE > 0
+uint8_t tasks_setEvent(uint8_t task_id, uint16_t event_flag)
 {
-    uint16_t dst_addr = 0x0000;
+    isrSaveCriticial_status_Variable;
 
-    ltlReport_t *lreport;
-    ltlAttrRec_t attrirecord;
-    ltlReportCmd_t *reportcmd;
-
-    if(ltlFindAttrRec(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, ATTRID_BASIC_SERIAL_NUMBER, &attrirecord)){
- 
-        reportcmd = (ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1);
-        if(reportcmd){
-            reportcmd->numAttr = 1;
-            lreport = &(reportcmd->attrList[0]);
-            lreport->attrID = attrirecord.attrId;
-            lreport->dataType = attrirecord.dataType;
-            lreport->attrData = attrirecord.dataPtr;
-
-            ltl_SendReportCmd(&dst_addr, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, 
-                            LTL_FRAMECTL_DIR_CLIENT_SERVER, LTL_MANU_CODE_SPECIFIC_LTL, TRUE,reportcmd);
-            
-            mo_free(reportcmd);
-        }
+    if ( task_id < tasksCnt ){
+        isrENTER_CRITICAL();
+        tasksEvents[task_id] |= event_flag; 
+        isrEXIT_CRITICAL();
+        return TRUE;
     }
-    timerRestart(*((TimerHandle_t *)arg), 1000);
+    
+    return FALSE;
 }
+
+uint8_t tasks_clearEvent(uint8_t task_id, uint16_t event_flag)
+{
+    isrSaveCriticial_status_Variable;
+
+    if ( task_id < tasksCnt ){
+        isrENTER_CRITICAL();
+        tasksEvents[task_id] &= ~event_flag; 
+        isrEXIT_CRITICAL();
+        return TRUE;
+    }
+    
+    return FALSE;
+}
+#endif
 
 
 static void logInit(void)
@@ -108,6 +150,7 @@ static void logInit(void)
     SerialDrvInit(COM2, 115200, 8, DRV_PAR_NONE);
     mo_log_set_max_logger_level(LOG_LEVEL_DEBUG);
 }
+
 
 /* 重定向fputc 到输出，单片机一般为串口*/ 
 int fputc(int ch, FILE *f)

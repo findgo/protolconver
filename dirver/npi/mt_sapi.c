@@ -16,7 +16,7 @@
 
 
 #define ZB_STATE_IDLE                   0
-#define ZB_STATE_LOGICAL_TYPE_CHECK     1
+#define ZB_STATE_INFO_CHECK             1
 #define ZB_STATE_WRITE_LOGICAL_TYPE     2
 #define ZB_STATE_START_MODEL            3
 #define ZB_STATE_ON_NET                 4
@@ -24,8 +24,7 @@
 
 
 static void mtsapi_GetDeviceAllInfohandle(uint8_t *data, uint8_t len);
-static void zbStateReadLogicalType(void);
-static void zbStateCheckLogicalType(uint8_t status, uint8_t type);
+static void zbStateReadInfo(void);
 static void zbStateCheckWrite(uint8_t status, uint8_t type);
 static void ZbtimerCb(void * arg);
 
@@ -99,11 +98,6 @@ int mtsapi_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len)
         mtsapi_GetDeviceAllInfohandle(data, len);
         break;
         
-    case MT_SAPI_READ_LOGICAL_TYPE:
-        sapi_log("read logical");
-        zbStateCheckLogicalType(data[0], data[1]);
-        break;
-        
     case MT_SAPI_WRITE_LOGICAL_TYPE:
         sapi_log("write logical");
         zbStateCheckWrite(data[0], data[1]);
@@ -127,13 +121,14 @@ int mtsapi_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len)
     switch (commandID){
     case MT_SAPI_RESET_IND:
         sapi_log("reset IND");
-        zbStateReadLogicalType();
+        zbStateReadInfo();
         break;
     
     case MT_SAPI_AF_INCOMING_MSG:
         if((msg = msgalloc(len)) == NULL)
             return NPI_LNX_FAILURE;
         sapi_log("af incoming msg!");
+        memcpy(msg,data,len);
         nwkmsgsend(msg); // 将消息发送nwk邮箱
         break;
                 
@@ -149,21 +144,28 @@ int mtsapi_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len)
 
 static void mtsapi_GetDeviceAllInfohandle(uint8_t *data, uint8_t len)
 {
-#if (NPI_LOGICAL_TYPE == ZG_DEVICETYPE_COORDINATOR)
-    if(DEV_ZB_COORD != *data++)
-#elif (NPI_LOGICAL_TYPE == ZG_DEVICETYPE_ROUTER)
-    if(DEV_ROUTER != *data++)
-#elif(NPI_LOGICAL_TYPE == ZG_DEVICETYPE_ENDDEVICE)
-    if(DEV_END_DEVICE != *data++)
-#else
-    #error "Error defined device logical type!"
-#endif
-    {
-        nwkinfo.state = ZB_STATE_IDLE;
-        timerStart(ZBtimehandle, ZB_WAIT_RESPONSE_TIME); 
+    uint8_t type,devstate;
+
+    type = *data++;
+    devstate = *data++;
+    
+    //不是设置的类型,写类型
+    if(type != NPI_LOGICAL_TYPE){
+        mtsapi_writeLogicalType(NPI_LOGICAL_TYPE);
+        nwkinfo.state = ZB_STATE_WRITE_LOGICAL_TYPE;
+        timerStart(ZBtimehandle, ZB_WAIT_RESPONSE_TIME);
+        return;
+
+    }
+    
+    // 网络是否已启动
+    if(devstate == 0x00){
+        mtsapi_StartNwk(0x02); // 启动网络
+        nwkinfo.state = ZB_STATE_START_MODEL;
+        timerStart(ZBtimehandle, ZB_WAIT_JOIN_NWK_TIME);
         return;
     }
-
+    
     nwkinfo.nwkaddr = BUILD_UINT16(data[0], data[1]);
     data += 2;
     memcpy(nwkinfo.macaddr,data,Z_EXTADDR_LEN);
@@ -178,7 +180,8 @@ static void mtsapi_GetDeviceAllInfohandle(uint8_t *data, uint8_t len)
     data += 2;
     //扩展painid
     //extendpanid =  BUILD_UINT16(data[0], data[1]);
-
+    
+    nwkinfo.state = ZB_STATE_ON_NET;
     nwkinfo.valid = TRUE;
     
     timerStop(ZBtimehandle);
@@ -187,37 +190,13 @@ static void mtsapi_GetDeviceAllInfohandle(uint8_t *data, uint8_t len)
 }
 
 // 状态,读设备逻辑类型
-static void zbStateReadLogicalType(void)
+static void zbStateReadInfo(void)
 {
-    mtsapi_ReadLogicalType();
-    nwkinfo.state = ZB_STATE_LOGICAL_TYPE_CHECK;
+    mtsapi_GeDeviceAllInfo();
+    nwkinfo.state = ZB_STATE_INFO_CHECK;
     timerStart(ZBtimehandle, ZB_WAIT_RESPONSE_TIME);
 }
-// 状态, 处理应答的设备逻辑类型
-static void zbStateCheckLogicalType(uint8_t status, uint8_t type)
-{
-    // 读失败 ,几乎不可能,除非线连不对,但还是处理一下
-    if(status > 0) {
-        ++nwkinfo.err;
-        nwkinfo.state = ZB_STATE_IDLE;
-        mtsapi_SystemReset();
-        timerStart(ZBtimehandle, ZB_WAIT_RESET_IND_TIME); 
-        return;
-    }
 
-    // 是否是设置的类型
-    if(type == NPI_LOGICAL_TYPE){
-        mtsapi_StartNwk(0x02); // 启动网络
-        nwkinfo.state = ZB_STATE_START_MODEL;
-        timerStart(ZBtimehandle, ZB_WAIT_JOIN_NWK_TIME);
-    }
-    else{
-        //不是设置的类型,写类型
-        mtsapi_writeLogicalType(NPI_LOGICAL_TYPE);
-        nwkinfo.state = ZB_STATE_WRITE_LOGICAL_TYPE;
-        timerStart(ZBtimehandle, ZB_WAIT_RESPONSE_TIME);
-    }
-}
 static void zbStateCheckWrite(uint8_t status, uint8_t type)
 {
     // 写失败 ,几乎不可能,除非线连不对,但还是处理一下
@@ -234,7 +213,7 @@ void zbNwkCheckZdo(uint8_t status)
 {
     if(status == 0){
         mtsapi_GeDeviceAllInfo();
-        nwkinfo.state = ZB_STATE_ON_NET;
+        nwkinfo.state = ZB_STATE_INFO_CHECK;
         timerStart(ZBtimehandle, ZB_WAIT_RESPONSE_TIME);
     }
     else{
@@ -247,18 +226,19 @@ void zbNwkCheckZdo(uint8_t status)
 
 void ZbInit()
 {
+    npiInit();
+
     ZBtimehandle = timerAssign(&ZBtimerStaticBuf, ZbtimerCb, &ZBtimehandle);
     
     nwkinfo.state = ZB_STATE_IDLE;
     nwkinfo.valid = FALSE;
     nwkinfo.err = 0;
-    mtsapi_SystemReset();
-    //timerStart(ZBtimehandle, ZB_WAIT_RESET_IND_TIME);   // 等待复位指示
+    timerStart(ZBtimehandle, ZB_WAIT_RESET_IND_TIME);   // 等待复位指示
 }
 
 uint8_t ZbisOnNet(void)
 {
-    return (nwkinfo.state == ZB_STATE_ON_NET)&&( nwkinfo.valid == TRUE );
+    return (nwkinfo.state == ZB_STATE_ON_NET) && ( nwkinfo.valid == TRUE );
 }
 
 void zbRestart(void)
@@ -269,6 +249,7 @@ void zbRestart(void)
     mtsapi_SystemReset();
     timerStart(ZBtimehandle, ZB_WAIT_RESET_IND_TIME); 
 }
+
 static void ZbtimerCb(void * arg)
 {
     sapi_log("timeout");
@@ -281,20 +262,15 @@ static void ZbtimerCb(void * arg)
         
     switch ( nwkinfo.state){
     case ZB_STATE_IDLE:
-    case ZB_STATE_LOGICAL_TYPE_CHECK:
+    case ZB_STATE_INFO_CHECK:
     case ZB_STATE_WRITE_LOGICAL_TYPE:
-        zbStateReadLogicalType();
+    case ZB_STATE_ON_NET:        
+        zbStateReadInfo();
         break;
         
     case ZB_STATE_START_MODEL:
         mtsapi_StartNwk(0x02);
         timerStart(ZBtimehandle, ZB_WAIT_JOIN_NWK_TIME);
-        break;
-        
-    case ZB_STATE_ON_NET:        
-        sapi_log("on net and get info!");
-        mtsapi_GeDeviceAllInfo();
-        timerStart(ZBtimehandle, ZB_WAIT_RESPONSE_TIME);
         break;
         
     case ZB_STATE_RECOVER:

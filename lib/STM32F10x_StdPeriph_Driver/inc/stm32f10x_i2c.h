@@ -578,7 +578,7 @@ void I2C_FastModeDutyCycleConfig(I2C_TypeDef* I2Cx, uint16_t I2C_DutyCycle);
  *    and returns ERROR if one or more flags are missing in the current status.
  *    - When to use:
  *      - This function is suitable for most applications as well as for startup 
- *      activity since the events are fully described in the product reference manual 
+ *      activity since the events are fully described in the product pAddrence manual 
  *      (RM0008).
  *      - It is also suitable for users who need to define their own events.
  *    - Limitations:

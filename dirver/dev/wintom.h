@@ -175,7 +175,7 @@ uint8_t wintom_getSingleDevID(uint8_t channel);
 @end */
 #define wintom_getMotoStatus(channel,moto_no) wintom_request(WT_CMDCODE_GET_MOTOSTATUS,channel,moto_no,NULL,0)
 
-void wintom_Init(void);
+void wintomInit(void);
 void wintomTask(void);
 void wintom_registerRspCallBack(wintom_rspCallbacks_t *rspCB);
 

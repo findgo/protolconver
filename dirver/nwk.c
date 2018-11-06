@@ -3,20 +3,20 @@
 #include "mt_sapi.h"
 #include "prefix.h"
 
+
 typedef struct {
     uint8_t fc;
     uint8_t seq;
     uint16_t dstaddr;
     uint16_t srcaddr;
-}nwk_Hdr_t;
+}nwkHdr_t;
 
 extern void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt);
 
-static uint8_t *nwkParseHdr(nwk_Hdr_t *hdr, uint8_t *pDat);
+static uint8_t *nwkParseHdr(nwkHdr_t *hdr, uint8_t *pDat);
 static void nwk_ProcessInNpdu(MoIncomingMsgPkt_t *pkt);
 
 static msgboxstatic_t nwkmsgboxHandlebuf = MSGBOX_STATIC_INIT(MSGBOX_UNLIMITED_CAP);
-
 
 void nwkInit(void)
 {
@@ -46,7 +46,7 @@ uint8_t *nwkBuildHdr(uint8_t *pDat,uint8_t fc, uint16_t dstaddr, uint8_t seq)
 }
 
 // get past hdr pointer
-static uint8_t *nwkParseHdr(nwk_Hdr_t *hdr, uint8_t *pDat)
+static uint8_t *nwkParseHdr(nwkHdr_t *hdr, uint8_t *pDat)
 {
     hdr->srcaddr = BUILD_UINT16(*pDat, *(pDat + 1));
     pDat += 2;
@@ -112,8 +112,8 @@ void nwkTask(void)
 {
     uint8_t *msg;
     MoIncomingMsgPkt_t pkt;
-    nwk_Hdr_t hdr;
-    
+    nwkHdr_t hdr;
+
     msg = msgBoxaccept(&nwkmsgboxHandlebuf);
     while(msg)
     {
@@ -130,11 +130,11 @@ void nwkTask(void)
             pkt.isbroadcast = FALSE;
         
         if(hdr.fc == NWK_FC_DATA){
-            pkt.refer = (void *)&(hdr.srcaddr);
+            pkt.pAddr = (void *)&(hdr.srcaddr);
             ltl_ProcessInApdu(&pkt);
         }
         else if(hdr.fc == NWK_FC_CMD){
-            pkt.refer = (void *)&hdr;
+            pkt.pAddr = (void *)&hdr;
             nwk_ProcessInNpdu(&pkt);
         }
         else if(hdr.fc == NWK_FC_PROTOCOL){

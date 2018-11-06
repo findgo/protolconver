@@ -4,7 +4,8 @@
 
 #include "ltl_genattr.h"
 #include "bsp_uniqueID.h"
-
+#include "app_cfg.h"
+#include "mleds.h"
 
 #define APPL_VERSION ((APPL_MAJOR_VERSION << 13) | (APPL_MINOR_VERSION << 8) \
                         | (APPL_FIXED_VERSION << 3) | APPL_BETA_VERSION)
@@ -15,6 +16,15 @@
 //local function
 static uint32_t mver_getminorver(void);
 static void SerialNumber(void);
+static void GenBasicResetFact(uint8_t nodeNo);
+static void GenBasicReboot(void);
+static void GenIdentify( uint16_t identifyTime );
+
+//extern function
+extern void CurtainOnoff(uint8_t nodeNO, uint8_t cmd);
+extern void CurtainLevelControlMoveToLevel( uint8_t node, ltlLCMoveTolevel_t *pCmd );
+extern void CurtainLevelControlStop(uint8_t node );
+
 
 //local 
 static const uint8_t ltlver = LTL_VERSION;
@@ -27,7 +37,7 @@ static uint8_t serialnumberTab[16];
 static const uint8_t powersrc = POWERSOURCE_DC;
 
 
-const ltlAttrRec_t GeneralBasicAttriList[] = {
+static const ltlAttrRec_t GeneralBasicAttriList[] = {
     {
         ATTRID_BASIC_LTL_VERSION,
         LTL_DATATYPE_UINT8,
@@ -77,15 +87,27 @@ const ltlAttrRec_t GeneralBasicAttriList[] = {
         (void *)&powersrc
     },
 };
+ltlGeneral_AppCallbacks_t GeneralAppCb =
+{
+    GenBasicResetFact,
+    GenBasicReboot,
+    GenIdentify,
+    CurtainOnoff,
+    CurtainLevelControlMoveToLevel,
+    NULL,
+    NULL,
+    CurtainLevelControlStop,
+};
 
 void ltl_GeneralBasicAttriInit(void)
 {
+    ltlGeneral_RegisterCmdCallBacks(&GeneralAppCb);
     ltl_StrToAppString(MANUFACTURER_NAME, manufactTab, sizeof(manufactTab));
     buildDateCode = mver_getminorver();    
     SerialNumber();
    
     ltl_registerAttrList(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO,
-                    sizeof(GeneralBasicAttriList)/sizeof(GeneralBasicAttriList[0]), GeneralBasicAttriList);
+                    UBOUND(GeneralBasicAttriList), GeneralBasicAttriList);
 }
 
 
@@ -151,3 +173,19 @@ static void SerialNumber(void)
     serialnumberTab[14] = 0;
     serialnumberTab[15] = 0;
 }
+
+
+static void GenBasicResetFact(uint8_t nodeNo)
+{
+    (void)nodeNo;
+}
+static void GenBasicReboot(void)
+{
+    __disable_fault_irq(); // 关中断
+    NVIC_SystemReset(); //软重启
+}
+static void GenIdentify( uint16_t identifyTime )
+{
+    mledsetblink(MLED_1, 1, 95 , identifyTime * 105 / 100);
+}
+

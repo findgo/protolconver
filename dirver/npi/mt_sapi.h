@@ -27,7 +27,7 @@
 
 #define MT_SAPI_RESET_FACTORY               0x70
 #define MT_SAPI_GET_DEV_ALL_INFO_REQ        0x71
-#define MT_SAPI_READ_LOGICAL_TYPE           0x72
+//0x72
 #define MT_SAPI_WRITE_LOGICAL_TYPE          0x73
 #define MT_SAPI_AF_DATA_REQUEST             0x7a
 /* AREQ to host */
@@ -112,7 +112,6 @@ int mtsapi_StartNwk(uint8_t mode);
 // by mo
 #define mtsapi_ResetFactory()    MTSAPI_SendSynchData(MT_SAPI_RESET_FACTORY, NULL, 0)  
 #define mtsapi_GeDeviceAllInfo() MTSAPI_SendSynchData(MT_SAPI_GET_DEV_ALL_INFO_REQ, NULL, 0)
-#define mtsapi_ReadLogicalType() MTSAPI_SendSynchData(MT_SAPI_READ_LOGICAL_TYPE, NULL,0)
 int mtsapi_writeLogicalType(uint8_t logicaltype);
 #define mtsapi_DataRequest(pData,len)    MTSAPI_SendSynchData(MT_SAPI_AF_DATA_REQUEST, pData, len)
 

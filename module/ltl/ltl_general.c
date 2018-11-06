@@ -46,31 +46,26 @@ static LStatus_t ltlGeneral_SpecificTrunckhandle( ltlApduMsg_t *ApduMsg )
     LStatus_t status = LTL_STATUS_SUCCESS;
 
     if( ltl_IsTrunkCmd(ApduMsg->hdr.fc.type) ){
-        if( ltl_IsMancodeDisable(ApduMsg->hdr.fc.manuSpecific) ){
-            if(ltlGeneralCBs == NULL)
-                return LTL_STATUS_FAILURE;
-   // gerneral specific trunk process add here         
-            switch (ApduMsg->hdr.trunkID){
-            case LTL_TRUNK_ID_GENERAL_BASIC:
-                status = ltlGeneral_ProcessSpecificInbasic(ApduMsg, ltlGeneralCBs);
-                break;
-            case LTL_TRUNK_ID_GENERAL_ONOFF:
-                status = ltlGeneral_ProcessSpecificInonoff(ApduMsg, ltlGeneralCBs);
-                break;
-            case LTL_TRUNK_ID_GENERAL_LEVEL_CONTROL:
-                status = ltlGeneral_ProcessSpecificInLevelControl(ApduMsg, ltlGeneralCBs);
-                break;
+        if(ltlGeneralCBs == NULL)
+            return LTL_STATUS_FAILURE;
+// gerneral specific trunk process add here         
+        switch (ApduMsg->hdr.trunkID){
+        case LTL_TRUNK_ID_GENERAL_BASIC:
+            status = ltlGeneral_ProcessSpecificInbasic(ApduMsg, ltlGeneralCBs);
+            break;
+        case LTL_TRUNK_ID_GENERAL_ONOFF:
+            status = ltlGeneral_ProcessSpecificInonoff(ApduMsg, ltlGeneralCBs);
+            break;
+        case LTL_TRUNK_ID_GENERAL_LEVEL_CONTROL:
+            status = ltlGeneral_ProcessSpecificInLevelControl(ApduMsg, ltlGeneralCBs);
+            break;
 
 
-                 
-             default:
-                status = LTL_STATUS_FAILURE;
-                break;
-            }           
-        }else{
-            //TODO: later
+             
+         default:
             status = LTL_STATUS_FAILURE;
-        }
+            break;
+        }           
     }
     else{
         status = LTL_STATUS_FAILURE;

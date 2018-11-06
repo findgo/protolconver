@@ -3,12 +3,12 @@
 /*********************************************************************
  * @brief   header of the prefix length
  *
- * @param   refer - in ---- information
+ * @param   pAddr - in ---- information
  *
  * @return  the header length
  */
  /*
-uint8_t ltlprefixsize(uint8_t *refer)
+uint8_t ltlprefixsize(uint8_t *pAddr)
 {
     return nwkHdrLen();
 }
@@ -16,15 +16,15 @@ uint8_t ltlprefixsize(uint8_t *refer)
 /*********************************************************************
  * @brief   Build header of the prefix format
  *
- * @param   refer - in ---- information
+ * @param   pAddr - in ---- information
  * @param   pDat -out ---- outgoing header space
  *
  * @return  pointer past the header
  */
  /*
-uint8_t *ltlPrefixBuildHdr( uint8_t *refer, uint8_t *pDat )
+uint8_t *ltlPrefixBuildHdr( uint8_t *pAddr, uint8_t *pDat )
 {
-    return nwkDataBuildHdr(pDat, *((uint16_t *)refer));
+    return nwkDataBuildHdr(pDat, *((uint16_t *)pAddr));
 }
 */
 /*
