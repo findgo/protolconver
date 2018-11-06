@@ -69,8 +69,8 @@ void loop_init_System(void)
    
     ltl_GeneralBasicAttriInit();
     curtainAttriInit();
-    // blink 3 ,show init success
-    mledsetblink(MLED_1, 6, 50 , MLED_FLASH_CYCLE_TIME);
+    // blink 3 ,show no on net
+    mledset(MLED_1, MLED_MODE_FLASH);
 
     mo_logln(INFO,"loop_init_System init end, and then start system");
 }

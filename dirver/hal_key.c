@@ -1,10 +1,11 @@
 #include "hal_key.h"
 #include "mkey.h"
 #include "timers.h"
-
+#include "mt_sapi.h"
 
 #define HAL_KEY_SCAN_TIME   10
 
+#define key_log(format,args...)      mo_logln(DEBUG,format,##args )
 
 static uint8_t halkeyResetIsDown(void);
 static void halkeyCB(void *arg);
@@ -42,7 +43,6 @@ static uint8_t halkeyResetIsDown(void)
 static void halkeyCB(void *arg)
 {
     mkeydecetor_task();
-    
     timerRestart(*((TimerHandle_t *)arg), HAL_KEY_SCAN_TIME);
 }
 
@@ -52,15 +52,16 @@ void keyTask(void)
 
     switch(keyVal){
     case MKEY_PRESS1_DOWN:
-        mo_logln(INFO, "reset key down!");
+        key_log("reset key down!");
+        
         break;
     case MKEY_PRESS1_UP:
-        mo_logln(INFO, "reset key up!");
+        key_log("reset key up!");
         break;
     case MKEY_PRESS1_LONG:
-        mo_logln(INFO, "reset key long down!");
+        key_log("reset key long down!");
+        mtsapi_ResetFactory();
         break;
-
     default:
         break;
     }

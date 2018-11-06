@@ -90,11 +90,15 @@ int mtsapi_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len)
 {
     switch (commandID){
     case MT_SAPI_RESET_FACTORY:
+        sapi_log("reset factiry");
         // 指示恢复出厂设置成功,需要设备重新上电
-        mledsetblink(MLED_1, 10, 50 , 1000);
+        nwkinfo.state = ZB_STATE_IDLE;
+        nwkinfo.valid = FALSE;
+        mledsetblink(MLED_1, 6, 80, 1000);
         break;
         
     case MT_SAPI_GET_DEV_ALL_INFO_REQ:
+        sapi_log("get device info");
         mtsapi_GetDeviceAllInfohandle(data, len);
         break;
         
@@ -185,7 +189,7 @@ static void mtsapi_GetDeviceAllInfohandle(uint8_t *data, uint8_t len)
     nwkinfo.valid = TRUE;
     
     timerStop(ZBtimehandle);
-    
+    mledsetblink(MLED_1, 1, 99, 5000);
     sapi_log("realy on net now");
 }
 
@@ -233,6 +237,7 @@ void ZbInit()
     nwkinfo.state = ZB_STATE_IDLE;
     nwkinfo.valid = FALSE;
     nwkinfo.err = 0;
+    nwkinfo.devType = NPI_LOGICAL_TYPE;
     timerStart(ZBtimehandle, ZB_WAIT_RESET_IND_TIME);   // 等待复位指示
 }
 
@@ -256,6 +261,7 @@ static void ZbtimerCb(void * arg)
 
     if(++nwkinfo.err > ZB_START_RETRY_CNT_MAX){
         nwkinfo.state = ZB_STATE_IDLE;
+        mledsetblink(MLED_1, MLED_BLINK_CONTINOUS_TODO, 50, MLED_FLASH_CYCLE_TIME);
         // 启动入网超过次数失败,指示一下
         return;
     }
@@ -268,13 +274,9 @@ static void ZbtimerCb(void * arg)
         zbStateReadInfo();
         break;
         
-    case ZB_STATE_START_MODEL:
-        mtsapi_StartNwk(0x02);
-        timerStart(ZBtimehandle, ZB_WAIT_JOIN_NWK_TIME);
-        break;
-        
+    case ZB_STATE_START_MODEL:        
     case ZB_STATE_RECOVER:
-        sapi_log("recover net!");
+        sapi_log("try to join or recover net!");
         mtsapi_StartNwk(0x02);
         timerStart(ZBtimehandle, ZB_WAIT_JOIN_NWK_TIME);
         break;
