@@ -17,7 +17,7 @@ typedef struct Queue_s
 
 
 // local function 
-static void __CopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const uint8_t xPosition );
+static void __CopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const uint8_t isFront );
 static void __CopyDataFromQueue( Queue_t * const pxQueue, void * const pvBuffer );
 static void __InitialiseNewQueue(Queue_t *pxNewQueue, const uint32_t uxQueueItemCap, const uint32_t uxItemSize, uint8_t *pucQueueStorage);
 #if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
@@ -82,9 +82,9 @@ uint8_t queueReset( QueueHandle_t xQueue)
     /* A value is returned for calling semantic consistency with previous versions. */
     return TRUE;
 }
-static void __CopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const uint8_t xPosition )
+static void __CopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const uint8_t isFront )
 {
-    if( xPosition == QUEUE_TO_BACK ){
+    if( isFront == FALSE ){
         ( void ) memcpy( ( void * ) pxQueue->pcWriteTo, pvItemToQueue, ( size_t ) pxQueue->uxItemSize ); 
         
         pxQueue->pcWriteTo += pxQueue->uxItemSize;
@@ -123,7 +123,7 @@ static void __InitialiseNewQueue(Queue_t *pxNewQueue, const uint32_t uxQueueItem
     pxNewQueue->uxItemSize = uxItemSize;
     ( void ) queueReset( pxNewQueue );
 }
-uint8_t xQueueGenericPut( QueueHandle_t xQueue, const void * const pvItemToQueue , const uint8_t xCopyPosition )
+uint8_t xQueueGenericPut( QueueHandle_t xQueue, const void * const pvItemToQueue , const uint8_t isFront )
 {
     Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 
@@ -134,7 +134,7 @@ uint8_t xQueueGenericPut( QueueHandle_t xQueue, const void * const pvItemToQueue
       If the head item in the queue is to be overwritten then it does not matter if the queue is full. */
     if( pxQueue->uItemCurCnt < pxQueue->uItemCap  ) {
         
-        __CopyDataToQueue( pxQueue, pvItemToQueue, xCopyPosition );
+        __CopyDataToQueue( pxQueue, pvItemToQueue, isFront );
 
         return TRUE;
     }
@@ -142,7 +142,7 @@ uint8_t xQueueGenericPut( QueueHandle_t xQueue, const void * const pvItemToQueue
     return FALSE;
 }
 
-uint8_t xQueueGenericPop( QueueHandle_t xQueue, void * const pvBuffer, const uint8_t xJustPeeking )
+uint8_t xQueueGenericPop( QueueHandle_t xQueue, void * const pvBuffer, const uint8_t isJustPeeking )
 {
     int8_t *pcOriginalReadPosition;
     Queue_t * const pxQueue = ( Queue_t * ) xQueue;
@@ -156,7 +156,7 @@ uint8_t xQueueGenericPop( QueueHandle_t xQueue, void * const pvBuffer, const uin
 
         __CopyDataFromQueue( pxQueue, pvBuffer );
 
-        if( xJustPeeking == TRUE ){
+        if( isJustPeeking == TRUE ){
             /* The data is not being removed, so reset the read pointer. */
             pxQueue->pcReadFrom = pcOriginalReadPosition;
         }
@@ -170,7 +170,7 @@ uint8_t xQueueGenericPop( QueueHandle_t xQueue, void * const pvBuffer, const uin
     
     return FALSE;
 }
-void *xQueueOnAlloc( QueueHandle_t xQueue , const uint8_t xPosition )
+void *xQueueOnAlloc( QueueHandle_t xQueue , const uint8_t isFront )
 {
     int8_t *pcPutPosition;
     Queue_t * const pxQueue = ( Queue_t * ) xQueue;
@@ -181,7 +181,7 @@ void *xQueueOnAlloc( QueueHandle_t xQueue , const uint8_t xPosition )
       If the head item in the queue is to be overwritten then it does not matter if the queue is full. */
     if( pxQueue->uItemCurCnt < pxQueue->uItemCap  ) {
         
-        if( xPosition == QUEUE_TO_BACK ){
+        if( isFront == FALSE ){
             pcPutPosition =  pxQueue->pcWriteTo;
             
             pxQueue->pcWriteTo += pxQueue->uxItemSize;

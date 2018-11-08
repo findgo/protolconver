@@ -69,59 +69,26 @@ EventBits_t eventGroupWaitBits( EventGroupHandle_t xEventGroup, const EventBits_
 EventBits_t eventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear )
 {
     EventBits_t uxReturn;
+    isrSaveCriticial_status_Variable;
 
     /* Check the user is not attempting to clear the bits used by the kernel itself. */
     configASSERT( xEventGroup );
 
-    taskENTER_CRITICAL();
+    isrENTER_CRITICAL();
     /* The value returned is the event group value prior to the bits being cleared. */
     uxReturn = ( ( EventGroup_t * ) xEventGroup )->eventBits;
 
     /* Clear the bits. */
     ( ( EventGroup_t * ) xEventGroup )->eventBits &= ~uxBitsToClear;
-    taskEXIT_CRITICAL();
+    isrEXIT_CRITICAL();
     
     return uxReturn;
 }
+
 
 EventBits_t eventGroupSetBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToSet )
 {
     EventBits_t uxReturn;
-    
-    /* Check the user is not attempting to set the bits used by the kernel itself. */
-    configASSERT( xEventGroup );
-    
-    taskENTER_CRITICAL();
-    uxReturn = ( ( EventGroup_t * ) xEventGroup )->eventBits;
-    /* Set the bits. */
-    ( ( EventGroup_t * ) xEventGroup )->eventBits |= uxBitsToSet;
-    taskEXIT_CRITICAL();
-
-    return uxReturn;
-}
-
-EventBits_t eventGroupClearBitsFromISR( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear )
-{
-    EventBits_t uxReturn;
-    isrSaveCriticial_status_Variable;
-
-    /* Check the user is not attempting to clear the bits used by the kernel itself. */
-    configASSERT( xEventGroup );
-
-    isrENTER_CRITICAL();
-    /* The value returned is the event group value prior to the bits being cleared. */
-    uxReturn = ( ( EventGroup_t * ) xEventGroup )->eventBits;
-
-    /* Clear the bits. */
-    ( ( EventGroup_t * ) xEventGroup )->eventBits &= ~uxBitsToClear;
-    isrEXIT_CRITICAL();
-    
-    return uxReturn;
-}
-
-EventBits_t eventGroupSetBitsFromISR( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToSet )
-{
-    EventBits_t uxReturn;
     isrSaveCriticial_status_Variable;
     
     /* Check the user is not attempting to set the bits used by the kernel itself. */
@@ -135,4 +102,3 @@ EventBits_t eventGroupSetBitsFromISR( EventGroupHandle_t xEventGroup, const Even
 
     return uxReturn;
 }
-

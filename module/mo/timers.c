@@ -29,6 +29,16 @@ typedef struct tmrTimerQueueMessage
     tmrTimerParameter_t;
 } tmrTimerQueueMessage_t;
 
+
+/*local funcition */
+static void __InitialiseNewTimer( tmrTimer_t *pxNewTimer , TimerCallbackFunction_t pxCallbackFunction, void *arg );
+static void __CheckForValidListAndQueue( void ) ;
+static uint32_t __GetCurTimeTick(void);
+static uint8_t __InsertTimerInActiveList( tmrTimer_t * const pxTimer, const uint32_t xTimeNow , 
+                                        const uint32_t xTimeoutInTicks, const uint32_t xMarkTimeInTicks);
+static uint8_t __GenericCommandReceived(tmrTimerQueueMessage_t *message);
+static void __ProcessReceivedCommands( uint32_t xTimeNow);
+
 // local variable
 /* The list in which active timers are stored.  Timers are referenced in expire
 time order, with the nearest expiry time at the front of the list.  Only the
@@ -43,15 +53,7 @@ static QueueHandle_t xTimerQueueHandle = NULL;
 static QueueStatic_t xTimerQueueStatic;
 static uint8_t ucTimerQueueStorageStatic[ configTIMER_QUEUE_LENGTH * sizeof( tmrTimerQueueMessage_t ) ];
 
-/*local funcition */
-static void __InitialiseNewTimer( tmrTimer_t *pxNewTimer , TimerCallbackFunction_t pxCallbackFunction, void *arg );
-static void __CheckForValidListAndQueue( void ) ;
-static uint32_t __GetCurTimeTick(void);
-static uint8_t __InsertTimerInActiveList( tmrTimer_t * const pxTimer, const uint32_t xTimeNow , 
-                                        const uint32_t xTimeoutInTicks, const uint32_t xMarkTimeInTicks);
-static uint8_t __GenericCommandReceived(tmrTimerQueueMessage_t *message);
-static void __ProcessReceivedCommands( uint32_t xTimeNow);
-
+static volatile uint32_t xLastTime = ( uint32_t ) 0U; 
 
 /*
  * Called after a tmrTimer_t structure has been allocated either statically or dynamically to fill in the structure's members.
@@ -192,8 +194,8 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
             /* Start or restart a timer.*/
             if( __InsertTimerInActiveList( pxTimer, xTimeNow, xMessage.xMarkTimeInTicks, xMessage.xTimeoutInTicks) != FALSE ) {
                 /* The timer expired before it was added to the active timer list.  Process it now. */
-                /* 在重启是否执行回调,有待思考,目前暂不处理 */
-                //pxTimer->pxCallbackFunction( pxTimer->arg);
+                /* 主要是命令执行的延迟,所以此时已超时,直接执行回调 */
+                pxTimer->pxCallbackFunction( pxTimer->arg);
             }
         }
         else if( xMessage.xMessageID == tmrCOMMAND_STOP || xMessage.xMessageID == tmrCOMMAND_DELETE ){
@@ -244,8 +246,7 @@ uint8_t timerIsTimerActive( TimerHandle_t xTimer )
     it is referenced from either the current or the overflow timer lists in
     one go, but the logic has to be reversed, hence the '!'. */
     return (( uint8_t ) !( listIS_CONTAINED_WITHIN( NULL, &( pxTimer->xTimerListItem ) ) ));
-} /*lint !e818 Can't be pointer to const due to the typedef. */
-
+} 
 /*-----------------------------------------------------------*/
 // ok
 uint8_t timerGenericCommandSend( TimerHandle_t xTimer, const uint32_t xCommandID, const uint32_t xTimeoutInTicks)
@@ -274,7 +275,6 @@ uint8_t timerGenericCommandSend( TimerHandle_t xTimer, const uint32_t xCommandID
 
 void timerTask( void )
 {
-    static volatile uint32_t xLastTime = ( uint32_t ) 0U; 
     
     uint32_t xTimeNow;
     uint8_t xTimerListsNeedSwitch = FALSE;
@@ -288,8 +288,11 @@ void timerTask( void )
         xTimerListsNeedSwitch = TRUE;
     }
     //save the last tick time value
-    xLastTime = xTimeNow;
-   
+    xLastTime = xTimeNow;    
+    /* before do anything must be Empty the command queue. */
+    /* 会增加插入队列的时间,但是为了保证及时执行命令,防止误回调执行, 只能抛弃一点效率 */
+    __ProcessReceivedCommands(xTimeNow);
+    
     if( xTimerListsNeedSwitch ) {// 发生回绕,时间溢出 需要切换列表 并处理所有当前时间列表的回调
         
          /* The tick count has overflowed.  The timer lists must be switched.
@@ -322,9 +325,6 @@ void timerTask( void )
         /* Call the timer callback. */
         pxTimer->pxCallbackFunction( pxTimer->arg );
     }
-
-    /* Empty the command queue. */
-    __ProcessReceivedCommands(xTimeNow);
 }
 
 
@@ -332,17 +332,78 @@ void timerTask( void )
 // 待测试
 uint32_t timerGetNextTimeout(void)
 {
-    if(!listLIST_IS_EMPTY( pxCurrentTimerList ) ){
-        return ( listGET_ITEM_VALUE_OF_HEAD_ENTRY( pxCurrentTimerList ) - __GetCurTimeTick() ) & 0xffffffffu;
-    }
+    uint32_t xTimeNow;
+    uint32_t xNextExpiryTime;
 
-    return 0xffffffffu;
+
+    if(!listLIST_IS_EMPTY( pxCurrentTimerList )){
+        xNextExpiryTime = listGET_ITEM_VALUE_OF_HEAD_ENTRY( pxCurrentTimerList );
+    }
+    else if(!listLIST_IS_EMPTY( pxOverflowTimerList )){
+        xNextExpiryTime = listGET_ITEM_VALUE_OF_HEAD_ENTRY( pxOverflowTimerList );
+    }
+    else{
+        // 没有任何时间任务在队列上, 返回最大值
+        return 0xffffffffu;
+    }
+    
+    xTimeNow = __GetCurTimeTick();
+    if( xNextExpiryTime <= xTimeNow ){
+        /* Has the expiry time elapsed between the command to start/restart a timer was issued, 
+            and the time the command was processed? */
+        if( ( ( uint32_t ) ( xTimeNow - xLastTime ) ) >= (( uint32_t )(xNextExpiryTime - xLastTime))){
+            /* (1  last    next            now
+             *      |       |               |    
+             *   --------------------------------------------->
+             *     next =< now ,( uint32_t )(now - last) > ( uint32_t )(next - last),  it is time out,   
+             */
+
+            /*(2            next           now          last    
+             *               |              |            |      
+             *   --------------------------------------------->
+             *     next =< now ,( uint32_t ) (now - last) > ( uint32_t )(next - last),  it is time out,  
+             */
+            return 0;
+        }
+        else{       
+            /*(3            next    last   now
+             *               |       |      |    
+             *   --------------------------------------------->
+             *     next =< now ,( uint32_t ) (now - last) < ( uint32_t )(next - last),  it is not time out,   
+             */
+        }
+    }
+    else {
+        if( ( xTimeNow < xLastTime ) && ( xNextExpiryTime >= xLastTime ) ){            
+            /*(1            now     last   next
+             *               |       |      |    
+             *   --------------------------------------------->
+             *     next > now , now < last, next >  last ,  it is time out,   
+             */
+            return 0;
+        }
+        else {
+            /*(2    last     now            next
+             *       |        |              |    
+             *   --------------------------------------------->
+             *     next > now , now > last, next >  last ,  it is not time out 
+             */
+
+            /*(3             now            next    last
+             *                |              |       |   
+             *   --------------------------------------------->
+             *     next > now , now < last, next <  last ,  it is not time out 
+             */
+        }
+    }
+    
+    return (xNextExpiryTime - xTimeNow) & 0xffffffffu;
 }
+
 
 
 static uint32_t __GetCurTimeTick(void)
 {
     return mcu_getCurSysctime();    
 }
-
 
