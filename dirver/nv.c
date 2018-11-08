@@ -474,13 +474,12 @@ static uint16_t findItem( uint16_t id )
  * @brief   An NV item is created and initialized with the data passed to the function, if any.
  *
  * @param   flag - TRUE if the 'buf' parameter contains data for the call to writeItem().
- *                 (i.e. if invoked from nvItemInit() ).
+ *                 (i.e. if invoked from nvItemInit() ).  意思是写入数据
  *
  *                 FALSE if writeItem() should just write the header and the 'buf' parameter
  *                 is ok to use as a return value of the page number to be cleaned with
- *                 COMPACT_PAGE_CLEANUP().
+ *                 COMPACT_PAGE_CLEANUP().  意思是只写个头部
  *                 (i.e. if invoked from NV_write() ).
- * @param  *buf - Pointer to item initalization data. Set to NULL if none.
  * @param   id  - Valid NV item Id.
  * @param  *buf - Pointer to item initalization data. Set to NULL if none.
  * @param   len - Item data length.
@@ -894,7 +893,7 @@ uint8_t nvItemWrite( uint16_t id, void *buf, uint16_t len )
     if ( srcOff == NV_ITEM_NULL ){
         // 找不到,则初始化一个新条目
         if ( initItem( TRUE, id, buf, len ) != NV_PAGE_NULL ){
-            return NV_ITEM_UNINIT;
+            return NV_SUCCESS;
         }
 
         return NV_OPER_FAILED;
