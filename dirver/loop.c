@@ -54,7 +54,7 @@ void loop_init_System(void)
 
     Systick_Configuration();
     logInit();
-    mo_logln(INFO,"loop_init_System init begin");
+    mo_logln(INFO,"loop_init_System init begin!");
     
 // driver init 
     // led
@@ -72,7 +72,7 @@ void loop_init_System(void)
     // blink 3 ,show no on net
     mledset(MLED_1, MLED_MODE_FLASH);
 
-    mo_logln(INFO,"loop_init_System init end, and then start system");
+    mo_logln(INFO,"loop_init_System init end, and start!");
 }
     
 void loop_Run_System(void)

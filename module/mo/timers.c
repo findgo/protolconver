@@ -18,7 +18,7 @@ typedef struct tmrTimerParameter_s
 {
     uint32_t            xTimeoutInTicks;        /*<< An value record time out value */
     uint32_t            xMarkTimeInTicks;       /*<<  mark time when command send*/
-    tmrTimer_t *           pxTimer;            /*<< The timer to which the command will be applied. */
+    tmrTimer_t          *pxTimer;            /*<< The timer to which the command will be applied. */
 } tmrTimerParameter_t;
 
 /* The structure that contains the two message types, along with an identifier
@@ -54,8 +54,7 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow);
 
 
 /*
- * Called after a tmrTimer_t structure has been allocated either statically or
- * dynamically to fill in the structure's members.
+ * Called after a tmrTimer_t structure has been allocated either statically or dynamically to fill in the structure's members.
  */
 static void __InitialiseNewTimer( tmrTimer_t *pxNewTimer , TimerCallbackFunction_t pxCallbackFunction, void *arg ) 
 {
@@ -187,31 +186,21 @@ static void __ProcessReceivedCommands( uint32_t xTimeNow)
             /* The timer is in a list, remove it. */
             ( void ) listRemove( &( pxTimer->xTimerListItem ) );
         }
-        else {
-            /* The timer is not in a list , do nothing*/
-        }
+        else { /* The timer is not in a list , do nothing*/ }
 
-        switch( xMessage.xMessageID ) {
-        case tmrCOMMAND_START :
-        case tmrCOMMAND_START_FROM_ISR:
+        if( xMessage.xMessageID == tmrCOMMAND_START ) {
             /* Start or restart a timer.*/
             if( __InsertTimerInActiveList( pxTimer, xTimeNow, xMessage.xMarkTimeInTicks, xMessage.xTimeoutInTicks) != FALSE ) {
                 /* The timer expired before it was added to the active timer list.  Process it now. */
-                pxTimer->pxCallbackFunction( pxTimer->arg);
+                /* 在重启是否执行回调,有待思考,目前暂不处理 */
+                //pxTimer->pxCallbackFunction( pxTimer->arg);
             }
-            break;
-
-        case tmrCOMMAND_STOP :
-        case tmrCOMMAND_STOP_FROM_ISR:
-        case tmrCOMMAND_DELETE :
+        }
+        else if( xMessage.xMessageID == tmrCOMMAND_STOP || xMessage.xMessageID == tmrCOMMAND_DELETE ){
             // 开头已经从链表删除过了,不做任何事
             /* The timer has already been removed from the active list */
-            break;
-
-        default :
-            /* Don't expect to get here. */
-            break;
-        }
+        }            
+        else { /* Don't expect to get here. */ }
     }
 }
 
@@ -272,20 +261,11 @@ uint8_t timerGenericCommandSend( TimerHandle_t xTimer, const uint32_t xCommandID
         xMessage.xTimeoutInTicks = xTimeoutInTicks;
         xMessage.pxTimer = ( tmrTimer_t * ) xTimer;
 
-        if( xCommandID < tmrFIRST_FROM_ISR_COMMAND ){
-            taskENTER_CRITICAL();
-            // get when send this command for mark
-            xMessage.xMarkTimeInTicks = __GetCurTimeTick();;
-            breturn = queuePutBack( xTimerQueueHandle, &xMessage);
-            taskEXIT_CRITICAL();
-        }
-        else {
-            isrENTER_CRITICAL();
-            // get when send this command for mark
-            xMessage.xMarkTimeInTicks = __GetCurTimeTick();;
-            breturn = queuePutBack( xTimerQueueHandle, &xMessage);
-            isrEXIT_CRITICAL();
-        }
+        isrENTER_CRITICAL();
+        // get when send this command for mark
+        xMessage.xMarkTimeInTicks = __GetCurTimeTick();;
+        breturn = queuePutBack( xTimerQueueHandle, &xMessage);
+        isrEXIT_CRITICAL();
     }
     
     return breturn;
@@ -345,6 +325,18 @@ void timerTask( void )
 
     /* Empty the command queue. */
     __ProcessReceivedCommands(xTimeNow);
+}
+
+
+// 获取下一次超时时间间隔
+// 待测试
+uint32_t timerGetNextTimeout(void)
+{
+    if(!listLIST_IS_EMPTY( pxCurrentTimerList ) ){
+        return ( listGET_ITEM_VALUE_OF_HEAD_ENTRY( pxCurrentTimerList ) - __GetCurTimeTick() ) & 0xffffffffu;
+    }
+
+    return 0xffffffffu;
 }
 
 
