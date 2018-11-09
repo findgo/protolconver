@@ -203,11 +203,11 @@ void sf_EraseBlock(uint32_t _uiBlockAddr, beraseType_t betype)
     /*!< Send block Erase instruction */
 	if(betype == BE32){
     	sf_spiReadWriteByte(SF_CMD_32KBE);        
-        _uiBlockAddr &= 0xffff8000; // 防止出错,处理成起始地址
+        _uiBlockAddr &= 0xffff8000; // 防止出错,处理成block起始地址
    }
 	else{
 		sf_spiReadWriteByte(SF_CMD_64KBE);
-        _uiBlockAddr &= 0xffff0000; // 防止出错,处理成起始地址
+        _uiBlockAddr &= 0xffff0000; // 防止出错,处理成block起始地址
     }
 	
     /*!< Send block Erase instruction */
@@ -237,14 +237,15 @@ uint8_t sf_Read(uint32_t _uiReadAddr, uint8_t * _pBuf,uint32_t _uiSize)
 {
     //如果读取的数据长度为0 
     if(_uiSize == 0)
-        return TRUE;
+        return Success;
+    
     // 超出芯片地址空间，则直接返回
     // 大小超出芯片容量
     // 尾地址超出地址空间
     if (( _uiReadAddr >= g_sf_info.TotalSize) 
         || (_uiSize > g_sf_info.TotalSize) || 
         ((_uiReadAddr + _uiSize) >= g_sf_info.TotalSize))
-        return FALSE;
+        return Failed;
 
     SF_SPI_CS_ASSERT();                                     
     /*!< Send "Read from Memory " instruction */
@@ -260,25 +261,26 @@ uint8_t sf_Read(uint32_t _uiReadAddr, uint8_t * _pBuf,uint32_t _uiSize)
     }
     SF_SPI_CS_DEASSERT();  
 
-    return TRUE;
+    return Success;
 }
 
 /* NumByteToWrite must be equal or less than pagesize */
 uint8_t sf_WriteWithinOnePage(uint32_t _PageAddr,uint8_t * _pBuf,uint32_t NumByteToWrite)
 {
-    if(_PageAddr & (g_sf_info.PageSize - 1) > 0)
-        return FALSE;
+    // 超出芯片地址空间
+    // 大小超出一页
+    // 尾地址超出地址空间
+    // 跨页出错
+    if (( _PageAddr >= g_sf_info.TotalSize) 
+        || (NumByteToWrite > g_sf_info.PageSize) 
+        || ((_PageAddr + NumByteToWrite) >= g_sf_info.TotalSize)
+        || ( ( _PageAddr + NumByteToWrite) >= ((_PageAddr + g_sf_info.PageSize ) & (~(g_sf_info.PageSize - 1)))))
+        return Failed;
+
 
     //如果写的数据长度为0 
     if(NumByteToWrite == 0)
-        return TRUE;
-    // 超出芯片地址空间，则直接返回
-    // 大小超出芯片容量
-    // 尾地址超出地址空间
-    if (( _PageAddr >= g_sf_info.TotalSize) 
-        || (_PageAddr > g_sf_info.TotalSize) || 
-        ((_PageAddr + NumByteToWrite) >= g_sf_info.TotalSize))
-        return FALSE;
+        return Success;
 
     /* for MX25L1606E 、 W25Q64BV */
     __sf_WriteEnable();                             
@@ -301,7 +303,7 @@ uint8_t sf_WriteWithinOnePage(uint32_t _PageAddr,uint8_t * _pBuf,uint32_t NumByt
 
     __sf_WaitForWriteEnd();
 
-    return TRUE;
+    return Success;
 }
 
 
@@ -310,12 +312,12 @@ uint8_t sf_WriteMulWholePage(uint32_t _PageStartAddr,uint8_t * _pBuf,uint32_t Nu
     uint32_t i;
 
     // 不是页起始地址,或写的数量不是页的倍数 错误
-    if(_PageStartAddr & (g_sf_info.PageSize - 1) > 0 || (NumByteToWrite % g_sf_info.PageSize) != 0)
-        return FALSE;
+    if( ((_PageStartAddr & (g_sf_info.PageSize - 1)) > 0) || (NumByteToWrite % g_sf_info.PageSize) != 0)
+        return Failed;
 
     //如果写的数据长度为0 
     if(NumByteToWrite == 0)
-        return TRUE;
+        return Success;
     
     // 超出芯片地址空间，则直接返回
     // 大小超出芯片容量
@@ -323,7 +325,7 @@ uint8_t sf_WriteMulWholePage(uint32_t _PageStartAddr,uint8_t * _pBuf,uint32_t Nu
     if (( _PageStartAddr >= g_sf_info.TotalSize) 
         || (_PageStartAddr > g_sf_info.TotalSize) || 
         ((_PageStartAddr + NumByteToWrite) >= g_sf_info.TotalSize))
-        return FALSE;
+        return Failed;
     
     for (i = 0; i < NumByteToWrite / g_sf_info.PageSize; i++){
         sf_WriteWithinOnePage(_PageStartAddr, _pBuf, g_sf_info.PageSize);                       
@@ -331,24 +333,26 @@ uint8_t sf_WriteMulWholePage(uint32_t _PageStartAddr,uint8_t * _pBuf,uint32_t Nu
         _pBuf += g_sf_info.PageSize;
     }
 
-    return TRUE;
+    return Success;
 }
 
+// 待测
 uint8_t sf_WriteBuffer(uint32_t _uiWriteAddr, uint8_t * _pBuf, uint32_t _usWriteSize)
 {
     uint32_t addr;
     uint32_t rem; 
 
-    //如果写的数据长度为0 
-    if(_usWriteSize == 0)
-        return TRUE;
     // 超出芯片地址空间，则直接返回
     // 大小超出芯片容量
     // 尾地址超出地址空间
     if (( _uiWriteAddr >= g_sf_info.TotalSize) 
         || (_uiWriteAddr > g_sf_info.TotalSize) || 
         ((_uiWriteAddr + _usWriteSize) >= g_sf_info.TotalSize))
-        return FALSE;
+        return Failed;
+    
+    //如果写的数据长度为0 
+    if(_usWriteSize == 0)
+        return Success;
 
     // 判断是否是页起始地址
     if(_uiWriteAddr & (g_sf_info.PageSize - 1) > 0){
@@ -373,7 +377,7 @@ uint8_t sf_WriteBuffer(uint32_t _uiWriteAddr, uint8_t * _pBuf, uint32_t _usWrite
         addr += rem;
         sf_WriteWithinOnePage(addr, _pBuf, _usWriteSize );
     }
-    return TRUE; 
+    return Success; 
 }
 
 void sf_InitFlash(void)
@@ -388,9 +392,6 @@ void sf_InitFlash(void)
     __sf_WriteStatus(0);            /* 解除所有BLOCK的写保护 */
 }
 
-#if SF_FLASH_WRITE_ADVANCED_MODE == 1
-static uint8_t g_sfBuf[SF_SECTOR_SIZE]; /* 用于写函数，先读出整个sector，修改缓冲区后，再整个sector回写 */
-
 /*
 *********************************************************************************************************
 *   函 数 名: sf_NeedErase
@@ -401,7 +402,7 @@ static uint8_t g_sfBuf[SF_SECTOR_SIZE]; /* 用于写函数，先读出整个sect
 *   返 回 值: FALSE : 不需要擦除， TRUE ：需要擦除
 *********************************************************************************************************
 */
-static uint8_t __sf_NeedErase(uint8_t * _ucpOldBuf, uint8_t *_ucpNewBuf, uint16_t _usLen)
+uint8_t sf_NeedErase(uint8_t * _ucpOldBuf, uint8_t *_ucpNewBuf, uint32_t _usLen)
 {
     uint16_t i;
     uint8_t ucOld;
@@ -433,6 +434,11 @@ static uint8_t __sf_NeedErase(uint8_t * _ucpOldBuf, uint8_t *_ucpNewBuf, uint16_
     }
     return FALSE;
 }
+
+#if SF_FLASH_WRITE_ADVANCED_MODE == 1
+static uint8_t g_sfBuf[SF_SECTOR_SIZE]; /* 用于写函数，先读出整个sector，修改缓冲区后，再整个sector回写 */
+
+
 /*
 *********************************************************************************************************
 *   函 数 名: sf_CmpData
@@ -483,7 +489,7 @@ static uint8_t __sf_CmpData(uint32_t _uiSrcAddr, uint8_t *_ucpTar, uint32_t _uiS
 *   形    参:   _pBuf : 数据源缓冲区；
 *               _uiWriteAddr ：目标区域首地址
 *               _usSize ：数据个数，不能超过扇区面大小
-*   返 回 值: FALSE : 错误， TRUE ： 成功
+*   返 回 值: Failed : 错误， Success ： 成功
 *********************************************************************************************************
 */
 static uint8_t sf_AutoWriteSector( uint32_t _uiWrAddr, uint8_t *_ucpSrc, uint16_t _usWrLen)
@@ -496,7 +502,7 @@ static uint8_t sf_AutoWriteSector( uint32_t _uiWrAddr, uint8_t *_ucpSrc, uint16_
 
     /* 长度为0时不继续操作,直接认为成功 */
     if (_usWrLen == 0)
-        return TRUE;
+        return Success;
 
     // 如果偏移地址超过芯片地址则退出
     // 如果数据长度大于扇区容量，则退出
@@ -504,18 +510,18 @@ static uint8_t sf_AutoWriteSector( uint32_t _uiWrAddr, uint8_t *_ucpSrc, uint16_
     if ((_uiWrAddr >= g_sf_info.TotalSize ) 
         || (_usWrLen > g_sf_info.SectorSize) 
         || (_uiWrAddr + _usWrLen) >= g_sf_info.TotalSize )
-        return FALSE;
+        return Failed;
 
     /* 如果FLASH中的数据没有变化,则不写FLASH */
     sf_Read(_uiWrAddr,g_sfBuf,_usWrLen);
     if (memcmp(g_sfBuf, _ucpSrc, _usWrLen) == 0){
-        return TRUE;
+        return Success;
     }
 
     /* 判断是否需要先擦除扇区 */
     /* 如果旧数据修改为新数据，所有位均是 1->0 或者 0->0, 则无需擦除,提高Flash寿命 */
     ucNeedErase = FALSE;
-    if (__sf_NeedErase(g_sfBuf, _ucpSrc, _usWrLen)){
+    if (sf_NeedErase(g_sfBuf, _ucpSrc, _usWrLen)){
         ucNeedErase = TRUE;
     }
 
@@ -535,7 +541,7 @@ static uint8_t sf_AutoWriteSector( uint32_t _uiWrAddr, uint8_t *_ucpSrc, uint16_
     }
 
     /* 写完之后进行校验，如果不正确则重写，最多3次 */
-    cRet = FALSE;
+    cRet = Failed;
     for (i = 0; i < 3; i++){
         /* 如果旧数据修改为新数据，所有位均是 1->0 或者 0->0, 则无需擦除,提高Flash寿命 */
         if (ucNeedErase == TRUE){
@@ -546,11 +552,12 @@ static uint8_t sf_AutoWriteSector( uint32_t _uiWrAddr, uint8_t *_ucpSrc, uint16_
         sf_WriteMulWholePage(uiFirstAddr, g_sfBuf, g_sf_info.SectorSize);
 
         if (__sf_CmpData(_uiWrAddr, _ucpSrc, _usWrLen) == 0){
-            cRet = TRUE;
+            cRet = Success;
             break;
-        }else{
+        }
+        else{
             if (__sf_CmpData(_uiWrAddr, _ucpSrc, _usWrLen) == 0){
-                cRet = TRUE;
+                cRet = Success;
                 break;
             }
 
@@ -570,7 +577,7 @@ static uint8_t sf_AutoWriteSector( uint32_t _uiWrAddr, uint8_t *_ucpSrc, uint16_
 *   形    参:   _pBuf : 数据源缓冲区；
 *               _uiWrAddr ：目标区域首地址
 *               _usSize ：数据个数，不能超过页面大小
-*   返 回 值: 1 : 成功， 0 ： 失败
+*   返 回 值: Success : 成功， Failed ： 失败
 *********************************************************************************************************
 */
 uint8_t sf_Write(uint32_t _uiWriteAddr, uint8_t* _pBuf,  uint16_t _usWriteSize)
@@ -585,51 +592,52 @@ uint8_t sf_Write(uint32_t _uiWriteAddr, uint8_t* _pBuf,  uint16_t _usWriteSize)
     if (Addr == 0){ /* 起始地址是扇区首地址  */
         if (NumOfPage == 0){ /* 数据长度小于扇区大小 */
             if (sf_AutoWriteSector( _uiWriteAddr, _pBuf,_usWriteSize) == 0){
-                return FALSE;
+                return Failed;
             }
         }else{  /* 数据长度大于等于扇区面大小 */
 
             while (NumOfPage--)
             {
                 if (sf_AutoWriteSector( _uiWriteAddr, _pBuf, g_sf_info.SectorSize) == 0){
-                    return FALSE;
+                    return Failed;
                 }
                 _uiWriteAddr +=  g_sf_info.SectorSize;
                 _pBuf += g_sf_info.SectorSize;
             }
             if (sf_AutoWriteSector( _uiWriteAddr, _pBuf, NumOfSingle) == 0){
-                return FALSE;
+                return Failed;
             }
         }
-    }else{  /* 起始地址不是页面首地址  */
-    
+    }
+    else{  /* 起始地址不是页面首地址  */
         if (NumOfPage == 0){ /* 数据长度小于页面大小 */
             if (NumOfSingle > count){ /* (_usWriteSize + _uiWriteAddr) > SPI_FLASH_PAGESIZE */
             
                 temp = NumOfSingle - count;
                 if (sf_AutoWriteSector( _uiWriteAddr, _pBuf, count) == 0){
-                    return FALSE;
+                    return Failed;
                 }
 
                 _uiWriteAddr +=  count;
                 _pBuf += count;
 
                 if (sf_AutoWriteSector( _uiWriteAddr, _pBuf, temp) == 0){
-                    return FALSE;
+                    return Failed;
                 }
             }else{
                 if (sf_AutoWriteSector( _uiWriteAddr, _pBuf, _usWriteSize) == 0){
-                    return FALSE;
+                    return Failed;
                 }
             }
-        }else{  /* 数据长度大于等于页面大小 */
+        }
+        else{  /* 数据长度大于等于页面大小 */
         
             _usWriteSize -= count;
             NumOfPage =  _usWriteSize / g_sf_info.SectorSize;
             NumOfSingle = _usWriteSize % g_sf_info.SectorSize;
 
             if (sf_AutoWriteSector( _uiWriteAddr, _pBuf, count) == 0){
-                return FALSE;
+                return Failed;
             }
 
             _uiWriteAddr +=  count;
@@ -638,7 +646,7 @@ uint8_t sf_Write(uint32_t _uiWriteAddr, uint8_t* _pBuf,  uint16_t _usWriteSize)
             while (NumOfPage--)
             {
                 if (sf_AutoWriteSector( _uiWriteAddr, _pBuf, g_sf_info.SectorSize) == 0){
-                    return FALSE;
+                    return Failed;
                 }
                 _uiWriteAddr +=  g_sf_info.SectorSize;
                 _pBuf += g_sf_info.SectorSize;
@@ -646,13 +654,13 @@ uint8_t sf_Write(uint32_t _uiWriteAddr, uint8_t* _pBuf,  uint16_t _usWriteSize)
 
             if (NumOfSingle != 0){
                 if (sf_AutoWriteSector( _uiWriteAddr, _pBuf, NumOfSingle) == 0){
-                    return FALSE;
+                    return Failed;
                 }
             }
         }
     }
     
-    return TRUE;   /* 成功 */
+    return Success;   /* 成功 */
 }
 #endif
 

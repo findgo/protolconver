@@ -1,8 +1,8 @@
 #include "util_bits.h"
 /*
  * @ 关于下面两个宏的正向和反向，
- * @ 正向，按位数域定向为正向，BITSTART 从右往左 数 __LENGTH 长      即按正常位节
- * @ 反向，按位数域定向反向为反向，BITSTART 从左往右数 __LENGTH 长 即按反向位节
+ * @ 正向，按位数域定向为正向，BITSTART 从右往左 数 __LENGTH 长      即按正常位节,从低位开始
+ * @ 反向，按位数域定向反向为反向，BITSTART 从左往右数 __LENGTH 长 即按反向位节, 开高位开始
  */
 
 #define WRITEBITS_UINTx( __VALUE, __BITSTART, __LENGTH, __DATA, __TYPE) \

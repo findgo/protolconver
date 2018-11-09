@@ -20,14 +20,22 @@
 #define ACTIVE_LOW        !
 #define ACTIVE_HIGH       !!    /* double negation forces result to be '1' */
 
-
+// 逻辑定义
 #ifndef FALSE
 #define FALSE 0
 #endif
 
-
 #ifndef TRUE
 #define TRUE 1
+#endif
+
+// 操作定义 成功: 0: 失败 :１
+#ifndef Failed
+#define Failed 1
+#endif
+
+#ifndef Success
+#define Success 0
 #endif
 
 

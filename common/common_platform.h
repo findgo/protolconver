@@ -1,26 +1,27 @@
 /**
   ******************************************************************************
-  * @file   commond_signal.h
+  * @file   commond_platform.h
   * @author  
   * @version 
   * @date    
-  * @brief 		»´æ÷Œƒº˛∫Õ∫Í∂®“Â ∏˘æ›∆ΩÃ®–ﬁ∏ƒ
+  * @brief 		ÂÖ®Â±ÄÊñá‰ª∂ÂíåÂÆèÂÆö‰πâ Ê†πÊçÆÂπ≥Âè∞‰øÆÊîπ
   ******************************************************************************
-  * @attention 	20151110     v1.1   	jgb		÷ÿππ	20151120
+  * @attention 	20151110     v1.1   	jgb		ÈáçÊûÑ	20151120
+  * @attention 	20181109     v1.2   	jgb		ÊîπÊñá‰ª∂Âêç, Âè™Êèê‰æõÂπ≥Âè∞ÂÆö‰πâ
   ******************************************************************************
   */
-#ifndef __COMMON_GLOBAL_H_
-#define __COMMON_GLOBAL_H_
+#ifndef __COMMON_PLATFORM_H_
+#define __COMMON_PLATFORM_H_
 
 #include "stm32F10x.h"
 
 
-//IOø⁄≤Ÿ◊˜∫Í∂®“Â
-#define BITBAND(addr, bitnum) ((addr & 0xF0000000)+0x2000000+((addr &0xFFFFF)<<5)+(bitnum<<2)) 
+//IOÂè£Êìç‰ΩúÂÆèÂÆö‰πâ
+#define BITBAND(addr, bitnum) (((addr) & 0xF0000000)+0x2000000+(((addr) &0xFFFFF)<<5)+((bitnum)<<2)) 
 #define MEM_ADDR(addr)  *((volatile unsigned long  *)(addr)) 
 #define BIT_ADDR(addr, bitnum)   MEM_ADDR(BITBAND(addr, bitnum))  
 
-//IOø⁄µÿ÷∑”≥…‰
+//IOÂè£Âú∞ÂùÄÊò†Â∞Ñ
 #define GPIOA_ODR_Addr    (GPIOA_BASE + 12) //0x4001080C 
 #define GPIOB_ODR_Addr    (GPIOB_BASE + 12) //0x40010C0C 
 #define GPIOC_ODR_Addr    (GPIOC_BASE + 12) //0x4001100C 
@@ -37,7 +38,7 @@
 #define GPIOF_IDR_Addr    (GPIOF_BASE + 8) //0x40011A08 
 #define GPIOG_IDR_Addr    (GPIOG_BASE + 8) //0x40011E08 
 
-//∂‘”⁄IOø’º‰”≥…‰‘⁄¥Ê¥¢ø’º‰µƒΩ·ππ£¨ ‰»Î ‰≥ˆ¥¶¿Ì
+//ÂØπ‰∫éIOÁ©∫Èó¥Êò†Â∞ÑÂú®Â≠òÂÇ®Á©∫Èó¥ÁöÑÁªìÊûÑÔºåËæìÂÖ•ËæìÂá∫Â§ÑÁêÜ
 #define inp(port)         (*((volatile byte *) (port)))
 #define inpw(port)        (*((volatile word *) (port)))
 #define inpdw(port)       (*((volatile dword *)(port)))
@@ -45,15 +46,80 @@
 #define outpw(port, val)  (*((volatile word *) (port)) = ((word) (val)))
 #define outpdw(port, val) (*((volatile dword *) (port)) = ((dword) (val)))
 
+//-- IOÂè£Êìç‰Ωú,Âè™ÂØπÂçï‰∏ÄÁöÑIOÂè£;Á°Æ‰øùnÁöÑÂÄºÂ∞è‰∫é16!--------------------------------
+#define PAout(n)   		BIT_ADDR(GPIOA_ODR_Addr,n)  						// ËæìÂá∫ 
+#define PAin(n)    		BIT_ADDR(GPIOA_IDR_Addr,n)  						// ËæìÂÖ• 
+
+#define PBout(n)   		BIT_ADDR(GPIOB_ODR_Addr,n)  						// ËæìÂá∫ 
+#define PBin(n)    		BIT_ADDR(GPIOB_IDR_Addr,n)  						// ËæìÂÖ• 
+
+#define PCout(n)   		BIT_ADDR(GPIOC_ODR_Addr,n)  						// ËæìÂá∫ 
+#define PCin(n)    		BIT_ADDR(GPIOC_IDR_Addr,n)  						// ËæìÂÖ• 
+
+#define PDout(n)   		BIT_ADDR(GPIOD_ODR_Addr,n)  						// ËæìÂá∫ 
+#define PDin(n)    		BIT_ADDR(GPIOD_IDR_Addr,n)  						// ËæìÂÖ• 
+
+#define PEout(n)   		BIT_ADDR(GPIOE_ODR_Addr,n)  						// ËæìÂá∫ 
+#define PEin(n)    		BIT_ADDR(GPIOE_IDR_Addr,n)  						// ËæìÂÖ•
+
+#define PFout(n)   		BIT_ADDR(GPIOF_ODR_Addr,n)  						// ËæìÂá∫ 
+#define PFin(n)    		BIT_ADDR(GPIOF_IDR_Addr,n)  						// ËæìÂÖ•
+
+#define PGout(n)   		BIT_ADDR(GPIOG_ODR_Addr,n)  						// ËæìÂá∫ 
+#define PGin(n)    		BIT_ADDR(GPIOG_IDR_Addr,n)  						// ËæìÂÖ•
+
+//-- IOÂè£ËæìÂÖ•ËæìÂá∫Ê®°ÂºèÈÖçÁΩÆ,Âè™ÂØπÂçï‰∏ÄÁöÑIOÂè£;!--------------------------------
+/* ‰∏ÄËà¨Áî®‰∫éÈÄö‰ø°*/
+/****ÈÄÇÁî®‰∫éÁ´ØÂè£0-7*************************************************/
+#define PLxModeInputAin(GPIOx,n)        (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000000 << ( (n) * 4)); )
+#define PLxModeInputFloating(GPIOx,n)   (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000004 << ( (n) * 4)); )
+#define PLxModeInputIPU(GPIOx,n)        (GPIOx->ODR |= 1 << (n);GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000008 << ( (n) * 4));  )
+#define PLxModeInputIPD(GPIOx,n)        (GPIOx->ODR &= ~(1 << (n));GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000008 << ( (n) * 4));  )
+//ÈÄüÁéá2M
+#define PLxModeOutputS2PP(GPIOx,n)   (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000002 << ( (n) * 4));  )
+#define PLxModeOutputS2OD(GPIOx,n)   (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000006 << ( (n) * 4));  )
+#define PLxModeOutputS2AFPP(GPIOx,n) (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x0000000A << ( (n) * 4));  )
+#define PLxModeOutputS2AFOD(GPIOx,n) (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x0000000E << ( (n) * 4));  )
+//ÈÄüÁéá10M
+#define PLxModeOutputS10PP(GPIOx,n)   (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000001 << ( (n) * 4));  )
+#define PLxModeOutputS10OD(GPIOx,n)   (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000005 << ( (n) * 4));  )
+#define PLxModeOutputS10AFPP(GPIOx,n) (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000009 << ( (n) * 4));  )
+#define PLxModeOutputS10AFOD(GPIOx,n) (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x0000000D << ( (n) * 4));  )
+//ÈÄüÁéá50M
+#define PLxModeOutputS50PP(GPIOx,n)   (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000003 << ( (n) * 4));  )
+#define PLxModeOutputS50OD(GPIOx,n)   (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x00000007 << ( (n) * 4));  )
+#define PLxModeOutputS50AFPP(GPIOx,n) (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x0000000B << ( (n) * 4));  )
+#define PLxModeOutputS50AFOD(GPIOx,n) (GPIOx->CRL &= (0x0000000F << ( (n) * 4)); GPIOA->CRL |= (0x0000000F << ( (n) * 4));  )
+/****ÈÄÇÁî®‰∫éÁ´ØÂè£8-15*************************************************/
+#define PHxModeInputAin(GPIOx,n)        (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000000 << ( (n) * 4)); )
+#define PHxModeInputFloating(GPIOx,n)   (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000004 << ( (n) * 4)); )
+#define PHxModeInputIPU(GPIOx,n)        (GPIOx->ODR |= 1 << (n);GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000008 << ( (n) * 4));  )
+#define PHxModeInputIPD(GPIOx,n)        (GPIOx->ODR &= ~(1 << (n));GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000008 << ( (n) * 4));  )
+//ÈÄüÁéá2M
+#define PHxModeOutputS2PP(GPIOx,n)   (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000002 << ( (n) * 4));  )
+#define PHxModeOutputS2OD(GPIOx,n)   (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000006 << ( (n) * 4));  )
+#define PHxModeOutputS2AFPP(GPIOx,n) (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x0000000A << ( (n) * 4));  )
+#define PHxModeOutputS2AFOD(GPIOx,n) (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x0000000E << ( (n) * 4));  )
+//ÈÄüÁéá10M
+#define PHxModeOutputS10PP(GPIOx,n)   (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000001 << ( (n) * 4));  )
+#define PHxModeOutputS10OD(GPIOx,n)   (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000005 << ( (n) * 4));  )
+#define PHxModeOutputS10AFPP(GPIOx,n) (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000009 << ( (n) * 4));  )
+#define PHxModeOutputS10AFOD(GPIOx,n) (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x0000000D << ( (n) * 4));  )
+//ÈÄüÁéá50M
+#define PHxModeOutputS50PP(GPIOx,n)   (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000003 << ( (n) * 4));  )
+#define PHxModeOutputS50OD(GPIOx,n)   (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x00000007 << ( (n) * 4));  )
+#define PHxModeOutputS50AFPP(GPIOx,n) (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x0000000B << ( (n) * 4));  )
+#define PHxModeOutputS50AFOD(GPIOx,n) (GPIOx->CRH &= (0x0000000F << ( (n) * 4)); GPIOA->CRH |= (0x0000000F << ( (n) * 4));  )
+
 /***********************************************************
-* ∫Íπ¶ƒ‹√Ë ˆ:“‘œ¬∫ÍΩ‚æˆªÿ»∆Œ Ã‚
-*±∏◊¢:		//∫Í≤Œ ˝±ÿ–ÎŒ™uint32_t¿‡–Õ
-*			//∏√∫Í◊Ó¥Ûø…≈–∂œ2^31-1µƒ—” ±≥Ã–Ú
+* ÂÆèÂäüËÉΩÊèèËø∞:‰ª•‰∏ãÂÆèËß£ÂÜ≥ÂõûÁªïÈóÆÈ¢ò
+*Â§áÊ≥®:		//ÂÆèÂèÇÊï∞ÂøÖÈ°ª‰∏∫uint32_tÁ±ªÂûã
+*			//ËØ•ÂÆèÊúÄÂ§ßÂèØÂà§Êñ≠2^31-1ÁöÑÂª∂Êó∂Á®ãÂ∫è
 ************************************************************/
-//µ±a‘⁄bµƒ∫Û√Ê(¥Û”⁄),¥À∫ÍŒ™’Ê
+//ÂΩìaÂú®bÁöÑÂêéÈù¢(Â§ß‰∫é),Ê≠§ÂÆè‰∏∫Áúü
 #define timer_after(__a,__b) 	((int32_t)(__b) - (int32_t)(__a) < 0)
 #define timer_after_eq(__a,__b)  ((int32_t)(__b) - (int32_t)(__a) <= 0)
-//µ±a‘⁄bµƒ«∞√Ê(–°”⁄),¥À∫ÍŒ™’Ê
+//ÂΩìaÂú®bÁöÑÂâçÈù¢(Â∞è‰∫é),Ê≠§ÂÆè‰∏∫Áúü
 #define timer_befor(__a,__b) 		timer_after(__b,__a)
 #define timer_befor_eq(__a,__b) 	timer_after_eq(__b,__a)
 

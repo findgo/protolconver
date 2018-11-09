@@ -132,6 +132,7 @@
 
 //调试信息配置
 
+#define GLOBAL_DEBUG    // 全局调试使能
 #define configASSERT( x )
 
 
