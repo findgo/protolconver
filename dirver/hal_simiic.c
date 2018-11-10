@@ -29,11 +29,7 @@ static void IIC_Start(void)
 	SOFT_IIC_SCL_HIGH();
 	SOFT_IIC_DELAY_WIDE();
 	SOFT_IIC_DELAY_WIDE();
-	SOFT_IIC_DELAY_WIDE();
-	SOFT_IIC_DELAY_WIDE();
  	SOFT_IIC_SDA_LOW();		//START:when CLK is high,DATA change form high to low 
-	SOFT_IIC_DELAY_WIDE();
-	SOFT_IIC_DELAY_WIDE();
 	SOFT_IIC_DELAY_WIDE();
 	SOFT_IIC_DELAY_WIDE();
 	SOFT_IIC_SCL_LOW();		//ready to send data or receive data
@@ -46,14 +42,11 @@ static void IIC_Stop(void)
 	SOFT_IIC_SDA_LOW();		//STOP:when CLK is high DATA change form low to high
 	SOFT_IIC_DELAY_WIDE();
 	SOFT_IIC_DELAY_WIDE();
-	SOFT_IIC_DELAY_WIDE();
-	SOFT_IIC_DELAY_WIDE();
 	SOFT_IIC_SCL_HIGH(); 
+	SOFT_IIC_DELAY_WIDE();
+	SOFT_IIC_DELAY_WIDE();
 	SOFT_IIC_SDA_HIGH();	//send stop signal
 	SOFT_IIC_DELAY_WIDE();
-	SOFT_IIC_DELAY_WIDE();
-	SOFT_IIC_DELAY_WIDE();
-	SOFT_IIC_DELAY_WIDE();							   	
 }
 
 //成功: success ,失败 : failed
