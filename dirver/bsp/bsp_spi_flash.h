@@ -15,7 +15,7 @@
 
 /* spi flash 需要spi支持模式3 */
 #include "app_cfg.h"
-#include "hal_spi.h"
+//#include "hal_spi.h"
 
 /* 使能高级写模式，将会开辟4K Ram 扇区空间用于读写缓冲 */
 #define SF_FLASH_WRITE_ADVANCED_MODE    (0)
@@ -28,7 +28,7 @@
 // 具体芯片参数
 #define SF_PAGE_SIZE        (uint16_t)0x100   // 256
 #define SF_SECTOR_SIZE      (uint16_t)0x1000  // 4K
-#define SF_TOTAL_SIZE       (uint32_t)(8 * 1024 * 1024)  // 64M bit 8M byte
+#define SF_TOTAL_SIZE       (uint32_t)(8 * 1024 * 1024)  // 64M bit, 8M byte
 
 #define SF_TOTAL_SECTOR_CNT     (SF_TOTAL_SIZE / SF_SECTOR_SIZE)
 #define SF_PAGE_IN_SECTOR_CNT   (SF_SECTOR_SIZE / SF_PAGE_SIZE)
@@ -90,42 +90,32 @@ void sf_EraseSector(uint32_t _uiSectorStartAddr);
 // 擦除指定, 扇区号码 sc < SF_TOTAL_SECTOR_CNT  
 #define sf_EraseSectorSC(sc)        sf_EraseSector(sc * SF_SECTOR_SIZE);
 /* 擦除扇区, 块起始始地址 */
-void sf_EraseBlock(uint32_t _uiBlockAddr,beraseType_t betype);
+void sf_EraseBlock(uint32_t _uiBlockStartAddr,beraseType_t betype);
 /* 擦除芯片 */
 void sf_EraseChip(void);
 /* 读数据可以任意地址,   不得超出整个芯片地址范围
  * Success: 成功, 否则Failed*/
 uint8_t sf_Read(uint32_t _uiReadAddr, uint8_t * _pBuf,uint32_t _uiSize);
+ /* Success: 成功, 否则Failed*/
+uint8_t sf_Write(uint32_t _uiWriteAddr, uint8_t * _pBuf, uint32_t _usWriteSize);
+// 获得芯片当前是否忙
+uint8_t sf_StatusBusy(void);
+/* TRUE: need ,FALSE: not NEED*/
+uint8_t sf_NeedErase(uint8_t * _ucpOldBuf, uint8_t *_ucpNewBuf, uint32_t _usLen);
+/* 1: different ,0: same*/
+uint8_t sf_CmpData(uint32_t _uiSrcAddr, uint8_t *_ucpTar, uint32_t _uiSize);
 
 #if SF_FLASH_WRITE_ADVANCED_MODE == 1
 /* 写数据可以任意地址,   不得超出整个芯片地址范围
  * 具有自动擦除和纠错功能,需要开4K扇区地址 
  * 如果发现写地方的数据不一样,可能会引起擦除 
  * Success: 成功, 否则Failed*/
-uint8_t sf_Write(uint32_t _uiWriteAddr, uint8_t* _pBuf,  uint32_t _usWriteSize);
+uint8_t sf_AutoWrite(uint32_t _uiWriteAddr, uint8_t* _pBuf,  uint32_t _usWriteSize);
 #endif
 
-/*************************以下只写数据,不对数据进行任何校验 *************************/
-/* 在一页内写数据, 0 - 256字节, 必需保证实的数据在同一页内,否则会写到页前面去  
- * Success: 成功, 否则Failed*/
-uint8_t sf_WriteWithinOnePage(uint32_t _PageAddr,uint8_t * _pBuf,uint32_t NumByteToWrite);
-/* 写多个整页数据, _PageStartAddr 页起始地址
- * NumByteToWrite : 为整页大小的倍数      
- * Success: 成功, 否则Failed*/
-uint8_t sf_WriteMulWholePage(uint32_t _PageStartAddr,uint8_t * _pBuf,uint32_t NumByteToWrite);
-/* 写数据可以任意地址,   不得超出整个芯片地址范围
- * Success: 成功, 否则Failed*/
-uint8_t sf_WriteBuffer(uint32_t _uiWriteAddr, uint8_t * _pBuf, uint32_t _usWriteSize);
-/* TRUE: need ,FALSE: not NEED*/
-uint8_t sf_NeedErase(uint8_t * _ucpOldBuf, uint8_t *_ucpNewBuf, uint32_t _usLen);
-
-
-// 获得芯片当前是否忙
-uint8_t sf_StatusBusy(void);
-// 启动一个擦扇区序列 
-void sf_StartEraseSectoreSequeue(uint32_t _uiSectorAddr); 
-// 启动一个写页数据序列  NumByteToWrite <= 256
-void sf_StartWritePageSequeue(uint32_t _PageAddr,uint8_t * _pBuf,uint16_t NumByteToWrite);
+/* 内部API */
+void sf_WriteMulBytes(uint32_t _uiWriteAddr,uint8_t * _pBuf,uint32_t NumByteToWrite);
+void sf_ReadMulBytes(uint32_t _uiReadAddr,uint8_t * _pBuf,uint32_t _uiSize);
 
 #endif
 

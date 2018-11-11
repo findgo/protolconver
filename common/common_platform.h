@@ -71,61 +71,44 @@
 //-- IO口输入输出模式配置,只对单一的IO口;!--------------------------------
 /* 一般用于通信 
  *NOTE: 当为输入时,如何设置上下拉, 要以设置ODR寄存器高低来决定上下拉*/
-/* or 的前面用于配置输入的, or的后面用于配置输出的 */
-#define PxCfgAin_Or_PP          0x00
-#define PxCfgFloating_Or_OD     0x01
-#define PxCfgPD_Or_AFPP         0x02
-#define PxCfgRes_Or_AFOD        0x03
+#define PxCfgInAnalog       0x00  /// input analog
+#define PxCfgInFloating     0x01  // input floating
+#define PxCfgInPD_PU        0x02  // input function pull down or pull up
+#define PxCfgOutPP          0x00  //general purpose output push-pull
+#define PxCfgOutOD          0x01  //general purpose output open-drain
+#define PxCfgOutAFPP        0x02  // alternate function push-pull
+#define PxCfgOutAFOD        0x03  // alternate function open-drain
+
 #define PxModeInput         0x00
 #define PxModeOutputS10     0x01
 #define PxModeOutputS2      0x02
 #define PxModeOutputS50     0x03
-/****适用于端口0-7*************************************************/
-#define PLxClearPortCfg(GPIOx,n)          ((GPIOx)->CRL &= ~(0x0000000F << ( (n) * 4)))
-#define PLxSetPortCfg(GPIOx,n,CNFy,MODEy) ((GPIOx)->CRL |= (((CNFy << 2) | MODEy) << ( (n) * 4)))
 
-#define PLxModeInputAin(GPIOx,n)        {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgAin_Or_PP,PxModeInput); }
-#define PLxModeInputFloating(GPIOx,n)   {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgFloating_Or_OD,PxModeInput); }
-#define PLxModeInputIPU(GPIOx,n)        {(GPIOx)->ODR |= 1 << (n);PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeInput); }
-#define PLxModeInputIPD(GPIOx,n)        {(GPIOx)->ODR &= ~(1 << (n));PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeInput); }
-//速率2M
-#define PLxModeOutputS2PP(GPIOx,n)      {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgAin_Or_PP,PxModeOutputS2); }
-#define PLxModeOutputS2OD(GPIOx,n)      {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgFloating_Or_OD,PxModeOutputS2); }
-#define PLxModeOutputS2AFPP(GPIOx,n)    {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeOutputS2); }
-#define PLxModeOutputS2AFOD(GPIOx,n)    {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgRes_Or_AFOD,PxModeOutputS2); }
-//速率10M
-#define PLxModeOutputS10PP(GPIOx,n)     {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgAin_Or_PP,PxModeOutputS10); }
-#define PLxModeOutputS10OD(GPIOx,n)     {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgFloating_Or_OD,PxModeOutputS10); }
-#define PLxModeOutputS10AFPP(GPIOx,n)   {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeOutputS10); }
-#define PLxModeOutputS10AFOD(GPIOx,n)   {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgRes_Or_AFOD,PxModeOutputS10); }
-//速率50M
-#define PLxModeOutputS50PP(GPIOx,n)     {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgAin_Or_PP,PxModeOutputS50); }
-#define PLxModeOutputS50OD(GPIOx,n)     {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgFloating_Or_OD,PxModeOutputS50); }
-#define PLxModeOutputS50AFPP(GPIOx,n)   {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeOutputS50); }
-#define PLxModeOutputS50AFOD(GPIOx,n)   {PLxClearPortCfg(GPIOx,n); PLxSetPortCfg(GPIOx,n,PxCfgRes_Or_AFOD,PxModeOutputS50); }
-/****适用于端口8-15*************************************************/
-#define PHxClearPortCfg(GPIOx,n)          ((GPIOx)->CRH &= ~(0x0000000F << ( (n) * 4)))
-#define PHxSetPortCfg(GPIOx,n,CNFy,MODEy) ((GPIOx)->CRH |= (((CNFy << 2) | MODEy) << ( (n) * 4)))
+/****适用于端口0-15*************************************************/
+#define __PLxPinCfg(GPIOx,n ,CNFy,MODEy ) {((GPIOx)->CRL &= ~(0x0000000F << ( (n) << 2))); ((GPIOx)->CRL |= (((CNFy << 2) | MODEy) << ( (n) << 2)));}
+#define __PHxPinCfg(GPIOx,n ,CNFy,MODEy ) {((GPIOx)->CRH &= ~(0x0000000F << ( (n) << 2))); ((GPIOx)->CRH |= (((CNFy << 2) | MODEy) << ( (n) << 2)));}
 
-#define PHxModeInputAin(GPIOx,n)        {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgAin_Or_PP,PxModeInput); }
-#define PHxModeInputFloating(GPIOx,n)   {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgFloating_Or_OD,PxModeInput); }
-#define PHxModeInputIPU(GPIOx,n)        {(GPIOx)->ODR |= 1 << (n);PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeInput); }
-#define PHxModeInputIPD(GPIOx,n)        {(GPIOx)->ODR &= ~(1 << (n));PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeInput); }
+#define PxPinCfg(GPIOx,n ,CNFy, MODEy ) {if((n) < 8){__PLxPinCfg(GPIOx,n ,CNFy,MODEy)}else{__PHxPinCfg(GPIOx,((n) >> 3), CNFy,MODEy)}}
+
+#define PxCfgInputAin(GPIOx,n)        PxPinCfg(GPIOx,n ,PxCfgInAnalog,PxModeInput )
+#define PxCfgInputFloating(GPIOx,n)   PxPinCfg(GPIOx,n ,PxCfgInFloating,PxModeInput )
+#define PxCfgInputIPU(GPIOx,n)        {GPIOx->ODR |=  (1 << (n));PxPinCfg(GPIOx,n ,PxCfgInPD_PU,PxModeInput)}
+#define PxCfgInputIPD(GPIOx,n)        {GPIOx->ODR &= ~(1 << (n));PxPinCfg(GPIOx,n ,PxCfgInPD_PU,PxModeInput)}
 //速率2M
-#define PHxModeOutputS2PP(GPIOx,n)      {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgAin_Or_PP,PxModeOutputS2); }
-#define PHxModeOutputS2OD(GPIOx,n)      {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgFloating_Or_OD,PxModeOutputS2); }
-#define PHxModeOutputS2AFPP(GPIOx,n)    {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeOutputS2); }
-#define PHxModeOutputS2AFOD(GPIOx,n)    {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgRes_Or_AFOD,PxModeOutputS2); }
+#define PxCfgOutputS2PP(GPIOx,n)      PxPinCfg(GPIOx,n ,PxCfgOutPP,PxModeOutputS2)
+#define PxCfgOutputS2OD(GPIOx,n)      PxPinCfg(GPIOx,n ,PxCfgOutOD,PxModeOutputS2)
+#define PxCfgOutputS2AFPP(GPIOx,n)    PxPinCfg(GPIOx,n ,PxCfgOutAFPP,PxModeOutputS2)
+#define PxCfgOutputS2AFOD(GPIOx,n)    PxPinCfg(GPIOx,n ,PxModeOutputS50,PxModeOutputS2)
 //速率10M
-#define PHxModeOutputS10PP(GPIOx,n)     {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgAin_Or_PP,PxModeOutputS10); }
-#define PHxModeOutputS10OD(GPIOx,n)     {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgFloating_Or_OD,PxModeOutputS10); }
-#define PHxModeOutputS10AFPP(GPIOx,n)   {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeOutputS10); }
-#define PHxModeOutputS10AFOD(GPIOx,n)   {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgRes_Or_AFOD,PxModeOutputS10); }
+#define PxCfgOutputS10PP(GPIOx,n)     PxPinCfg(GPIOx,n ,PxCfgOutPP,PxModeOutputS10)
+#define PxCfgOutputS10OD(GPIOx,n)     PxPinCfg(GPIOx,n ,PxCfgOutOD,PxModeOutputS10)
+#define PxCfgOutputS10AFPP(GPIOx,n)   PxPinCfg(GPIOx,n ,PxCfgOutAFPP,PxModeOutputS10 )
+#define PxCfgOutputS10AFOD(GPIOx,n)   PxPinCfg(GPIOx,n ,PxModeOutputS50,PxModeOutputS10)
 //速率50M
-#define PHxModeOutputS50PP(GPIOx,n)     {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgAin_Or_PP,PxModeOutputS50); }
-#define PHxModeOutputS50OD(GPIOx,n)     {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgFloating_Or_OD,PxModeOutputS50); }
-#define PHxModeOutputS50AFPP(GPIOx,n)   {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgPD_Or_AFPP,PxModeOutputS50); }
-#define PHxModeOutputS50AFOD(GPIOx,n)   {PHxClearPortCfg(GPIOx,n); PHxSetPortCfg(GPIOx,n,PxCfgRes_Or_AFOD,PxModeOutputS50); }
+#define PxCfgOutputS50PP(GPIOx,n)     PxPinCfg(GPIOx,n ,PxCfgOutPP,PxModeOutputS50)
+#define PxCfgOutputS50OD(GPIOx,n)     PxPinCfg(GPIOx,n ,PxCfgOutOD,PxModeOutputS50)
+#define PxCfgOutputS50AFPP(GPIOx,n)   PxPinCfg(GPIOx,n ,PxCfgOutAFPP,PxModeOutputS50)
+#define PxCfgOutputS50AFOD(GPIOx,n)   PxPinCfg(GPIOx,n ,PxModeOutputS50,PxModeOutputS50)
 
 /***********************************************************
 * 宏功能描述:以下宏解决回绕问题

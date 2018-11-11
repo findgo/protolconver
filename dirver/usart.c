@@ -12,6 +12,18 @@
   */
 #include "usart.h"
 
+#if defined(RTE_Drivers_USART1)
+extern ARM_DRIVER_USART Driver_USART1;
+#endif
+
+#if defined(RTE_Drivers_USART2)
+extern ARM_DRIVER_USART Driver_USART2;
+#endif
+
+#if defined(RTE_Drivers_USART3)
+extern ARM_DRIVER_USART Driver_USART3;
+#endif
+
 /**
   * @brief  init the serial
   * @param  port      which port
@@ -32,6 +44,7 @@ int SerialDrvInit(uint8_t port, uint32_t ulBaudRate, uint8_t ucDataBits, DRV_Par
     
     switch (port){
     case COM0:
+    #if !defined(RTE_Drivers_USART1)
         USART_USING1_GPIO_PeriphClock_EN();
         USART_USING1_PeriphClock_EN();
         
@@ -69,9 +82,21 @@ int SerialDrvInit(uint8_t port, uint32_t ulBaudRate, uint8_t ucDataBits, DRV_Par
         USART_ITConfig(USART_USING1, USART_IT_RXNE, ENABLE);
         
         USART_Cmd(USART_USING1, ENABLE);//enable USART1
+    #else
+        Driver_USART1.Initialize(NULL);
+        Driver_USART1.PowerControl(ARM_POWER_FULL);
+        Driver_USART1.Control(ARM_USART_MODE_ASYNCHRONOUS 
+            | ARM_USART_DATA_BITS_8 
+            | ARM_USART_PARITY_NONE 
+            | ARM_USART_STOP_BITS_1
+            | ARM_USART_FLOW_CONTROL_NONE , ulBaudRate);
+
+        Driver_USART1.Control(ARM_USART_CONTROL_TX | ARM_USART_CONTROL_RX, 1);
+        #endif
         break;
         
-     case COM1:
+    case COM1:
+    #if !defined(RTE_Drivers_USART2)
         USART_USING2_GPIO_PeriphClock_EN();
         USART_USING2_PeriphClock_EN();
         
@@ -109,9 +134,21 @@ int SerialDrvInit(uint8_t port, uint32_t ulBaudRate, uint8_t ucDataBits, DRV_Par
         USART_ITConfig(USART_USING2, USART_IT_RXNE, ENABLE);
         
         USART_Cmd(USART_USING2, ENABLE);//enable USART2
+    #else
+        Driver_USART2.Initialize(NULL);
+        Driver_USART2.PowerControl(ARM_POWER_FULL);
+        Driver_USART2.Control(ARM_USART_MODE_ASYNCHRONOUS 
+            | ARM_USART_DATA_BITS_8 
+            | ARM_USART_PARITY_NONE 
+            | ARM_USART_STOP_BITS_1
+            | ARM_USART_FLOW_CONTROL_NONE , ulBaudRate);
+
+        Driver_USART2.Control(ARM_USART_CONTROL_TX | ARM_USART_CONTROL_RX, 1);
+    #endif
         break;
          
-        case COM2:
+    case COM2:
+    #if !defined(RTE_Drivers_USART3)
         USART_USING3_GPIO_PeriphClock_EN();
         USART_USING3_PeriphClock_EN();
         
@@ -149,6 +186,17 @@ int SerialDrvInit(uint8_t port, uint32_t ulBaudRate, uint8_t ucDataBits, DRV_Par
         USART_ITConfig(USART_USING3, USART_IT_RXNE, ENABLE);
         
         USART_Cmd(USART_USING3, ENABLE);//enable USART2
+    #else
+        Driver_USART3.Initialize(NULL);
+        Driver_USART3.PowerControl(ARM_POWER_FULL);
+        Driver_USART3.Control(ARM_USART_MODE_ASYNCHRONOUS 
+            | ARM_USART_DATA_BITS_8 
+            | ARM_USART_PARITY_NONE 
+            | ARM_USART_STOP_BITS_1
+            | ARM_USART_FLOW_CONTROL_NONE , ulBaudRate);
+    
+        Driver_USART3.Control(ARM_USART_CONTROL_TX | ARM_USART_CONTROL_RX, 1);
+    #endif
         break;       
         
      default:
