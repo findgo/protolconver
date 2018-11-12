@@ -21,10 +21,12 @@
 #include "mt_npi.h"
 
 
-#if LOOP_TASKS_EVENT_ENABLE > 0
+#if configSUPPORT_TASKS_EVENT > 0
+#include "msglink.h"
 // 事件触发,为未来低功耗节能
 static const pTaskFn_t tasksArr[] =
 {
+    NULL
 };
 static const uint8_t tasksCnt = sizeof(tasksArr) / sizeof(tasksArr[0]);
 static uint16_t *tasksEvents;
@@ -45,7 +47,7 @@ static void logInit(void);
 
 void loop_init_System(void)
 {
-#if LOOP_TASKS_EVENT_ENABLE > 0
+#if configSUPPORT_TASKS_EVENT > 0
     uint8_t taskID = 0;
     
     tasksEvents = (uint16_t *)mo_malloc( sizeof( uint16_t ) * tasksCnt);
@@ -84,7 +86,7 @@ void loop_Run_System(void)
         pollsArr[idx]();
     }
     
-#if LOOP_TASKS_EVENT_ENABLE > 0
+#if configSUPPORT_TASKS_EVENT > 0
     // 移植的TI OSAL
     for(idx = 0;idx < tasksCnt; ++idx)
     {
@@ -114,7 +116,16 @@ void loop_Run_System(void)
 #endif
 
 }
-#if LOOP_TASKS_EVENT_ENABLE > 0
+#if configSUPPORT_TASKS_EVENT > 0
+// task id and qmsg map message
+typedef struct {
+    uint8_t task_id;
+    msg_q_t q_taskmsghead;
+}taskmsg_mapInfo_t; 
+static taskmsg_mapInfo_t *taskmap_search(uint8_t task_id);
+
+static msg_q_t taskmsgq_head;
+
 uint8_t tasks_setEvent(uint8_t task_id, uint16_t event_flag)
 {
     isrSaveCriticial_status_Variable;
@@ -142,6 +153,98 @@ uint8_t tasks_clearEvent(uint8_t task_id, uint16_t event_flag)
     
     return FALSE;
 }
+
+int task_msg_assign(uint8_t task_id)
+{
+    taskmsg_mapInfo_t *mapinfo;
+
+    mapinfo = taskmap_search(task_id);
+
+    if(mapinfo == NULL){
+        if ((mapinfo = msgalloc(sizeof(taskmsg_mapInfo_t))) == NULL)
+            return MSG_INVALID_POINTER;
+
+        mapinfo->task_id = task_id;
+        mapinfo->q_taskmsghead = NULL;
+
+        msgQputFront(&taskmsgq_head, mapinfo);
+    }
+    
+    return MSG_SUCCESS;
+}
+
+// not find it : NULL,else find it 
+static taskmsg_mapInfo_t *taskmap_search(uint8_t task_id)
+{
+    taskmsg_mapInfo_t *srch;
+
+    msgQ_for_each_msg(&taskmsgq_head, srch){
+        if(srch->task_id == task_id){ // find it 
+            break;
+        }
+    }
+
+    return srch;
+}
+
+int task_msg_Genericput(uint8_t dest_taskid, void *msg_ptr, uint8_t isfront)
+{
+    taskmsg_mapInfo_t *mapinfo;
+
+    if(dest_taskid >= tasksCnt){
+        return MSG_INVALID_TASK;
+    }
+
+    mapinfo = taskmap_search(dest_taskid);
+    if(!mapinfo){
+        return MSG_TASK_MSG_UNINT;
+    }
+
+    msgQGenericput(&(mapinfo->q_taskmsghead), msg_ptr, isfront);
+    tasks_setEvent(dest_taskid, SYS_EVENT_MSG);
+    
+    return MSG_SUCCESS;
+}
+int task_msg_put(uint8_t dest_taskid, void *msg_ptr)
+{
+    return task_msg_Genericput(dest_taskid, msg_ptr, FALSE);
+}
+int task_msg_putFront(uint8_t dest_taskid, void *msg_ptr)
+{
+    return task_msg_Genericput(dest_taskid, msg_ptr, TRUE);
+}
+void *tasks_msg_accept(uint8_t task_id)
+{
+    taskmsg_mapInfo_t *mapinfo;
+
+    if(task_id >= tasksCnt){
+        return NULL;
+    }
+
+    mapinfo = taskmap_search(task_id);
+    if(!mapinfo){
+        return NULL;
+    }
+
+    return msgQpop(&(mapinfo->q_taskmsghead));
+}
+
+void *tasks_msg_peek(uint8_t task_id)
+{
+    taskmsg_mapInfo_t *mapinfo;
+
+    if(task_id >= tasksCnt){
+        return NULL;
+    }
+
+    mapinfo = taskmap_search(task_id);
+    if(!mapinfo){
+        return NULL;
+    }
+
+    return msgQpeek(&(mapinfo->q_taskmsghead));
+}
+
 #endif
 
 

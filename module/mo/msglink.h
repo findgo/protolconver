@@ -24,10 +24,13 @@ extern "C" {
 
 // 返回信息错误码
 #define MSG_SUCCESS             (0)   // 成功
-#define MSG_INVALID_POINTER     (-1)  // 表明指针无效
-#define MSG_BUFFER_NOT_AVAIL    (-2)  // 表明释放时,信息处于队列上,不可释放
-#define MSG_QBOX_FULL           (-3)  // 信息邮箱满
-
+#define MSG_FAILED              (-1)  // 其它失败
+#define MSG_INVALID_POINTER     (-2)  // 表明指针无效
+#define MSG_BUFFER_NOT_AVAIL    (-3)  // 表明释放时,信息处于队列上,不可释放
+#define MSG_QBOX_FULL           (-4)  // 信息邮箱满
+// 仅使能 configSUPPORT_TASKS_EVENT 
+#define MSG_TASK_MSG_UNINT      (-10)
+#define MSG_INVALID_TASK        (-11)  // 无效任务
 
 typedef struct {
     uint16_t dumy0; 
