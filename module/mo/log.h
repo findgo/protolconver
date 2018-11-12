@@ -1,5 +1,4 @@
 
-
 /*
  *  realize four level log module
  *
@@ -56,8 +55,12 @@ extern logger_t default_logger;
 
 #define mo_log_set_max_logger_level(LEVEL) (default_logger.level = (LEVEL))
 
-void mo_log_set_logger_callback(log_FuncpfnCB_t log_func);
 
+// 定义一个外部初始化
+#define logInit() do {SerialDrvInit(COM2, 115200, 8, DRV_PAR_NONE); \
+                        mo_log_set_max_logger_level(LOG_LEVEL_DEBUG); }while(0)
+
+void mo_log_set_logger_callback(log_FuncpfnCB_t log_func);
 
 #ifdef __cplusplus
 }  /* extern "C */

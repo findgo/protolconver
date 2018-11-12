@@ -11,12 +11,12 @@ int main(void)
     prvnvicInit();
 
     // init sysytem
-    loop_init_System();
+    task_init_System();
 
     // run system
     while(1)
     {
-        loop_Run_System();
+        tasks_Run_System();
     }
     
     //Should never reach this point!

@@ -50,3 +50,6 @@ void mo_log_set_logger_callback(log_FuncpfnCB_t log_func)
     default_logger.log = log_func;
 }
 
+
+
+
