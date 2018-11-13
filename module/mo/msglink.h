@@ -51,31 +51,31 @@ typedef void *msg_q_t;
  * @param   len - 信息长度
  * @return  指向信息
  */
-void *msgalloc( uint16_t msglen );
+void *msgalloc(const uint16_t msglen );
 /**
  * @brief   释放一个信息
  * @param   msg_ptr - 指向信息
  * @return  返回错误码
  */
-int msgdealloc( void *msg_ptr );
+int msgdealloc( void *const msg_ptr );
 /**
  * @brief   获得信息的长度
  * @param   msg_ptr - 指向信息
  * @return  返回信息长度, 指针无效返回0
  */
-uint16_t msglen(void * msg_ptr);
+uint16_t msglen(void *const msg_ptr);
 /**
  * @brief   获得信息 预留空间的值 (供用户自定义使用)
  * @param   msg_ptr - 指向信息
  * @return  预留空间的值
  */
-uint8_t msgspare(void * msg_ptr);
+uint8_t msgspare(void *const msg_ptr);
 /**
  * @brief   设置信息 预留空间的值 (供用户自定义使用)
  * @param   msg_ptr - 指向信息
  * @return 返回错误码
  */
-int msgsetspare(void * msg_ptr, uint8_t val);
+int msgsetspare(void *const msg_ptr,const uint8_t val);
 
 //信息邮箱
 /**
@@ -83,37 +83,37 @@ int msgsetspare(void * msg_ptr, uint8_t val);
  * @param   MaxCap - 邮箱最大存储能力,不限制设置为 MSGBOX_UNLIMITED_CAP
  * @return 返回句柄
  */
-msgboxhandle_t msgBoxNew(uint16_t MaxCap);
+msgboxhandle_t msgBoxNew(const uint16_t MaxCap);
 /**
  * @brief   用静态邮箱句柄缓存 创建 一个信息邮箱句柄
  * @param   MaxCap - 邮箱最大存储能力,不限制设置为 MSGBOX_UNLIMITED_CAP
  * @return 返回句柄
  */
-msgboxhandle_t msgBoxAssign(msgboxstatic_t *pmsgboxBuffer,uint16_t MaxCap);
+msgboxhandle_t msgBoxAssign(msgboxstatic_t *const pmsgboxBuffer,const uint16_t MaxCap);
 /**
  * @brief   获得信息邮箱中信息数量
  * @param   msgboxhandle_t - 信息邮箱句柄
  * @return  信息数量
  */
-uint16_t msgBoxcnt(msgboxhandle_t      msgbox);
+uint16_t msgBoxcnt(const msgboxhandle_t      msgbox);
 /**
  * @brief   获得信息邮箱中空闲全置数量
  * @param   msgboxhandle_t - 信息邮箱句柄
  * @return  空闲位置数量
  */
-uint16_t msgBoxIdle( msgboxhandle_t msgbox );
+uint16_t msgBoxIdle(const msgboxhandle_t msgbox );
 /**
  * @brief   取出信息邮箱一条信息
  * @param   msgboxhandle_t - 信息邮箱句柄
  * @return  有信息返回信息指针,否则为NULL
  */
-void *msgBoxaccept(msgboxhandle_t msgbox);
+void *msgBoxaccept(const msgboxhandle_t msgbox);
 /**
  * @brief   查看信息邮箱第一条信息,但并不取出
  * @param   msgboxhandle_t - 信息邮箱句柄
  * @return  有信息返回信息指针,否则为NULL
  */
-void *msgBoxpeek( msgboxhandle_t msgbox );
+void *msgBoxpeek(const msgboxhandle_t msgbox );
 /**
  * @brief   向信息邮箱发送一条信息
  * @param   msgboxhandle_t - 信息邮箱句柄
@@ -136,13 +136,13 @@ void *msgBoxpeek( msgboxhandle_t msgbox );
  * @param   q_ptr - 信息队列头
  * @return  有信息返回信息指针,否则为NULL
  */
-void *msgQpop( msg_q_t *q_ptr );
+void *msgQpop( msg_q_t *const q_ptr );
 /**
  * @brief   查看信息队列第一条信息,但不取出
  * @param   q_ptr - 信息队列头
  * @return  有信息返回信息指针,否则为NULL
  */
-void *msgQpeek( msg_q_t *q_ptr );
+void *msgQpeek( msg_q_t *const q_ptr );
 /**
  * @brief   向信息队列 发送一条信息
  * @param   q_ptr - 信息队列头
@@ -164,7 +164,7 @@ void *msgQpeek( msg_q_t *q_ptr );
  * @param   premsg_ptr - 前一条信息指针
  * @return  返回错误码
  */
-void msgQextract( msg_q_t *q_ptr, void *msg_ptr, void *premsg_ptr );
+void msgQextract( msg_q_t *const q_ptr, void *const msg_ptr, void *const premsg_ptr );
 // scan msgQ each message
 #define msgQ_for_each_msg(q_ptr, listmsg) for(listmsg = *(q_ptr); listmsg != NULL;listmsg = msgQnext(listmsg)) 
 // how to take a messge from the list
@@ -212,7 +212,7 @@ void msgQextract( msg_q_t *q_ptr, void *msg_ptr, void *premsg_ptr );
  * @param   isfront - FALSE: 放入信息邮箱尾 : TRUE: 放入信息邮箱头
  * @return  返回错误码
  */
-int msgBoxGenericpost(msgboxhandle_t msgbox, void * msg_ptr, uint8_t isfront);
+int msgBoxGenericpost(const msgboxhandle_t msgbox,void *const msg_ptr, const uint8_t isfront);
 /**
  * @brief   向信息队列头 发送一条信息
  * @param   q_ptr - 信息队列头
@@ -220,13 +220,13 @@ int msgBoxGenericpost(msgboxhandle_t msgbox, void * msg_ptr, uint8_t isfront);
  * @param   isfront - FALSE: 放入信息队列尾 : TRUE: 放入信息队列头
  * @return  返回错误码
  */
-void msgQGenericput( msg_q_t *q_ptr, void *msg_ptr, uint8_t isfront );
+void msgQGenericput( msg_q_t *const q_ptr, void *const msg_ptr,const uint8_t isfront );
 /**
  * @brief   从信息获得下一条信息        ( 信息必需在队列上,这属于内部API,不得调用 )
  * @param   msg_ptr - 信息指针
  * @return  下一条消息指针
  */
-void *msgQnext(void *msg_ptr);
+void *msgQnext(void *const msg_ptr);
 /*********************** 内部API,不可独立调用**********************************************/
 
 

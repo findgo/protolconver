@@ -41,19 +41,19 @@ extern "C"
 void nvinit( void );
 
 /* Read an NV attribute */
-uint8_t nvItemReadx( uint16_t id, uint16_t ndx, void *buf, uint16_t len );
+uint8_t nvItemReadx(const uint16_t id,const uint16_t ndx, void *const buf, const uint16_t len );
 
 /* Read an NV attribute */
 #define nvItemRead(id, buf, len)    nvItemReadx(id, 0, buf, len)
 
 /* Write an NV attribute*/
-uint8_t nvItemWrite( uint16_t id, void *buf, uint16_t len );
+uint8_t nvItemWrite(const uint16_t id,const void *buf,const uint16_t len );
 
 /* Get the length of an NV item. */
-uint16_t nvItemlen( uint16_t id );
+uint16_t nvItemlen(const uint16_t id );
 
 /* Delete an NV item. */
-uint8_t nvItemDelete( uint16_t id );
+uint8_t nvItemDelete(const uint16_t id );
 
 /*********************************************************************
 *********************************************************************/

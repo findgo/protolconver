@@ -850,7 +850,7 @@ void nvinit( void )
  *
  * @return  Item length, if found; zero otherwise.
  */
-uint16_t nvItemlen( uint16_t id )
+uint16_t nvItemlen(const uint16_t id )
 {
     NvItemHdr_t hdr;
     uint16_t offset;
@@ -872,7 +872,7 @@ uint16_t nvItemlen( uint16_t id )
  *
  * @return  NV_SUCCESS if successful, NV_OPER_FAILED if failure.
  */
-uint8_t nvItemWrite( uint16_t id, void *buf, uint16_t len )
+uint8_t nvItemWrite(const uint16_t id,const void *buf,const uint16_t len )
 {
     uint8_t rtrn = NV_SUCCESS;
     NvItemHdr_t hdr;
@@ -984,7 +984,7 @@ uint8_t nvItemWrite( uint16_t id, void *buf, uint16_t len )
  * @return  NV_SUCCESS if NV data was copied to the parameter 'buf'.
  *          Otherwise, NV_OPER_FAILED for failure.
  */
-uint8_t nvItemReadx( uint16_t id, uint16_t ndx, void *buf, uint16_t len )
+uint8_t nvItemReadx(const uint16_t id,const uint16_t ndx, void *const buf,const uint16_t len )
 {
     uint16_t offset;
 
@@ -1008,7 +1008,7 @@ uint8_t nvItemReadx( uint16_t id, uint16_t ndx, void *buf, uint16_t len )
  *          NV_ITEM_UNINIT if item did not exist in NV,
  *          NV_OPER_FAILED if attempted deletion failed.
  */
-uint8_t nvItemDelete( uint16_t id )
+uint8_t nvItemDelete(const uint16_t id )
 {
     uint16_t offset;
 

@@ -49,13 +49,13 @@ TimerHandle_t timerNew( TimerCallbackFunction_t pxCallbackFunction, void * arg) 
  * @param   arg - 回调函数参数
  * @return  成功返回句柄,否则NULL
  */
-TimerHandle_t timerAssign(TimerStatic_t * pxTimerBuffer, TimerCallbackFunction_t pxCallbackFunction, void * arg) ; 
+TimerHandle_t timerAssign(TimerStatic_t *const pxTimerBuffer, TimerCallbackFunction_t pxCallbackFunction, void * arg) ; 
 /**
  * @brief   查看时间句柄是否活跃在时间任务队列中
  * @param   xTimer - 时间句柄
  * @return  TRUE: active FALSE: not active
  */
-uint8_t timerIsTimerActive( TimerHandle_t xTimer );
+uint8_t timerIsTimerActive( const TimerHandle_t xTimer );
 /**
  * @brief   获得下一次超时到期时间
  * @param   无
@@ -85,7 +85,7 @@ void timerTask( void );
 #define timerDeleteFromISR( xTimer )           timerDelete( xTimer )
 
 // internal function do not use it
-uint8_t timerGenericCommandSend( TimerHandle_t xTimer, const uint32_t xCommandID, const uint32_t xTimeoutInTicks);
+uint8_t timerGenericCommandSend(const TimerHandle_t xTimer, const uint32_t xCommandID, const uint32_t xTimeoutInTicks);
 
 #ifdef __cplusplus
 }
