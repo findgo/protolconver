@@ -12,10 +12,10 @@
 #define xIIC_SDA_PORT   GPIOA
 #define xIIC_RCC_PORT   RCC_APB2Periph_GPIOA
 
-#define xIIC_SDA_OUTPUT()       PLxModeOutputS50PP(GPIOA,1)//{GPIOA->CRL&=0XFFFFFF0F;GPIOA->CRL|=0x00000030;}//通用推挽输出50MZ 
-#define xIIC_SDA_INPUT()    PLxModeInputIPU(GPIOA, 1) //{GPIOA->CRL&=0XFFFFFF0F;GPIOA->CRL|=0x00000080;}//输入模式上拉下拉输入模式
-#define xIIC_SCL_PIN_OUT       PAout(0)
-#define xIIC_SCL_PIN_IN        PAin(0)
+#define xIIC_SDA_OUTPUT()       PxCfgOutputS50PP(GPIOA,1)//通用推挽输出50MZ 
+#define xIIC_SDA_INPUT()        PxCfgInputIPU(GPIOA, 1) //输入模式上拉下拉输入模式
+#define xIIC_SCL_PIN_OUT        PAout(0)
+#define xIIC_SCL_PIN_IN         PAin(0)
 
 #define xIIC_SDA_PIN_OUT       PAout(1)
 #define xIIC_SDA_PIN_IN        PAin(1)
@@ -41,8 +41,10 @@ uint8_t xIICReadMultiBytes(u8 devaddr,u8 memAddress,u8 len,u8 *wbuf);
 // 读命令寄存器
 #define xIICReadReg(devaddr) xIICReadByte(devaddr, xIICDEV_NO_MEM_ADDR)
 
-
-uint8_t SHT_iicDevReadMultiDelay(u8 devaddr,u8 addr,u8 len,u8 *rbuf , u8 ms);
-void    SHT_iicDevReadMultiReg(u8 devaddr,uint16_t _usRegAddr, uint8_t *_pRegBuf, uint8_t _ucLen);
-void    SHT_iicDevWriteMultiReg(u8 devaddr,uint16_t _usRegAddr, uint8_t *_pRegBuf, uint8_t _ucLen);
+/******************************非标准IIC Only for SHT2x*****************************************************/
+/* 非主机模式 读取成功返回success*/ 
+uint8_t SHT_DevReadbyPoll(u8 devaddr,u8 addr,u8 len,u8 *rbuf);
+uint8_t SHT_DevReadMeasure(u8 devaddr,u8 len,u8 *wbuf);
+void SHT_DevReadMultiReg(u8 devaddr,uint16_t _usRegAddr, uint8_t *_pRegBuf, uint8_t _ucLen);
+void SHT_DevWriteMultiReg(u8 devaddr,uint16_t _usRegAddr, uint8_t *_pRegBuf, uint8_t _ucLen);
 #endif

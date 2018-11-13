@@ -18,6 +18,7 @@
 #endif
 
 /*************************************************************/
+uint8_t bsp_InitSHT(void);
 void SHT_PeriodicHandle(void);
 
 #endif

@@ -235,7 +235,6 @@ uint8_t xIICReadByte(u8 devaddr,u8 memAddress)
 uint8_t xIICReadMultiBytes(u8 devaddr,u8 memAddress,u8 len,u8 *wbuf)
 {
     uint8_t i = 0;
-	uint8_t temp;
 	
 	xIIC_start();
 	xIIC_byte_write(devaddr);	   //send devAddress address and write
@@ -251,21 +250,22 @@ uint8_t xIICReadMultiBytes(u8 devaddr,u8 memAddress,u8 len,u8 *wbuf)
 	
     for(i = 0; i < len; i++){ 
 		 if(i != (len - 1))
-		 	temp = xIIC_byte_read(TRUE);  //read with ack
+		 	wbuf[i] = xIIC_byte_read(TRUE);  //read with ack
 		 else
-			temp = xIIC_byte_read(FALSE);	//last byte with nack
-
-		wbuf[i] = temp;
+			wbuf[i] = xIIC_byte_read(FALSE);	//last byte with nack
 	}
     xIIC_stop();//stop
     
     return  Success;
 }
 
-uint8_t SHT_iicDevReadMultiDelay(u8 devaddr,u8 _usRegAddr,u8 _ucLen,u8 *_pRegBuf , u8 ms)
+/******************************非标准IIC Only for SHT2x*****************************************************/
+/* 非主机模式 */ /* 主机模式不实现 */ 
+uint8_t SHT_DevReadbyPoll(u8 devaddr,u8 _usRegAddr,u8 _ucLen,u8 *_pRegBuf)
 {
     uint8_t i;
-
+    uint32_t retry = 90000;
+    
     xIIC_start();					/* 总线开始信号 */
 
     xIIC_byte_write(devaddr);	/* 发送设备地址+写信号 */
@@ -273,29 +273,65 @@ uint8_t SHT_iicDevReadMultiDelay(u8 devaddr,u8 _usRegAddr,u8 _ucLen,u8 *_pRegBuf
 
     xIIC_byte_write(_usRegAddr);		/* 地址低8位 */
 	xIIC_wait_ack();
-    delay_ms(ms);
 
+    do
+    {
+        delay_us(1);
+        xIIC_start();
+        xIIC_byte_write(devaddr + 0x01);	/* 发送设备地址+读信号 */
+    }while((xIIC_wait_ack() == Failed) && (retry--));
+
+    if(retry > 0){
+        for (i = 0; i <_ucLen; i++)
+        {
+            if(i != (_ucLen - 1))
+               _pRegBuf[i] = xIIC_byte_read(TRUE);  //read with ack
+            else
+               _pRegBuf[i] = xIIC_byte_read(FALSE);   //last byte with nack
+        }
+        
+        xIIC_stop();                            /* 总线停止信号 */
+	    return Success;
+    }
+    
+	return Failed;
+}
+
+uint8_t SHT_DevReadMeasure(u8 devaddr,u8 len,u8 *wbuf)
+{
+    uint8_t i = 0;
+	uint16_t retry = 100;
+    
 	xIIC_start();
-    xIIC_byte_write(devaddr + 0x01);	/* 发送设备地址+读信号 */
+	xIIC_byte_write(devaddr);	   //send devAddress address and write
 	xIIC_wait_ack();
-	delay_ms(ms);
-	for (i = 0; i <_ucLen  - 1; i++)
-	{
-	    _pRegBuf[i] = xIIC_byte_read(1);	/* 读寄存器数据 */
-//		xIIC_wait_ack();
-	}
 
-	/* 最后一个数据 */
-	 _pRegBuf[i] = xIIC_byte_read(0);		/* 读寄存器数据 */
-//	xIIC_nack();
 
-    xIIC_stop();							/* 总线停止信号 */
-	
-	return Success;
+    do
+    {
+        delay_us(1);
+        xIIC_start();
+        xIIC_byte_write(devaddr | 0x01);	/* 发送设备地址+读信号 */
+    }while((xIIC_wait_ack() == Failed) && (retry--));
+		
+    if(retry > 0){
+        for (i = 0; i <len; i++)
+        {
+            if(i != (len - 1))
+               wbuf[i] = xIIC_byte_read(TRUE);  //read with ack
+            else
+               wbuf[i] = xIIC_byte_read(FALSE);   //last byte with nack
+        }
+        
+        xIIC_stop();                            /* 总线停止信号 */
+	    return Success;
+    }
+    
+	return Failed;
 }
 
 //way3
-void SHT_iicDevReadMultiReg(u8 devaddr,uint16_t _usRegAddr, uint8_t *_pRegBuf, uint8_t _ucLen)
+void SHT_DevReadMultiReg(u8 devaddr,uint16_t _usRegAddr, uint8_t *_pRegBuf, uint8_t _ucLen)
 {
     uint8_t i;
 
@@ -314,19 +350,17 @@ void SHT_iicDevReadMultiReg(u8 devaddr,uint16_t _usRegAddr, uint8_t *_pRegBuf, u
     xIIC_byte_write(devaddr + 0x01);	/* 发送设备地址+读信号 */
 	xIIC_wait_ack();
 
-	for (i = 0; i < _ucLen - 1; i++)
+	for (i = 0; i < _ucLen; i++)
 	{
-	    _pRegBuf[i] = xIIC_byte_read(TRUE);	/* 读寄存器数据 */
-//		xIIC_wait_ack();
+        if(i != (_ucLen - 1))
+           _pRegBuf[i] = xIIC_byte_read(TRUE);  //read with ack
+        else
+           _pRegBuf[i] = xIIC_byte_read(FALSE);   //last byte with nack
 	}
-
-	/* 最后一个数据 */
-	 _pRegBuf[i] = xIIC_byte_read(FALSE);		/* 读寄存器数据 */
-//	xIIC_nack();
 
     xIIC_stop();							/* 总线停止信号 */
 }
-void SHT_iicDevWriteMultiReg(u8 devaddr,uint16_t _usRegAddr, uint8_t *_pRegBuf, uint8_t _ucLen)
+void SHT_DevWriteMultiReg(u8 devaddr,uint16_t _usRegAddr, uint8_t *_pRegBuf, uint8_t _ucLen)
 {
 	uint8_t i;
 
