@@ -4,7 +4,7 @@
  * 
  * 信息邮箱 只可使用前面创建的信息
  *
- * 信息队列 只可使用前面创建的信息, 注意,信息队列的API,未检测指针的有效性
+ * 信息队列 只可使用前面创建的信息, 注意,信息队列的API,未检测指针的有效性,仅供用户使用
  *
  * NOTE: MSG_BOX_UNLIMITED_CAP 表明信息条目不作限制 
  */
@@ -29,7 +29,6 @@ extern "C" {
 #define MSG_BUFFER_NOT_AVAIL    (-3)  // 表明释放时,信息处于队列上,不可释放
 #define MSG_QBOX_FULL           (-4)  // 信息邮箱满
 // 仅使能 configSUPPORT_TASKS_EVENT 
-#define MSG_TASK_MSG_UNINT      (-10)
 #define MSG_INVALID_TASK        (-11)  // 无效任务
 
 typedef struct {
@@ -44,7 +43,8 @@ typedef void *msg_q_t;
 
 //静态初始化一个信息邮箱句柄缓存
 #define MSGBOX_STATIC_INIT(MaxCap) { 0, (MaxCap), NULL}
-
+// 静态缓存转化成句柄
+#define MSGBOX_STATIC_TO_HANDLE(pmsgBoxStatic) ((msgboxhandle_t *)pmsgBoxStatic)
 // 信息
 /**
  * @brief   分配一个信息

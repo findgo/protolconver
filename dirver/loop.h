@@ -8,7 +8,7 @@
 
 
 
-void task_init_System(void);
+void tasks_init_System(void);
 
 #endif
 

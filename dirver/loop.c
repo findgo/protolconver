@@ -30,21 +30,8 @@ const pTaskFn_t tasksArr[] =
 const uint8_t tasksCnt = sizeof(tasksArr) / sizeof(tasksArr[0]);
 uint16_t *tasksEvents;
 #endif
-#if configSUPPORT_POLL_TASK > 0
-// 轮询
-const pPollFn_t pollsArr[] =
-{
-    nwkTask,
-    timerTask, 
-    wintomTask,
-    npiTask,
-    keyTask
-};
-const uint8_t poolsCnt = sizeof(pollsArr) / sizeof(pollsArr[0]);
-#endif
 
-
-void task_init_System(void)
+void tasks_init_System(void)
 {
 #if configSUPPORT_TASKS_EVENT > 0
     uint8_t taskID = 0;
@@ -75,7 +62,14 @@ void task_init_System(void)
 
     mo_logln(INFO,"loop_init_System init end, and start!");
 }
-
+void tasksPoll(void)
+{
+    nwkTask();
+    timerTask();
+    wintomTask();
+    npiTask();
+    keyTask();
+}
 
 /* 重定向fputc 到输出，单片机一般为串口*/ 
 int fputc(int ch, FILE *f)
