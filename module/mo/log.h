@@ -15,7 +15,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include "common_type.h"
+#include "mserial.h"
+#include "usart.h"
 enum {
     LOG_LEVEL_ERROR = 0,
     LOG_LEVEL_WARN,
@@ -23,44 +25,29 @@ enum {
     LOG_LEVEL_DEBUG
 };
 
-typedef void (*log_FuncpfnCB_t)(void *ctx, int level, const char *format, ...);
-typedef struct logger_s {
-    int level;
 
-    void *context;
-    log_FuncpfnCB_t log;
-} logger_t;
+#define log_error(format,args...)       log_ll(LOG_LEVEL_ERROR,format,##args)
+#define log_warn(format,args...)        log_ll(LOG_LEVEL_WARN,format,##args)
+#define log_info(format,args...)        log_ll(LOG_LEVEL_INFO,format,##args)
+#define log_debug(format,args...)       log_ll(LOG_LEVEL_DEBUG,format,##args)
 
-extern logger_t default_logger;
+#define log_errorln(format,args...)     log_llln(LOG_LEVEL_ERROR,format,##args)
+#define log_warnln(format,args...)      log_llln(LOG_LEVEL_WARN,format,##args)
+#define log_infoln(format,args...)      log_llln(LOG_LEVEL_INFO,format,##args)
+#define log_debugln(format,args...)     log_llln(LOG_LEVEL_DEBUG,format,##args)
 
-// for user 
-#define MO_LOG_DEFAULTLOG_CB  ( log_FuncpfnCB_t )1
 
-#define mo_log(LEVEL,format,args...)	\
-        do {                                    \
-            const int level = LOG_LEVEL_##LEVEL;   \
-            if(default_logger.level >= level ){ \
-                void *ctx = default_logger.context; \
-	            default_logger.log(ctx, (level),format,##args);  \
-          }}while(0)
-
- #define mo_logln(LEVEL,format,args...) \
-         do {                                    \
-             const int level = LOG_LEVEL_##LEVEL;   \
-             if(default_logger.level >= level ){ \
-                 void *ctx = default_logger.context; \
-                 default_logger.log(ctx, (level),format,##args);      \
-                 default_logger.log(ctx, (level),"\r\n");   \
-           }}while(0)
-
-#define mo_log_set_max_logger_level(LEVEL) (default_logger.level = (LEVEL))
+void log_set_max_level(uint8_t level);
+void log_Init(void);
+void log_llln(uint8_t level,const char *format,...);
+void log_ll(uint8_t level,const char *format,...);
 
 
 // 定义一个外部初始化
-#define logInit() do {SerialDrvInit(COM2, 115200, 8, DRV_PAR_NONE); \
-                        mo_log_set_max_logger_level(LOG_LEVEL_DEBUG); }while(0)
+#define lowlogInit() do {SerialDrvInit(COM2, 115200, 8, DRV_PAR_NONE); log_set_max_level(LOG_LEVEL_DEBUG); }while(0)
+// 重定向fput的字符
+#define lowlogputChar(c) Serial_WriteByte(COM2,c);
 
-void mo_log_set_logger_callback(log_FuncpfnCB_t log_func);
 
 #ifdef __cplusplus
 }  /* extern "C */

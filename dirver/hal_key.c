@@ -5,7 +5,7 @@
 
 #define HAL_KEY_SCAN_TIME   10
 
-#define key_log(format,args...)      mo_logln(DEBUG,format,##args )
+#define key_log(format,args...)      log_debugln(format,##args )
 
 static uint8_t halkeyResetIsDown(void);
 static void halkeyCB(void *arg);

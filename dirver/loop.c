@@ -41,8 +41,8 @@ void tasks_init_System(void)
 #endif
 
     Systick_Configuration();
-    logInit();
-    mo_logln(INFO,"loop_init_System init begin!");
+    log_Init();
+    log_infoln("loop_init_System init begin!");
     
 // driver init 
     // led
@@ -60,7 +60,7 @@ void tasks_init_System(void)
     // blink 3 ,show no on net
     mledset(MLED_1, MLED_MODE_FLASH);
 
-    mo_logln(INFO,"loop_init_System init end, and start!");
+    log_infoln("loop_init_System init end, and start!");
 }
 void tasksPoll(void)
 {
@@ -70,19 +70,4 @@ void tasksPoll(void)
     npiTask();
     keyTask();
 }
-
-/* 重定向fputc 到输出，单片机一般为串口*/ 
-int fputc(int ch, FILE *f)
-{
-    /* e.g. write a character to the USART */
-    (void)Serial_WriteByte(COM2,ch);
-    
-//    (void)Serial_WriteByte(COM2,ch);
-//    USART_SendData(USART_USING2,ch);
-    /* Loop until the end of transmission */
-//    while(USART_GetFlagStatus(USART_USING2, USART_FLAG_TC) == RESET);
-    
-    return ch;
-}
-
 

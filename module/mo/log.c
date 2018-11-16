@@ -4,52 +4,92 @@
 #include <stdarg.h>
 #include "log.h"
 
+#if defined(GLOBAL_DEBUG)
+
+//默认只输出error
+static uint8_t default_level = LOG_LEVEL_DEBUG;
+
+
+static void lowlevelPrefix_log(uint8_t level)
+{
+    switch (level){
+    case LOG_LEVEL_ERROR:
+        printf("[Error]:");
+        break;
+    case LOG_LEVEL_WARN:
+        printf("[Warning]:");
+        break;
+    case LOG_LEVEL_INFO:
+        printf("[Info]:");
+        break;
+    case LOG_LEVEL_DEBUG:
+        printf("[Debug]:");
+        break;
+    default:
+        break;
+    }
+}
+
 // 默认输出到stdout
-static void mo_log_defaultlog_callback(void *ctx, int level, const char *format,...)
+void log_ll(uint8_t level,const char *format,...)
 {
     va_list ap;
+
+    if( level <= default_level ){ 
+        lowlevelPrefix_log(level);
+        va_start(ap,format);
+        vprintf(format,ap);
+        va_end(ap);
+    }   
+}
+
+void log_llln(uint8_t level,const char *format,...)
+{
+    va_list ap;
+
+    if( level <= default_level ){ 
+        lowlevelPrefix_log(level);
+        va_start(ap,format);
+        vprintf(format,ap);
+        va_end(ap);
+        printf("\r\n");
+    }   
+}
+
+void log_set_max_level(uint8_t level) 
+{
+    default_level = MIN(level, LOG_LEVEL_DEBUG);
+}
+void log_Init(void)
+{
+    lowlogInit();
+}
+
+/* 重定向fputc 到输出，单片机一般为串口*/ 
+int fputc(int ch, FILE *f)
+{
+    /* e.g. write a character to the USART */
+    lowlogputChar(ch);
     
-    (void)ctx;
-    (void)level;
-
-    va_start(ap,format);
-	vprintf(format,ap);
-	va_end(ap);
+//    (void)Serial_WriteByte(COM2,ch);
+//    USART_SendData(USART_USING2,ch);
+    /* Loop until the end of transmission */
+//    while(USART_GetFlagStatus(USART_USING2, USART_FLAG_TC) == RESET);
+    
+    return ch;
 }
 
-//将所以信息默认不输出
-static void mo_log_nulllog_callback(void *ctx, int level, const char *format,...)
+#else
+void log_ll(uint8_t level,const char *format,...)
 {
-    (void)ctx;
     (void)level;
-    (void)format;
 }
-
-logger_t default_logger = {
-	LOG_LEVEL_WARN,
-    NULL,
-	mo_log_defaultlog_callback
-};
-
-/*********************************************************************
- * @fn          
- *
- * @brief       注册一个
- *
- * @param       log_Funcpfn_t - function pointer to read/write routine
- *
- * @return      
- */
-void mo_log_set_logger_callback(log_FuncpfnCB_t log_func)
+void log_set_max_level(uint8_t level) 
 {
-    if (NULL == log_func)
-        log_func = mo_log_nulllog_callback;
-    else if(log_func == MO_LOG_DEFAULTLOG_CB)
-        log_func = mo_log_defaultlog_callback;
-
-    default_logger.log = log_func;
+    (void)level;
 }
+void log_Init(void)
+{
 
-
-
-
+}
+#endif

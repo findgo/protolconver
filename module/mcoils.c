@@ -68,42 +68,82 @@ static void mCoilsOnOff(uint8_t Coils, uint8_t val)
 {
 #if (mCOILSNUM >= 1)
     if (Coils & MCOILS_1){
-        val ? MTURN_COILS1_ON() : MTURN_COILS1_OFF();
+        if(val){
+            MTURN_COILS1_ON();
+        }
+        else{
+            MTURN_COILS1_OFF();
+        }
     }
 #endif
 #if (mCOILSNUM >= 2)
     if (Coils & MCOILS_2){
-        val ? MTURN_COILS2_ON() : MTURN_COILS2_OFF();
+        if(val){
+            MTURN_COILS2_ON();
+        }
+        else{
+            MTURN_COILS2_OFF();
+        }
     }
 #endif
 #if (mCOILSNUM >= 3)
     if (Coils & MCOILS_3){
-        val ? MTURN_COILS3_ON() : MTURN_COILS3_OFF();
+        if(val){
+            MTURN_COILS3_ON();
+        }
+        else{
+            MTURN_COILS3_OFF();
+        }
     }
 #endif
 #if (mCOILSNUM >= 4)
     if (Coils & MCOILS_4){
-        val ? MTURN_COILS4_ON() : MTURN_COILS4_OFF();
+        if(val){
+            MTURN_COILS4_ON();
+        }
+        else{
+            MTURN_COILS4_OFF();
+        }
     }
 #endif
 #if (mCOILSNUM >= 5)
     if (Coils & MCOILS_5){
-        val ? MTURN_COILS5_ON() : MTURN_COILS5_OFF();
+        if(val){
+            MTURN_COILS5_ON();
+        }
+        else{
+            MTURN_COILS5_OFF();
+        }
     }
 #endif
 #if (mCOILSNUM >= 6)
     if (Coils & MCOILS_6){
-        val ? MTURN_COILS6_ON() : MTURN_COILS6_OFF();
+        if(val){
+            MTURN_COILS6_ON();
+        }
+        else{
+            MTURN_COILS6_OFF();
+        }
     }
 #endif
 #if (mCOILSNUM >= 7)
     if (Coils & MCOILS_7){
-        val ? MTURN_COILS7_ON() : MTURN_COILS7_OFF();
+        if(val){
+            MTURN_COILS7_ON();
+        }
+        else{
+            MTURN_COILS7_OFF();
+        }
     }
 #endif
 #if (mCOILSNUM >= 8)    
     if (Coils & MCOILS_8){
-        val ? MTURN_COILS8_ON() : MTURN_COILS8_OFF();
+        if(val){
+            MTURN_COILS8_ON();
+        }
+        else{
+            MTURN_COILS8_OFF();
+        }
     }
 #endif
 
@@ -114,4 +154,5 @@ static void mCoilsOnOff(uint8_t Coils, uint8_t val)
         CurCoilOnOffStatus &= (Coils ^ 0xFF);
     }
 }
+
 

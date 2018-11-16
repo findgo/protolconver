@@ -117,7 +117,7 @@ void nwkTask(void)
     msg = msgBoxaccept(&nwkmsgboxHandlebuf);
     while(msg)
     {
-        mo_logln(DEBUG, "nwk msg process!");
+        log_debugln("nwk msg process!");
         // process you message
         pkt.apduData = nwkParseHdr(&hdr, msg);
         pkt.apduLength = msglen(msg) - nwkHdrLen();

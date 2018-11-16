@@ -4,7 +4,7 @@
 #include "mleds.h"
 #include "nwk.h"
 
-#define sapi_log(format,args...)  mo_logln(DEBUG, format, ##args)
+#define sapi_log(format,args...)  log_debugln(format, ##args)
 
 // 入网重试次数
 #define ZB_START_RETRY_CNT_MAX   10
