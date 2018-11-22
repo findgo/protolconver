@@ -6,24 +6,30 @@
 
 #if defined(GLOBAL_DEBUG)
 
-//默认只输出error
+//默认只输出debug等级
 static uint8_t default_level = LOG_LEVEL_DEBUG;
 
 
 static void lowlevelPrefix_log(uint8_t level)
 {
     switch (level){
+    case LOG_LEVEL_ALERT:
+        printf("[A]:");
+        break;
     case LOG_LEVEL_ERROR:
-        printf("[Error]:");
+        printf("[E]:");
         break;
     case LOG_LEVEL_WARN:
-        printf("[Warning]:");
+        printf("[W]:");
+        break;
+    case LOG_LEVEL_NOTICE:
+        printf("[N]:");
         break;
     case LOG_LEVEL_INFO:
-        printf("[Info]:");
+        printf("[I]:");
         break;
     case LOG_LEVEL_DEBUG:
-        printf("[Debug]:");
+        printf("[D]:");
         break;
     default:
         break;
@@ -84,6 +90,11 @@ void log_ll(uint8_t level,const char *format,...)
 {
     (void)level;
 }
+void log_llln(uint8_t level,const char *format,...)
+{
+    (void)level;
+}
+
 void log_set_max_level(uint8_t level) 
 {
     (void)level;

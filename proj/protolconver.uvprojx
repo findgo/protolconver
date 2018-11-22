@@ -335,9 +335,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>STM32F10X_MD,USE_STDPERIPH_DRIVER</Define>
+              <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\common;..\dirver;..\module;..\user;..\util;..\dirver\connect;..\module\ltl;..\module\mo;..\dirver\bsp;..\dirver\dev;..\user\curtain;..\dirver\npi</IncludePath>
+              <IncludePath>..\bxCommon;..\bxDriver;..\bxModule;..\bxUser;..\bxDriver\connect;..\bxModule\ltl;..\bxModule\mo;..\bxDriver\bsp;..\bxDriver\dev;..\bxUser\curtain;..\bxDriver\npi</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -379,365 +379,207 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>driver</GroupName>
+          <GroupName>bxDriver</GroupName>
           <Files>
-            <File>
-              <FileName>systick.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\dirver\systick.c</FilePath>
-              <FileOption>
-                <CommonProperty>
-                  <UseCPPCompiler>2</UseCPPCompiler>
-                  <RVCTCodeConst>0</RVCTCodeConst>
-                  <RVCTZI>0</RVCTZI>
-                  <RVCTOtherData>0</RVCTOtherData>
-                  <ModuleSelection>0</ModuleSelection>
-                  <IncludeInBuild>1</IncludeInBuild>
-                  <AlwaysBuild>2</AlwaysBuild>
-                  <GenerateAssemblyFile>2</GenerateAssemblyFile>
-                  <AssembleAssemblyFile>2</AssembleAssemblyFile>
-                  <PublicsOnly>2</PublicsOnly>
-                  <StopOnExitCode>11</StopOnExitCode>
-                  <CustomArgument></CustomArgument>
-                  <IncludeLibraryModules></IncludeLibraryModules>
-                  <ComprImg>1</ComprImg>
-                </CommonProperty>
-                <FileArmAds>
-                  <Cads>
-                    <interw>2</interw>
-                    <Optim>0</Optim>
-                    <oTime>2</oTime>
-                    <SplitLS>2</SplitLS>
-                    <OneElfS>2</OneElfS>
-                    <Strict>2</Strict>
-                    <EnumInt>2</EnumInt>
-                    <PlainCh>2</PlainCh>
-                    <Ropi>2</Ropi>
-                    <Rwpi>2</Rwpi>
-                    <wLevel>2</wLevel>
-                    <uThumb>2</uThumb>
-                    <uSurpInc>2</uSurpInc>
-                    <uC99>2</uC99>
-                    <uGnu>2</uGnu>
-                    <useXO>2</useXO>
-                    <v6Lang>0</v6Lang>
-                    <v6LangP>0</v6LangP>
-                    <vShortEn>2</vShortEn>
-                    <vShortWch>2</vShortWch>
-                    <v6Lto>2</v6Lto>
-                    <v6WtE>2</v6WtE>
-                    <v6Rtti>2</v6Rtti>
-                    <VariousControls>
-                      <MiscControls></MiscControls>
-                      <Define></Define>
-                      <Undefine></Undefine>
-                      <IncludePath></IncludePath>
-                    </VariousControls>
-                  </Cads>
-                </FileArmAds>
-              </FileOption>
-            </File>
             <File>
               <FileName>usart.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\dirver\usart.c</FilePath>
+              <FilePath>..\bxDriver\usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>systick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxDriver\systick.c</FilePath>
             </File>
             <File>
               <FileName>wintom.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\dirver\dev\wintom.c</FilePath>
-            </File>
-            <File>
-              <FileName>loop.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\dirver\loop.c</FilePath>
-            </File>
-            <File>
-              <FileName>hal_led.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\dirver\hal_led.c</FilePath>
-            </File>
-            <File>
-              <FileName>hal_key.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\dirver\hal_key.c</FilePath>
+              <FilePath>..\bxDriver\dev\wintom.c</FilePath>
             </File>
             <File>
               <FileName>nwk.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\dirver\nwk.c</FilePath>
+              <FilePath>..\bxDriver\nwk.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_spi_flash.c</FileName>
+              <FileName>hal_key.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\dirver\bsp\bsp_spi_flash.c</FilePath>
-              <FileOption>
-                <CommonProperty>
-                  <UseCPPCompiler>2</UseCPPCompiler>
-                  <RVCTCodeConst>0</RVCTCodeConst>
-                  <RVCTZI>0</RVCTZI>
-                  <RVCTOtherData>0</RVCTOtherData>
-                  <ModuleSelection>0</ModuleSelection>
-                  <IncludeInBuild>0</IncludeInBuild>
-                  <AlwaysBuild>2</AlwaysBuild>
-                  <GenerateAssemblyFile>2</GenerateAssemblyFile>
-                  <AssembleAssemblyFile>2</AssembleAssemblyFile>
-                  <PublicsOnly>2</PublicsOnly>
-                  <StopOnExitCode>11</StopOnExitCode>
-                  <CustomArgument></CustomArgument>
-                  <IncludeLibraryModules></IncludeLibraryModules>
-                  <ComprImg>1</ComprImg>
-                </CommonProperty>
-                <FileArmAds>
-                  <Cads>
-                    <interw>2</interw>
-                    <Optim>0</Optim>
-                    <oTime>2</oTime>
-                    <SplitLS>2</SplitLS>
-                    <OneElfS>2</OneElfS>
-                    <Strict>2</Strict>
-                    <EnumInt>2</EnumInt>
-                    <PlainCh>2</PlainCh>
-                    <Ropi>2</Ropi>
-                    <Rwpi>2</Rwpi>
-                    <wLevel>0</wLevel>
-                    <uThumb>2</uThumb>
-                    <uSurpInc>2</uSurpInc>
-                    <uC99>2</uC99>
-                    <uGnu>2</uGnu>
-                    <useXO>2</useXO>
-                    <v6Lang>0</v6Lang>
-                    <v6LangP>0</v6LangP>
-                    <vShortEn>2</vShortEn>
-                    <vShortWch>2</vShortWch>
-                    <v6Lto>2</v6Lto>
-                    <v6WtE>2</v6WtE>
-                    <v6Rtti>2</v6Rtti>
-                    <VariousControls>
-                      <MiscControls></MiscControls>
-                      <Define></Define>
-                      <Undefine></Undefine>
-                      <IncludePath></IncludePath>
-                    </VariousControls>
-                  </Cads>
-                </FileArmAds>
-              </FileOption>
+              <FilePath>..\bxDriver\hal_key.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxDriver\hal_led.c</FilePath>
+            </File>
+            <File>
+              <FileName>loop.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxDriver\loop.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>user</GroupName>
+          <GroupName>bxUser</GroupName>
           <Files>
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\main.c</FilePath>
+              <FilePath>..\bxUser\main.c</FilePath>
             </File>
             <File>
               <FileName>stm32f10x_it.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\stm32f10x_it.c</FilePath>
+              <FilePath>..\bxUser\stm32f10x_it.c</FilePath>
             </File>
             <File>
               <FileName>curtain.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\user\curtain\curtain.c</FilePath>
+              <FilePath>..\bxUser\curtain\curtain.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>module</GroupName>
+          <GroupName>bxModule</GroupName>
           <Files>
             <File>
               <FileName>mleds.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\mleds.c</FilePath>
+              <FilePath>..\bxModule\mleds.c</FilePath>
             </File>
             <File>
-              <FileName>delay.c</FileName>
+              <FileName>Mserial.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\delay.c</FilePath>
-            </File>
-            <File>
-              <FileName>mclock.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\module\mclock.c</FilePath>
+              <FilePath>..\bxModule\Mserial.c</FilePath>
             </File>
             <File>
               <FileName>port_atom.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\port_atom.c</FilePath>
+              <FilePath>..\bxModule\port_atom.c</FilePath>
             </File>
             <File>
               <FileName>mkey.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\mkey.c</FilePath>
+              <FilePath>..\bxModule\mkey.c</FilePath>
             </File>
             <File>
-              <FileName>mserial.c</FileName>
+              <FileName>mcoils.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\mserial.c</FilePath>
+              <FilePath>..\bxModule\mcoils.c</FilePath>
+            </File>
+            <File>
+              <FileName>mclock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxModule\mclock.c</FilePath>
+            </File>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxModule\delay.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>ltl</GroupName>
+          <GroupName>bxModule\ltl</GroupName>
           <Files>
             <File>
               <FileName>ltl.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\ltl\ltl.c</FilePath>
-            </File>
-            <File>
-              <FileName>prefix.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\module\ltl\prefix.c</FilePath>
-            </File>
-            <File>
-              <FileName>ltl_general.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\module\ltl\ltl_general.c</FilePath>
+              <FilePath>..\bxModule\ltl\ltl.c</FilePath>
             </File>
             <File>
               <FileName>ltl_genattr.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\ltl\ltl_genattr.c</FilePath>
+              <FilePath>..\bxModule\ltl\ltl_genattr.c</FilePath>
+            </File>
+            <File>
+              <FileName>ltl_general.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxModule\ltl\ltl_general.c</FilePath>
             </File>
             <File>
               <FileName>ltl_ms.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\ltl\ltl_ms.c</FilePath>
+              <FilePath>..\bxModule\ltl\ltl_ms.c</FilePath>
+            </File>
+            <File>
+              <FileName>prefix.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxModule\ltl\prefix.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>mo</GroupName>
+          <GroupName>bxMo</GroupName>
           <Files>
             <File>
               <FileName>heap_4.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\mo\heap_4.c</FilePath>
-            </File>
-            <File>
-              <FileName>log.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\module\mo\log.c</FilePath>
-            </File>
-            <File>
-              <FileName>memalloc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\module\mo\memalloc.c</FilePath>
+              <FilePath>..\bxModule\mo\heap_4.c</FilePath>
             </File>
             <File>
               <FileName>list.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\mo\list.c</FilePath>
+              <FilePath>..\bxModule\mo\list.c</FilePath>
             </File>
             <File>
-              <FileName>queue.c</FileName>
+              <FileName>log.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\mo\queue.c</FilePath>
-              <FileOption>
-                <CommonProperty>
-                  <UseCPPCompiler>2</UseCPPCompiler>
-                  <RVCTCodeConst>0</RVCTCodeConst>
-                  <RVCTZI>0</RVCTZI>
-                  <RVCTOtherData>0</RVCTOtherData>
-                  <ModuleSelection>0</ModuleSelection>
-                  <IncludeInBuild>1</IncludeInBuild>
-                  <AlwaysBuild>2</AlwaysBuild>
-                  <GenerateAssemblyFile>2</GenerateAssemblyFile>
-                  <AssembleAssemblyFile>2</AssembleAssemblyFile>
-                  <PublicsOnly>2</PublicsOnly>
-                  <StopOnExitCode>11</StopOnExitCode>
-                  <CustomArgument></CustomArgument>
-                  <IncludeLibraryModules></IncludeLibraryModules>
-                  <ComprImg>1</ComprImg>
-                </CommonProperty>
-                <FileArmAds>
-                  <Cads>
-                    <interw>2</interw>
-                    <Optim>0</Optim>
-                    <oTime>2</oTime>
-                    <SplitLS>2</SplitLS>
-                    <OneElfS>2</OneElfS>
-                    <Strict>2</Strict>
-                    <EnumInt>2</EnumInt>
-                    <PlainCh>2</PlainCh>
-                    <Ropi>2</Ropi>
-                    <Rwpi>2</Rwpi>
-                    <wLevel>0</wLevel>
-                    <uThumb>2</uThumb>
-                    <uSurpInc>2</uSurpInc>
-                    <uC99>2</uC99>
-                    <uGnu>2</uGnu>
-                    <useXO>2</useXO>
-                    <v6Lang>0</v6Lang>
-                    <v6LangP>0</v6LangP>
-                    <vShortEn>2</vShortEn>
-                    <vShortWch>2</vShortWch>
-                    <v6Lto>2</v6Lto>
-                    <v6WtE>2</v6WtE>
-                    <v6Rtti>2</v6Rtti>
-                    <VariousControls>
-                      <MiscControls></MiscControls>
-                      <Define></Define>
-                      <Undefine></Undefine>
-                      <IncludePath></IncludePath>
-                    </VariousControls>
-                  </Cads>
-                </FileArmAds>
-              </FileOption>
+              <FilePath>..\bxModule\mo\log.c</FilePath>
             </File>
             <File>
-              <FileName>timers.c</FileName>
+              <FileName>memalloc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\mo\timers.c</FilePath>
-            </File>
-            <File>
-              <FileName>event_groups.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\module\mo\event_groups.c</FilePath>
+              <FilePath>..\bxModule\mo\memalloc.c</FilePath>
             </File>
             <File>
               <FileName>msglink.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\mo\msglink.c</FilePath>
+              <FilePath>..\bxModule\mo\msglink.c</FilePath>
+            </File>
+            <File>
+              <FileName>queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxModule\mo\queue.c</FilePath>
             </File>
             <File>
               <FileName>task.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\module\mo\task.c</FilePath>
+              <FilePath>..\bxModule\mo\task.c</FilePath>
+            </File>
+            <File>
+              <FileName>timers.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxModule\mo\timers.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>bsp</GroupName>
+          <GroupName>bxDriver\bsp</GroupName>
           <Files>
             <File>
               <FileName>bsp_uniqueID.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\dirver\bsp\bsp_uniqueID.c</FilePath>
+              <FilePath>..\bxDriver\bsp\bsp_uniqueID.c</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>npi</GroupName>
+          <GroupName>bxDrive\rnpi</GroupName>
           <Files>
             <File>
-              <FileName>mt_zdo.c</FileName>
+              <FileName>mt_sapi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\dirver\npi\mt_zdo.c</FilePath>
+              <FilePath>..\bxDriver\npi\mt_sapi.c</FilePath>
             </File>
             <File>
               <FileName>mt_npi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\dirver\npi\mt_npi.c</FilePath>
+              <FilePath>..\bxDriver\npi\mt_npi.c</FilePath>
             </File>
             <File>
-              <FileName>mt_sapi.c</FileName>
+              <FileName>mt_zdo.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\dirver\npi\mt_sapi.c</FilePath>
+              <FilePath>..\bxDriver\npi\mt_zdo.c</FilePath>
             </File>
           </Files>
         </Group>

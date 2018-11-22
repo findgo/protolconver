@@ -268,7 +268,7 @@ static void npi_syncprocess(void)
     
     }
 }
-/* Process received frame */
+/* Process received Pdu frame */
 static void npi_procframe( uint8_t cmd0, uint8_t commandId, uint8_t *pBuf, uint8_t length)
 {
     npi_syncreq_t *msg;
