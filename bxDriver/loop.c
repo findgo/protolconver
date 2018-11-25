@@ -1,18 +1,21 @@
 
 #include "loop.h"
-//for driver
-#include "wintom.h"
-#include "mleds.h"
-#include "hal_key.h"
-#include "systick.h"
 
+
+//for module
 #include "memalloc.h"
 #include "timers.h"
 #include "event_groups.h"
 #include "log.h"
 
+// for ltl
 #include "ltl.h"
 #include "ltl_genattr.h"
+//for driver
+#include "wintom.h"
+#include "mleds.h"
+#include "hal_key.h"
+#include "systick.h"
 
 #include "curtain.h"
 #include "nwk.h"
@@ -21,7 +24,6 @@
 
 
 #if configSUPPORT_TASKS_EVENT > 0
-#include "msglink.h"
 // 事件触发,为未来低功耗节能
 const pTaskFn_t tasksArr[] =
 {

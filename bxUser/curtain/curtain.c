@@ -136,7 +136,7 @@ static void curtainParsePoscb(uint8_t moto_no, uint8_t devID, uint8_t pos )
         lreport->attrData = attrirecord->dataPtr;
 
         
-        ltl_SendReportCmd(&dst_addr, LTL_TRUNK_ID_GENERAL_LEVEL_CONTROL, LTL_NODE_CURTAIN, 0, 
+        ltl_SendReportCmd(dst_addr, LTL_TRUNK_ID_GENERAL_LEVEL_CONTROL, LTL_NODE_CURTAIN, 0, 
                         LTL_FRAMECTL_DIR_CLIENT_SERVER, TRUE, reportcmd);
         
         mo_free(reportcmd);

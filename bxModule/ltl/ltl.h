@@ -351,34 +351,34 @@ LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO,
 
 
 
-LStatus_t ltl_SendCommand(void *pAddr, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
+LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
                                 uint8_t specific, uint8_t direction, uint8_t disableDefaultRsp,
                                 uint8_t cmd, uint8_t *cmdFormat,uint16_t cmdFormatLen);
-LStatus_t ltl_SendReadReq(void *pAddr, uint16_t trunkID, uint8_t nodeNO,
+LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
                                 uint8_t seqNum,uint8_t direction,
                                 uint8_t disableDefaultRsp, ltlReadCmd_t *readCmd );
-LStatus_t ltl_SendReadRsp(void *pAddr, uint16_t trunkID, uint8_t nodeNO,
+LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
                                 uint8_t seqNum,uint8_t direction,
                                 uint8_t disableDefaultRsp, ltlReadRspCmd_t *readRspCmd );
-LStatus_t ltl_SendWriteRequest(void *pAddr, uint16_t trunkID, uint8_t nodeNO,
+LStatus_t ltl_SendWriteRequest(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
                                 uint8_t seqNum,uint8_t direction,
                                 uint8_t disableDefaultRsp, uint8_t cmd, ltlWriteCmd_t *writeCmd );
-#define ltl_SendWriteReq(pAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
-                        ltl_SendWriteRequest(pAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES, writeCmd )
-#define ltl_SendWriteRequUndivided(pAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
-                        ltl_SendWriteRequest(pAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED, writeCmd )
+#define ltl_SendWriteReq(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
+                        ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES, writeCmd )
+#define ltl_SendWriteRequUndivided(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
+                        ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED, writeCmd )
                         
-#define ltl_SendWriteReqNoRsp(pAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
-                        ltl_SendWriteRequest(pAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES_NORSP, writeCmd )
+#define ltl_SendWriteReqNoRsp(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
+                        ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES_NORSP, writeCmd )
                         
-LStatus_t ltl_SendwriteRsp( void *pAddr, uint16_t trunkID,uint8_t nodeNO,
+LStatus_t ltl_SendwriteRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
                                  uint8_t seqNum , uint8_t direction,
                                  uint8_t disableDefaultRsp, ltlWriteRspCmd_t *writeRspCmd);
-LStatus_t ltl_SendReportCmd( void *pAddr, uint16_t trunkID,uint8_t nodeNO,
+LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
                                  uint8_t seqNum , uint8_t direction,
                                  uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd);
 
-LStatus_t ltl_SendDefaultRspCmd( void *pAddr, uint16_t trunkID,uint8_t nodeNO,
+LStatus_t ltl_SendDefaultRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
                                 uint8_t seqNum, uint8_t direction,
                                 uint8_t disableDefaultRsp, ltlDefaultRspCmd_t *defaultRspCmd);
 
