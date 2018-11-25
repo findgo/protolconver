@@ -477,57 +477,59 @@ void COM2_RX_Isr_callback(void)
   */
 void USART1_IRQHandler(void)
 {
-    if(USART_GetITStatus(USART1, USART_IT_TXE) != RESET){
+    if(LL_USART_IsActiveFlag_TXE(USART1)){
+        
         COM0_TXE_Isr_callback();
-        USART_ClearITPendingBit(USART1, USART_IT_TXE);
     }
     
-    if(USART_GetITStatus(USART1,USART_IT_RXNE) != RESET){
+    if(LL_USART_IsActiveFlag_RXNE(USART1)){
         COM0_RX_Isr_callback();
-        USART_ClearITPendingBit(USART1, USART_IT_RXNE);
+        LL_USART_ClearFlag_RXNE(USART1);
     }
     
-    if(USART_GetITStatus(USART1, USART_IT_TC) != RESET){
+    if(LL_USART_IsActiveFlag_TC(USART1)){
         COM0_TXC_Isr_callback();
-        USART_ClearITPendingBit(USART1, USART_IT_TC);
+        LL_USART_ClearFlag_TC(USART1);
     }
     NVIC_ClearPendingIRQ(USART1_IRQn);
 }
 void USART2_IRQHandler(void)
 {
-    if(USART_GetITStatus(USART2, USART_IT_TXE) != RESET){
+    if(LL_USART_IsActiveFlag_TXE(USART2)){
+        
         COM1_TXE_Isr_callback();
-        USART_ClearITPendingBit(USART2, USART_IT_TXE);
     }
     
-    if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET){
+    if(LL_USART_IsActiveFlag_RXNE(USART2)){
         COM1_RX_Isr_callback();
-        USART_ClearITPendingBit(USART2, USART_IT_RXNE);
+        LL_USART_ClearFlag_RXNE(USART2);
     }
     
-    if(USART_GetITStatus(USART2, USART_IT_TC) != RESET){
+    if(LL_USART_IsActiveFlag_TC(USART2)){
         COM1_TXC_Isr_callback();
-        USART_ClearITPendingBit(USART2, USART_IT_TC);
+        LL_USART_ClearFlag_TC(USART2);
     }
+
     NVIC_ClearPendingIRQ(USART2_IRQn);
 }
 
 void USART3_IRQHandler(void)
 {
-    if(USART_GetITStatus(USART3, USART_IT_TXE) != RESET){
+    if(LL_USART_IsActiveFlag_TXE((USART3))){
+        
         COM2_TXE_Isr_callback();
-        USART_ClearITPendingBit(USART3, USART_IT_TXE);
     }
     
-    if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET){
+    if(LL_USART_IsActiveFlag_RXNE(USART3)){
         COM2_RX_Isr_callback();
-        USART_ClearITPendingBit(USART3, USART_IT_RXNE);
+        LL_USART_ClearFlag_RXNE((USART3));
     }
     
-    if(USART_GetITStatus(USART3, USART_IT_TC) != RESET){
+    if(LL_USART_IsActiveFlag_TC((USART3))){
         COM2_TXC_Isr_callback();
-        USART_ClearITPendingBit(USART3, USART_IT_TC);
+        LL_USART_ClearFlag_TC((USART3));
     }
+
     NVIC_ClearPendingIRQ(USART3_IRQn);
 }
 

@@ -13,7 +13,7 @@
 #ifndef __COMMON_PLATFORM_H_
 #define __COMMON_PLATFORM_H_
 
-#include "stm32F10x.h"
+#include "stm32f1xx.h"
 
 
 //IO口操作宏定义

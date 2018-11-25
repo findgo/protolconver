@@ -7,7 +7,6 @@
 #include "timers.h"
 
 #include "wintom.h"
-#include "dlinkzigbee.h"
 
 // 周期 1s 读取位置
 #define CURTAIN_POS_SCAN_TIME  1000

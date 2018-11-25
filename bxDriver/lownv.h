@@ -6,7 +6,7 @@
 
 #include "common_type.h"
 #include "common_def.h"
-#include "stm32f10x.h"
+#include "stm32f1xx.h"
 /*********************************************************************
  * specific in stm32F1 series
  */

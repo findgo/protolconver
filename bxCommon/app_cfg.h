@@ -29,4 +29,11 @@
 #include "log.h"
 #include "loop.h"
 
+
+// for stm32cubeMX driver
+#include "gpio.h"
+#include "main.h"
+#include "usart.h"
+#include "stm32_assert.h"
+
 #endif

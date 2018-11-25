@@ -54,7 +54,7 @@ int mtaf_Register(endPointDesc_t *endPointDesc)
 
 int mtaf_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len)
 {
-
+    return NPI_LNX_SUCCESS;
 }
 
 
@@ -67,7 +67,7 @@ int mtaf_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len)
         
         if((msg = msgalloc(len)) == NULL)
             return NPI_LNX_FAILURE;
-        mo_logln("af incoming msg!");
+        log_debug("af incoming msg!");
         nwkmsgsend(msg); // 将消息发送nwk邮箱
         break;
         

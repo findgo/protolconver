@@ -1,4 +1,7 @@
-/si
+
 /proj/Listings
 /proj/Objects
 /*.si4project
+/Drivers
+/MDK-ARM/Listing
+/MDK-ARM/Output

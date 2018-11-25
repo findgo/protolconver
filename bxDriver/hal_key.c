@@ -18,17 +18,6 @@ static mkeycfgStatic_t keycfgReset;
 
 void halkeyInit(void)
 {
-	GPIO_InitTypeDef GPIO_InitStruct;
-
-	HAL_KEY_GPIO_PeriphClock_EN();
-
-//for red led
-	GPIO_InitStruct.GPIO_Pin = HAL_KEY_RESET_PIN;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-
-	GPIO_Init(HAL_KEY_RESET_PORT, &GPIO_InitStruct);
-
     mkeyAssign(&keycfgReset,  halkeyResetIsDown, MKEY_PRESS1_DOWN, MKEY_PRESS1_LONG, MKEY_NULL, 0, 600, 0);
     keytimeHandle = timerAssign(&keytimer, halkeyCB , (void *)&keytimeHandle);
     timerStart(keytimeHandle, HAL_KEY_SCAN_TIME);
@@ -37,7 +26,7 @@ void halkeyInit(void)
 
 static uint8_t halkeyResetIsDown(void)
 {
-    return !GPIO_ReadInputDataBit(HAL_KEY_RESET_PORT, HAL_KEY_RESET_PIN);
+    return !(LL_GPIO_ReadInputPort(HAL_KEY_RESET_GPIO_Port) & HAL_KEY_RESET_Pin);
 }
 
 static void halkeyCB(void *arg)

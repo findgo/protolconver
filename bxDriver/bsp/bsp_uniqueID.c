@@ -1,5 +1,5 @@
 
-#include "stm32F10x.h"
+#include "stm32f1xx.h"
 #include "bsp_uniqueID.h"
 
 

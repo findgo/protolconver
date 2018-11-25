@@ -22,7 +22,7 @@
   */
 void Systick_Configuration(void)
 {
-	SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
+    LL_SYSTICK_SetClkSource(LL_SYSTICK_CLKSOURCE_HCLK);
 	if(SysTick_Config(SystemCoreClock/1000)){
 		while(1);
 	}
