@@ -1,13 +1,11 @@
 
 
-#ifndef __LTL_GENATTR_H__
-#define __LTL_GENATTR_H__
+#ifndef __LTL_APP_GENATTR_H__
+#define __LTL_APP_GENATTR_H__
 
-#include "common_type.h"
-#include "common_def.h"
-#include "ltl.h"
 #include "ltl_general.h"
 
+// 制造商名字字符串最大长度
 #define MANUFACTURER_NAME_STRING_MAX_LEN 16
 
 // ltl version

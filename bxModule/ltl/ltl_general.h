@@ -1,9 +1,6 @@
 #ifndef __LTL_GENERAL_H__
 #define __LTL_GENERAL_H__
 
-#include "common_type.h"
-#include "common_def.h"
-#include "ltl_trunk.h"
 #include "ltl.h"
 
 /*************************attribute******************************************************************************/

@@ -2,7 +2,7 @@
 #include "mt_sapi.h"
 #include "timers.h"
 #include "mleds.h"
-#include "nwk.h"
+#include "bxnwk.h"
 
 #define sapi_log(format,args...)  log_debugln(format, ##args)
 
@@ -133,7 +133,7 @@ int mtsapi_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len)
             return NPI_LNX_FAILURE;
         sapi_log("af incoming msg!");
         memcpy(msg,data,len);
-        nwkmsgsend(msg); // 将消息发送nwk邮箱
+        bxNwkmsgsend(msg); // 将消息发送nwk邮箱
         break;
                 
     default:

@@ -1,7 +1,5 @@
 
-#include <stdlib.h>
-#include <string.h>
-#include "heap_mange.h"
+#include "memalloc.h"
 
 /*********************************************************************
  * @brief   malloc memory

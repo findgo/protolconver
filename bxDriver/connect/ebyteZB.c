@@ -442,7 +442,7 @@ void ebyteZBTask(void)
         case EBYTE_FSM_OSPF_XOR:
             if(mXOR(eb_pbuf, eb_packetlen) == ch){
                 mo_logln(DEBUG, "OSPF sendto nwk!");
-                if(nwkmsgsend(eb_pbuf) < 0)
+                if(bxNwkmsgsend(eb_pbuf) < 0)
                     msgdealloc(eb_pbuf);
             }
             else{

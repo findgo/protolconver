@@ -7,6 +7,9 @@
 #define __MO_MEMALLOC_H__
 
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include "heap_mange.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

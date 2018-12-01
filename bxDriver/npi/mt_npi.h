@@ -6,7 +6,7 @@
 #include "app_cfg.h"
 #include "common_type.h"
 #include "mserial.h"
-#include "nwk.h"
+#include "bxnwk.h"
 
 
 #define NPI_LOGICAL_TYPE  ZG_DEVICETYPE_ROUTER

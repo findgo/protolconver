@@ -10,7 +10,7 @@
 
 // for ltl
 #include "ltl.h"
-#include "ltl_genattr.h"
+#include "ltl_app_genattr.h"
 //for driver
 #include "wintom.h"
 #include "mleds.h"
@@ -18,7 +18,7 @@
 #include "systick.h"
 
 #include "curtain.h"
-#include "nwk.h"
+#include "bxnwk.h"
 
 #include "mt_npi.h"
 
@@ -58,7 +58,7 @@ void tasks_init_System(void)
     // key
     halkeyInit();
     
-    nwkInit();
+    bxNwkInit();
     // curtain    
     wintomInit();
    
@@ -71,7 +71,7 @@ void tasks_init_System(void)
 }
 void tasksPoll(void)
 {
-    nwkTask();
+    bxNwkTask();
     timerTask();
     wintomTask();
     npiTask();

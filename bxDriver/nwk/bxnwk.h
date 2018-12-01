@@ -1,6 +1,7 @@
-#ifndef __NWK_H__
-#define __NWK_H__
+#ifndef __BX_NWK_H__
+#define __BX_NWK_H__
 
+#include "prefix.h"
 #include "msglink.h"
 #include "mt_sapi.h"
 
@@ -9,8 +10,8 @@
 #define NWK_FC_PROTOCOL 0x02
 
 // 定义网络层底层
-#define NWK_LowInit() ZbInit()
-#define NWK_LowDataRequest(pData, len)  mtsapi_DataRequest(pData, len)
+#define bxNWK_LowInit() ZbInit()
+#define bxNwk_LowDataRequest(dstaddr, pData, len)  mtsapi_DataRequest(pData, len)
 
 
 
@@ -28,14 +29,14 @@ typedef enum  bcast_addr_s {
 
 
 
-uint8_t nwkIsOnNet(void);
-int nwkmsgsend(void *msg_ptr);
+uint8_t bxNwkIsOnNet(void);
+int bxNwkmsgsend(void *msg_ptr);
 
-uint8_t nwkHdrLen(void);
-uint8_t *nwkBuildHdr(uint8_t *pDat,uint8_t fc, uint16_t dstaddr, uint8_t seq);
+uint8_t bxNwkHdrLen(void);
+uint8_t *bxNwkBuildHdr(uint8_t *pDat,uint8_t fc, uint16_t dstaddr, uint8_t seq);
 
-void nwkInit(void);
-void nwkTask(void);
+void bxNwkInit(void);
+void bxNwkTask(void);
 
 #endif
 

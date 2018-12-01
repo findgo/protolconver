@@ -18,7 +18,7 @@
 // 定义使能调试信息
 // 模块调试
 #if  ( 1 ) && defined(GLOBAL_DEBUG)
-#define SHT2Xlog(format,args...) printf(format,##args) 
+#define SHT2Xlog(format,args...) log_debugln(format,##args) 
 #else
 #define SHT2Xlog(format,args...)
 #endif
@@ -170,13 +170,13 @@ uint8_t SHT2x_CheckFeature(uint8_t Resolution, uint8_t isHeatterOn)
 
     reg = SHT2x_ReadUserReg();
     
-    SHT2Xlog("Get user reg: 0x%x\r\n", reg);
+    SHT2Xlog("Get user reg: 0x%x", reg);
     
 	//check the RES_MASK status
 	temp = reg & SHT2x_RES_MASK;
 	if( temp != resol ) // is you want?
 	{
-		SHT2Xlog("SHT2x mode is incorrect\r\n");
+		SHT2Xlog("SHT2x mode is incorrect");
 		SHT2x_SetFeature(Resolution, isHeatterOn);
 	}
 	else
@@ -186,37 +186,37 @@ uint8_t SHT2x_CheckFeature(uint8_t Resolution, uint8_t isHeatterOn)
 
 	if( temp == SHT2x_RES_12_14BIT )
 	{
-		SHT2Xlog("SHT2x_RES_12_14BIT\r\n");
+		SHT2Xlog("SHT2x_RES_12_14BIT");
 	}
 	else 	if( temp == SHT2x_RES_8_12BIT )
 	{
-		SHT2Xlog("SHT2x_RES_8_12BIT\r\n");	
+		SHT2Xlog("SHT2x_RES_8_12BIT");	
 	}
 	else if( temp == SHT2x_RES_10_13BIT )
 	{
-		SHT2Xlog("SHT2x_RES_10_13BIT\r\n");	
+		SHT2Xlog("SHT2x_RES_10_13BIT");	
 	}
 	else 	if( temp == SHT2x_RES_11_11BIT )
 	{
-		SHT2Xlog("SHT2x_RES_11_11BIT\r\n");	
+		SHT2Xlog("SHT2x_RES_11_11BIT");	
 	}
 	
 	//check the battery status
 	if(( reg & SHT2x_EOB_MASK ) == SHT2x_EOB_ON )
 	{
-		SHT2Xlog("Battery <2.25V\r\n");
+		SHT2Xlog("Battery <2.25V");
 	}else
 	{
-		SHT2Xlog("Battery >2.25V\r\n");
+		SHT2Xlog("Battery >2.25V");
 	}
 	
 	//check the HEATER status
 	if(( reg & SHT2x_HEATER_MASK ) == SHT2x_HEATER_ON )
 	{
-		SHT2Xlog("SHT2x_HEATER_ON\r\n");
+		SHT2Xlog("SHT2x_HEATER_ON");
 	}else
 	{
-        SHT2Xlog("SHT2x_HEATER_OFF\r\n");
+        SHT2Xlog("SHT2x_HEATER_OFF");
 	}
     
 	return Failed;
@@ -225,7 +225,7 @@ uint8_t SHT2x_CheckFeature(uint8_t Resolution, uint8_t isHeatterOn)
 void SHT2x_MeasureStart(uint8_t cmd)
 {
     _SHT2x_iicDevWriteCmd(SHT2x_SLAVE_ADDRESS, cmd); 
-    SHT2Xlog("SHT2x measure start!\r\n");
+    SHT2Xlog("SHT2x measure start!");
 }
 // 解析前一个序列的值
 uint8_t SHT2x_MeasureDeal(void)
@@ -234,10 +234,10 @@ uint8_t SHT2x_MeasureDeal(void)
 	u16 tmpval;	
 	uint8_t crc;
     
-    SHT2Xlog("SHT2x measure deal!\r\n");
+    SHT2Xlog("SHT2x measure deal!");
     if((_SHT2x_iicDevReadMeasure(SHT2x_SLAVE_ADDRESS, sizeof(tmp), tmp) == Failed)
         || ( (crc = SHT2x_calCrc8(tmp,2)) != tmp[2])){
-        SHT2Xlog("read failed crc rcv: %x - cal:%x\r\n", tmp[2], crc);
+        SHT2Xlog("read failed crc rcv: %x - cal:%x", tmp[2], crc);
     
         return Failed;
     }
@@ -261,7 +261,7 @@ uint8_t SHT2x_MeasureDeal(void)
         sht2x_info.TEMP_HM = ((float)value * 0.00268127) - 46.85;
         #endif
     }
-    SHT2Xlog("read success!\r\n");
+    SHT2Xlog("read success!");
     
     return SUCCESS;
 }
@@ -273,10 +273,10 @@ uint8_t SHT2x_Measure(uint8_t cmd)
 	u16 tmpval;	
 	uint8_t crc;
     
-    SHT2Xlog("measure sync start!\r\n");
+    SHT2Xlog("measure sync start!");
     if((_SHT2x_iicDevReadbyPoll(SHT2x_SLAVE_ADDRESS,cmd,sizeof(tmp),tmp) == Failed)
         || ( (crc = SHT2x_calCrc8(tmp,2)) != tmp[2])){
-        SHT2Xlog("read failed crc rcv: %x - cal:%x\r\n", tmp[2], crc);
+        SHT2Xlog("read failed crc rcv: %x - cal:%x", tmp[2], crc);
     
         return Failed;
     }
@@ -300,7 +300,7 @@ uint8_t SHT2x_Measure(uint8_t cmd)
         sht2x_info.TEMP = ((float)value * 0.00268127) - 46.85;
         #endif
     }
-    SHT2Xlog("read success!\r\n");
+    SHT2Xlog("read sync success!");
     
     return Success;
 }

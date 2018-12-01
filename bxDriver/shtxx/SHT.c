@@ -96,7 +96,7 @@ void SHT_PeriodicHandle(void)
 	SHT2x_Measure(TRIG_HUMI_MEASUREMENT_POLL);//获取SHT20 湿度
     delay_ms(200);
     info = SHT2x_GetInfo();
-    BspSHTlog("\t SHT2x:T = %.1f H = %.1f\r\n", info->TEMP, info->HUMI );
+    BspSHTlog("\t SHT2x:T = %.2f H = %.2f", info->TEMP, info->HUMI );
 #endif
 
 }

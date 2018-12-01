@@ -10,7 +10,7 @@
  /*
 uint8_t ltlprefixsize(uint8_t *pAddr)
 {
-    return nwkHdrLen();
+    return bxNwkHdrLen();
 }
 */
 /*********************************************************************

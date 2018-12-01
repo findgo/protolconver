@@ -2,7 +2,7 @@
 
 
 
-#include "ltl_genattr.h"
+#include "ltl_app_genattr.h"
 #include "bsp_uniqueID.h"
 #include "app_cfg.h"
 #include "mleds.h"

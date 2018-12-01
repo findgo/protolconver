@@ -98,10 +98,6 @@ void mledset(uint8_t leds, MledMode_t mode)
 #else
     uint8_t led;
 
-    // no blink, do nothing
-    if( mode > MLED_MODE_TOGGLE)
-        return;
-
     // on or off 
     if( mode < MLED_MODE_TOGGLE ) {
         ledlowOnOff (leds, mode);

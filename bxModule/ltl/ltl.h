@@ -3,6 +3,7 @@
 
 #include "common_type.h"
 #include "common_def.h"
+#include "ltl_trunk.h"
 #include "prefix.h"
 
 // define in frame control field

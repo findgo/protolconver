@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define>USE_FULL_LL_DRIVER,HSE_VALUE=8000000,HSE_STARTUP_TIMEOUT=100,LSE_STARTUP_TIMEOUT=5000,LSE_VALUE=32768,HSI_VALUE=8000000,LSI_VALUE=40000,VDD_VALUE=3300,PREFETCH_ENABLE=1,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;..\bxCommon;..\bxDriver;..\bxDriver\bsp;..\bxDriver\dev;..\bxDriver\npi;..\bxUser\curtain;..\bxModule\mo;..\bxModule\ltl;..\bxModule</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;..\bxCommon;..\bxDriver;..\bxDriver\bsp;..\bxDriver\dev;..\bxDriver\npi;..\bxUser\curtain;..\bxModule\mo;..\bxModule\ltl;..\bxModule;..\bxDriver\nwk;..\bxUser</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -397,11 +397,6 @@
               <FilePath>..\bxDriver\systick.c</FilePath>
             </File>
             <File>
-              <FileName>nwk.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bxDriver\nwk.c</FilePath>
-            </File>
-            <File>
               <FileName>loop.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\bxDriver\loop.c</FilePath>
@@ -425,6 +420,11 @@
               <FileName>curtain.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\bxUser\curtain\curtain.c</FilePath>
+            </File>
+            <File>
+              <FileName>ltl_app_genattr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxUser\ltl_app_genattr.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -530,6 +530,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>bxDriver/nwk</GroupName>
+          <Files>
+            <File>
+              <FileName>bxnwk.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bxDriver\nwk\bxnwk.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>bxModule</GroupName>
           <Files>
             <File>
@@ -616,11 +626,6 @@
               <FileName>ltl.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\bxModule\ltl\ltl.c</FilePath>
-            </File>
-            <File>
-              <FileName>ltl_genattr.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bxModule\ltl\ltl_genattr.c</FilePath>
             </File>
             <File>
               <FileName>ltl_general.c</FileName>

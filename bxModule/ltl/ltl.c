@@ -275,7 +275,7 @@ LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint
     uint16_t prefixlen;
     LStatus_t status;
     
-    if(!nwkIsOnNet())
+    if(!bxNwkIsOnNet())
        return LTL_FAILURE;
     
     memset((uint8_t *)&hdr,0,sizeof(ltlFrameHdr_t));
@@ -292,12 +292,14 @@ LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint
     if(!msgbuf){
         return LTL_MEMERROR;
     }
+    pbuf = msgbuf;
+    
     //填充前置预留空间
-    pbuf = ltlPrefixBuildHdr(dstAddr, msgbuf);
+    pbuf = ltlPrefixBuildHdr(dstAddr, pbuf);
     pbuf = ltlBuildHdr(&hdr, pbuf);
     memcpy(pbuf, cmdFormat, cmdFormatLen);
 
-    status = ltlPrefixrequest(msgbuf, msglen);
+    status = ltlPrefixrequest(dstaddr, msgbuf, msglen);
     mo_free(msgbuf);
     
     return status;
