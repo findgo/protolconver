@@ -62,8 +62,8 @@ typedef enum
 }MledMode_t;
 
 
-#define MTURN_LED1_ON()		LL_GPIO_SetOutputPin(HAL_LED_BLUE_GPIO_Port, HAL_LED_BLUE_Pin)
-#define MTURN_LED1_OFF()	LL_GPIO_ResetOutputPin(HAL_LED_BLUE_GPIO_Port, HAL_LED_BLUE_Pin)
+#define MTURN_LED1_ON()		LL_GPIO_ResetOutputPin(HAL_LED_BLUE_GPIO_Port, HAL_LED_BLUE_Pin)
+#define MTURN_LED1_OFF()	LL_GPIO_SetOutputPin(HAL_LED_BLUE_GPIO_Port, HAL_LED_BLUE_Pin)
 #define MTURN_LED2_ON()	 	
 #define MTURN_LED2_OFF()	
 #define MTURN_LED3_ON()		

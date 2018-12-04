@@ -104,12 +104,12 @@ int main(void)
     
     MX_GPIO_Init();
     // init sysytem
-//    tasks_init_System();
+    tasks_init_System();
 
     // run system
     while(1)
     {
-  //      tasks_Run_System();
+        tasks_Run_System();
     }
     
 

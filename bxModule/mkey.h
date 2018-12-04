@@ -68,7 +68,7 @@ enum
 };
 
 void mkeyAssign(mkeycfgStatic_t *cfg,
-                mKeyDownFunc_t IsmKeyDownFunc_t,    // 定义该函数 按键下 返回1
+                mKeyDownFunc_t IsmKeyDownFunc,    // 定义该函数 按键下 返回1
                 uint8_t KeyCodeDown,                // 短按编码, 为MKEY_NULL将忽略短按
                 uint8_t KeyCodeLong,                // 长按编码
                 uint8_t KeyCodeUp,                  // 为 MKEY_NULL表示不支持抬键,不会触发KeyCodeUp
