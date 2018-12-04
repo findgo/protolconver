@@ -36,6 +36,7 @@ int SerialDrvInit(uint8_t port, uint32_t ulBaudRate, uint8_t ucDataBits, DRV_Par
         LL_USART_DisableIT_TXE(USART_USING1);
         LL_USART_DisableIT_TC(USART_USING1);
         LL_USART_EnableIT_RXNE(USART_USING1);
+        LL_USART_Enable(USART_USING1);
         break;
         
     case COM1:
@@ -46,6 +47,7 @@ int SerialDrvInit(uint8_t port, uint32_t ulBaudRate, uint8_t ucDataBits, DRV_Par
         LL_USART_DisableIT_TXE(USART_USING2);
         LL_USART_DisableIT_TC(USART_USING2);
         LL_USART_EnableIT_RXNE(USART_USING2);
+        LL_USART_Enable(USART_USING2);
         break;
          
     case COM2:

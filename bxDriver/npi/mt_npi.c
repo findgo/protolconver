@@ -25,8 +25,7 @@ typedef struct  {
 	uint8_t state;
 	uint8_t tempDataLen;
 	uint8_t LEN_Token;
-	uint8_t CMD0_Token;
-	uint8_t CMD1_Token;
+	uint16_t CMD_Token;
 	uint8_t *data;
 } npi_parseinfo_t;
 
@@ -37,65 +36,19 @@ typedef struct {
 
 // 同步请求信息头
 typedef struct {
-    uint8_t cmd0;
-    uint8_t cmd1;
+    uint16_t cmd;
     uint8_t len;
     uint8_t dat[];
 }npi_syncreq_t;
 
-typedef struct {
-    uint8_t subsystem;
-    npiSubsystemHandle_t pfn;
-}npihandle_t;
-
-//extern int mtsys_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-//extern int mtsys_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-//extern int mtmac_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-//extern int mtmac_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-//extern int mtaf_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-//extern int mtaf_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-extern int mtzdo_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-extern int mtzdo_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-extern int mtsapi_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-extern int mtsapi_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-//extern int mtutil_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-//extern int mtutil_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-//extern int mtappcfg_SyncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-//extern int mtappcfg_AsncHandle(uint8_t commandID, uint8_t *data, uint8_t len);
-
-
-static const npihandle_t npiSynchandle[] ={
-//    {MT_RPC_SYS_SYS, NULL},
-//    {MT_RPC_SYS_MAC, NULL},
-//    {MT_RPC_SYS_NWK, NULL},
-//    {MT_RPC_SYS_AF, NULL},
-    {MT_RPC_SYS_ZDO, mtzdo_SyncHandle},
-    {MT_RPC_SYS_SAPI, mtsapi_SyncHandle},
-//    {MT_RPC_SYS_UTIL, NULL},
-//    {MT_RPC_SYS_DBG, NULL},
-//    {MT_RPC_SYS_APP, NULL}, 
-//    {MT_RPC_SYS_APPCFG, NULL},
-//    {MT_RPC_SYS_GP, NULL}   
-};
-
-static const npihandle_t npiAsnchandle[] ={
-//    {MT_RPC_SYS_SYS, NULL},
-//    {MT_RPC_SYS_MAC, NULL},
-//    {MT_RPC_SYS_NWK, NULL},
-//    {MT_RPC_SYS_AF, NULL},
-    {MT_RPC_SYS_ZDO, mtzdo_AsncHandle},
-    {MT_RPC_SYS_SAPI, mtsapi_AsncHandle},
-//    {MT_RPC_SYS_UTIL, NULL},
-//    {MT_RPC_SYS_DBG, NULL},
-//    {MT_RPC_SYS_APP, NULL}, 
-//    {MT_RPC_SYS_APPCFG, NULL},
-//    {MT_RPC_SYS_GP, NULL}   
-};
+extern int mt_SyncHandle(uint16_t commandID, uint8_t *data, uint8_t len);
+extern int mt_AsncHandle(uint16_t commandID, uint8_t *data, uint8_t len);
 
 // -- Local Variables --
 static void npi_syncprocess(void);
-static uint8_t npi_calcfcs(uint8_t len, uint8_t cmd0, uint8_t cmd1, uint8_t *data);
-static void npi_procframe( uint8_t cmd0, uint8_t commandId, uint8_t *pBuf, uint8_t length);
+static uint8_t npi_calcfcs(uint8_t len, uint16_t cmd, uint8_t *data);
+static void npi_procframe( uint16_t cmd, uint8_t *pBuf, uint8_t length);
+
 // for receive parse info
 static npi_parseinfo_t npi_parseinfo;
 static npi_sycninfo_t npi_syncinfo;
@@ -112,7 +65,7 @@ void npiInit(void)
 
 /* build and send an NPI frame
  */
-int npisendframe(uint8_t cmd0, uint8_t cmd1, uint8_t *pData, uint8_t len)
+int npisendframe(uint16_t cmd, uint8_t *pData, uint8_t len)
 {
     npi_syncreq_t *msg;
 	uint8_t *pBuf;
@@ -122,7 +75,7 @@ int npisendframe(uint8_t cmd0, uint8_t cmd1, uint8_t *pData, uint8_t len)
         return NPI_LNX_FAILURE;
 
     len = (pData != NULL) ? len : 0;  
-    frlen = MT_RPC_UART_FRAME_OVHD + MT_RPC_FRAME_HDR_SZ + len; // frame length
+    frlen = MT_RPC_FRAME_OVHD + MT_RPC_PDU_HDR_SZ + len; // frame length
 
 	msg = (npi_syncreq_t *) msgalloc(sizeof(npi_syncreq_t) + frlen);
 	if (!msg) {
@@ -133,17 +86,16 @@ int npisendframe(uint8_t cmd0, uint8_t cmd1, uint8_t *pData, uint8_t len)
     
 	pBuf[0] = MT_RPC_UART_SOF;
 	pBuf[1 + MT_RPC_POS_LEN] = len;
-	pBuf[1 + MT_RPC_POS_CMD0] = cmd0;
-	pBuf[1 + MT_RPC_POS_CMD1] = cmd1;
+	pBuf[1 + MT_RPC_POS_CMD0] = HI_UINT16(cmd);
+	pBuf[1 + MT_RPC_POS_CMD1] = LO_UINT16(cmd);
     if(pData){
 	    memcpy(&pBuf[1 + MT_RPC_POS_DAT0], pData, len);
     }
-	pBuf[1 + len + MT_RPC_FRAME_HDR_SZ] = npi_calcfcs(len, cmd0, cmd1, pData);
+	pBuf[1 + len + MT_RPC_PDU_HDR_SZ] = npi_calcfcs(len, cmd, pData);
     
-    if(cmd0 & MT_RPC_CMD_SREQ) {
+    if(cmd & MT_RPC_CMD_SREQ) {
         // wait for sync response
-        msg->cmd0 = cmd0;
-        msg->cmd1 = cmd1;
+        msg->cmd = cmd;
         msg->len = frlen;
         msgQput(&npi_sync_q, msg);
     }
@@ -188,12 +140,12 @@ void npiTask(void)
 			break;
 
 		case CMD_STATE1:
-			npi_parseinfo.CMD0_Token = ch;
+			npi_parseinfo.CMD_Token = ch << 8;
 			npi_parseinfo.state = CMD_STATE2;
 			break;
 
 		case CMD_STATE2:
-			npi_parseinfo.CMD1_Token = ch;
+			npi_parseinfo.CMD_Token |= ch;
 			/* If there is no data, skip to FCS state */
 			npi_parseinfo.state = (npi_parseinfo.LEN_Token > 0) ? DATA_STATE : FCS_STATE;
 			break;
@@ -225,9 +177,8 @@ void npiTask(void)
 
 		case FCS_STATE:
 			/* Make sure it's correct */
-			if ((npi_calcfcs(npi_parseinfo.LEN_Token,npi_parseinfo.CMD0_Token,npi_parseinfo.CMD1_Token,
-					npi_parseinfo.data) == ch)) {
-				npi_procframe(npi_parseinfo.CMD0_Token, npi_parseinfo.CMD1_Token, npi_parseinfo.data, npi_parseinfo.LEN_Token);
+			if ((npi_calcfcs(npi_parseinfo.LEN_Token,npi_parseinfo.CMD_Token, npi_parseinfo.data) == ch)) {
+				npi_procframe(npi_parseinfo.CMD_Token, npi_parseinfo.data, npi_parseinfo.LEN_Token);
 			}
             /* deallocate the msg */
             if(npi_parseinfo.data)
@@ -254,7 +205,7 @@ static void npi_syncprocess(void)
         // any request on the list?
         msg = (npi_syncreq_t *)msgQpeek(&npi_sync_q);
         if(msg){
-            npi_write(msg->dat,msg->len);
+            npi_write(msg->dat, msg->len);
             ctimerStart(npi_syncinfo.timer);
             npi_syncinfo.state = 1;
         }
@@ -269,52 +220,35 @@ static void npi_syncprocess(void)
     }
 }
 /* Process received Pdu frame */
-static void npi_procframe( uint8_t cmd0, uint8_t commandId, uint8_t *pBuf, uint8_t length)
+static void npi_procframe( uint16_t cmd, uint8_t *pBuf, uint8_t length)
 {
     npi_syncreq_t *msg;
-    uint8_t subsystem;
-    uint8_t idx;
-    npiSubsystemHandle_t handle = NULL;
+    uint16_t commandId;
 
-    subsystem = cmd0 & MT_RPC_SUBSYSTEM_MASK;
-	if ( (cmd0 & MT_RPC_CMD_TYPE_MASK) == MT_RPC_CMD_SRSP) { // ((cmd0 & MT_RPC_SUBSYSTEM_MASK) == MT_RPC_SYS_BOOT)
+    commandId = cmd & MT_RPC_SUBSYSTEM_MASK;
+	if ( (cmd & MT_RPC_CMD_TYPE_MASK) == MT_RPC_CMD_SRSP) { // ((cmd & MT_RPC_SUBSYSTEM_MASK) == MT_RPC_SYS_BOOT)
 		// process synchronous response
         if((msg = msgQpeek(&npi_sync_q)) == NULL)
             return;
         
-        if((subsystem  == (msg->cmd0 & MT_RPC_SUBSYSTEM_MASK)) && (commandId == msg->cmd1)){
+        if(commandId  == (msg->cmd & MT_RPC_SUBSYSTEM_MASK)){
             msgdealloc(msgQpop(&npi_sync_q));
             npi_syncinfo.state  = 0;
-            for(idx = 0; idx < sizeof(npiSynchandle)/sizeof(npiSynchandle[0]); idx++){
-                if(npiSynchandle[idx].subsystem == subsystem){
-                    handle = npiSynchandle[idx].pfn;
-                    break;
-                }
-            }
-
-            if(handle)
-                (void)handle(commandId, pBuf , length);
+           
+            (void)mt_SyncHandle(commandId, pBuf , length);
         }
 	}
 	else {
 		// process an asynchronous message
-        for(idx = 0; idx < sizeof(npiAsnchandle)/sizeof(npiAsnchandle[0]); idx++){
-            if(npiAsnchandle[idx].subsystem == subsystem){
-                handle = npiAsnchandle[idx].pfn;
-                break;
-            }
-        }
-
-        if(handle)
-            (void)handle(commandId, pBuf , length);
+        (void)mt_AsncHandle(commandId, pBuf , length);
 	}
 }
 
 /* Calculate NPI frame FCS */
-static uint8_t npi_calcfcs( uint8_t len, uint8_t cmd0, uint8_t cmd1, uint8_t *data_ptr )
+static uint8_t npi_calcfcs( uint8_t len, uint16_t cmd, uint8_t *data_ptr )
 {
 	uint8_t i;
-	uint8_t xorResult = len ^ cmd0 ^ cmd1;
+	uint8_t xorResult = len ^ HI_UINT16(cmd) ^ LO_UINT16(cmd);
 
 	for ( i = 0; i < len; i++, data_ptr++ )
 		xorResult = xorResult ^ *data_ptr;

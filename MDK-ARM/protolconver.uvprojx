@@ -311,7 +311,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
+            <Optim>3</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -508,11 +508,6 @@
           <GroupName>bxDriver/npi</GroupName>
           <Files>
             <File>
-              <FileName>mt_af.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bxDriver\npi\mt_af.c</FilePath>
-            </File>
-            <File>
               <FileName>mt_npi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\bxDriver\npi\mt_npi.c</FilePath>
@@ -521,11 +516,6 @@
               <FileName>mt_sapi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\bxDriver\npi\mt_sapi.c</FilePath>
-            </File>
-            <File>
-              <FileName>mt_zdo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bxDriver\npi\mt_zdo.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -23,10 +23,6 @@
 // 宏 控制支持的串口数量
 #define COM_USE_NUM     3
 
-
-
-
-
 //宏 用于控制非阻塞方式下，设置发送，接收最大缓冲区
 #define COM0_RX_MAX_SIZE   512
 #define COM0_TX_MAX_SIZE   255

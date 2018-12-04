@@ -43,8 +43,6 @@ void tasks_init_System(void)
     tasksEvents = (uint16_t *)mo_malloc( sizeof( uint16_t ) * tasksCnt);
     memset( tasksEvents, 0, (sizeof( uint16_t ) * tasksCnt));
 #endif
-
-
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
 
@@ -81,9 +79,10 @@ void tasksPoll(void)
 
 int main(void)
 {
+    // for stm32cubeMX init must be init first
+    /* MCU Configuration--------------------------------------------------------*/
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-    
-    
+        
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_AFIO);
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
     
@@ -100,14 +99,17 @@ int main(void)
     
     /* Configure the system clock */
     SystemClock_Config();
+    SystemCoreClockUpdate();
 
+    
+    MX_GPIO_Init();
     // init sysytem
-    tasks_init_System();
+//    tasks_init_System();
 
     // run system
     while(1)
     {
-        tasks_Run_System();
+  //      tasks_Run_System();
     }
     
 

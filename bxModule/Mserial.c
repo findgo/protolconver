@@ -352,6 +352,7 @@ void COM0_TXE_Isr_callback(void)
     }
     isrEXIT_CRITICAL();
 }
+#if COM_USE_NUM > 0
 /**
   * @brief  发送完成中断回调函数
   * @param  None
@@ -379,6 +380,30 @@ void COM0_RX_Isr_callback(void)
     isrEXIT_CRITICAL();
 }
 
+/**
+  * @brief  This function handles usart interrupt request.
+  * @param  None
+  * @retval None
+  */
+void USART1_IRQHandler(void)
+{
+    if(LL_USART_IsActiveFlag_TXE(USART1)){
+        COM0_TXE_Isr_callback();
+    }
+    
+    if(LL_USART_IsActiveFlag_RXNE(USART1)){
+        COM0_RX_Isr_callback();
+        LL_USART_ClearFlag_RXNE(USART1);
+    }
+    
+    if(LL_USART_IsActiveFlag_TC(USART1)){
+        COM0_TXC_Isr_callback();
+        LL_USART_ClearFlag_TC(USART1);
+    }
+    NVIC_ClearPendingIRQ(USART1_IRQn);
+}
+#endif
+#if COM_USE_NUM > 1
 /**
   * @brief  发送空中断调用函数
   * @param  None
@@ -424,6 +449,26 @@ void COM1_RX_Isr_callback(void)
     SerialRxPut(&comcfg1,temp);
     isrEXIT_CRITICAL();
 }
+void USART2_IRQHandler(void)
+{
+    if(LL_USART_IsActiveFlag_TXE(USART2)){
+        COM1_TXE_Isr_callback();
+    }
+    
+    if(LL_USART_IsActiveFlag_RXNE(USART2)){
+        COM1_RX_Isr_callback();
+        LL_USART_ClearFlag_RXNE(USART2);
+    }
+    
+    if(LL_USART_IsActiveFlag_TC(USART2)){
+        COM1_TXC_Isr_callback();
+        LL_USART_ClearFlag_TC(USART2);
+    }
+
+    NVIC_ClearPendingIRQ(USART2_IRQn);
+}
+#endif
+#if COM_USE_NUM > 2
 /**
   * @brief  锟斤拷锟酵匡拷锟叫断碉拷锟矫猴拷锟斤拷
   * @param  None
@@ -470,53 +515,9 @@ void COM2_RX_Isr_callback(void)
 //    isrEXIT_CRITICAL();
 }
 
-/**
-  * @brief  This function handles usart interrupt request.
-  * @param  None
-  * @retval None
-  */
-void USART1_IRQHandler(void)
-{
-    if(LL_USART_IsActiveFlag_TXE(USART1)){
-        
-        COM0_TXE_Isr_callback();
-    }
-    
-    if(LL_USART_IsActiveFlag_RXNE(USART1)){
-        COM0_RX_Isr_callback();
-        LL_USART_ClearFlag_RXNE(USART1);
-    }
-    
-    if(LL_USART_IsActiveFlag_TC(USART1)){
-        COM0_TXC_Isr_callback();
-        LL_USART_ClearFlag_TC(USART1);
-    }
-    NVIC_ClearPendingIRQ(USART1_IRQn);
-}
-void USART2_IRQHandler(void)
-{
-    if(LL_USART_IsActiveFlag_TXE(USART2)){
-        
-        COM1_TXE_Isr_callback();
-    }
-    
-    if(LL_USART_IsActiveFlag_RXNE(USART2)){
-        COM1_RX_Isr_callback();
-        LL_USART_ClearFlag_RXNE(USART2);
-    }
-    
-    if(LL_USART_IsActiveFlag_TC(USART2)){
-        COM1_TXC_Isr_callback();
-        LL_USART_ClearFlag_TC(USART2);
-    }
-
-    NVIC_ClearPendingIRQ(USART2_IRQn);
-}
-
 void USART3_IRQHandler(void)
 {
     if(LL_USART_IsActiveFlag_TXE((USART3))){
-        
         COM2_TXE_Isr_callback();
     }
     
@@ -532,4 +533,4 @@ void USART3_IRQHandler(void)
 
     NVIC_ClearPendingIRQ(USART3_IRQn);
 }
-
+#endif
