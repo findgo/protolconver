@@ -1,5 +1,5 @@
-#ifndef __MT_SAPI_H__
-#define __MT_SAPI_H__
+#ifndef __MT_APP_H__
+#define __MT_APP_H__
 
 #include "app_cfg.h"
 #include "mt_npi.h"
@@ -55,7 +55,7 @@ typedef struct {
 }nwk_info_t;
 
 // aync command 
-#define mtsapi_SystemReset()    NPISendAsynchData(MT_SAPI_SYS_RESET,NULL,0)
+#define mtsapi_SystemReset()    NPISendAsynchData(MT_SAPI_SYS_RESET, NULL, 0)
 int mtsapi_StartNwk(uint8_t mode);
 
 // sync command
@@ -67,10 +67,10 @@ int mtsapi_StartNwk(uint8_t mode);
 
 
 // by mo
-#define mtsapi_ResetFactory()    NPISendSynchData(MT_SAPI_RESET_FACTORY, NULL, 0)  
-#define mtsapi_GeDeviceAllInfo() NPISendSynchData(MT_SAPI_GET_DEV_ALL_INFO_REQ, NULL, 0)
+#define mtsapi_ResetFactory()       NPISendSynchData(MT_SAPI_RESET_FACTORY, NULL, 0)  
+#define mtsapi_GeDeviceAllInfo()    NPISendSynchData(MT_SAPI_GET_DEV_ALL_INFO_REQ, NULL, 0)
 int mtsapi_writeLogicalType(uint8_t logicaltype);
-#define mtsapi_DataRequest(pData,len)    NPISendSynchData(MT_SAPI_AF_DATA_REQUEST, pData, len)
+#define mtsapi_DataRequest(pData,len)    NPISendSynchData(MT_AF_DATA_REQUEST, pData, len)
 
 void ZbInit(void);
 uint8_t ZbisOnNet(void);

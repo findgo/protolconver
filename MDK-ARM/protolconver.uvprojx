@@ -513,9 +513,9 @@
               <FilePath>..\bxDriver\npi\mt_npi.c</FilePath>
             </File>
             <File>
-              <FileName>mt_sapi.c</FileName>
+              <FileName>mt_app.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\bxDriver\npi\mt_sapi.c</FilePath>
+              <FilePath>..\bxDriver\npi\mt_app.c</FilePath>
             </File>
           </Files>
         </Group>

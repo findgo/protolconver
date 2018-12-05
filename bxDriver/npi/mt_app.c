@@ -1,5 +1,5 @@
 
-#include "mt_sapi.h"
+#include "mt_app.h"
 #include "timers.h"
 #include "mleds.h"
 #include "bxnwk.h"
@@ -76,11 +76,6 @@ int mtaf_Register(endPointDesc_t *endPointDesc)
 
     return status;
 }
-// 注意,这里目的地址交给nwk层管理,前两字节必须为目地地址
-//int mtaf_DataRequest(uint8_t *dat, uint8_t len)
-//{
-//    return MTAF_SendSynchData(MT_AF_REGISTER, dat, len);
-//}
 
 int mtsapi_WriteConfiguration(uint8_t configId, uint8_t len, uint8_t *valTab)
 {
@@ -155,7 +150,7 @@ int mt_SyncHandle(uint16_t commandID, uint8_t *data, uint8_t len)
         zbStateCheckWrite(data[0], data[1]);
         break;
         
-    case MT_SAPI_AF_DATA_REQUEST:
+    case MT_AF_DATA_REQUEST:
         
         break;
         
@@ -174,24 +169,17 @@ int mt_AsncHandle(uint16_t commandID, uint8_t *data, uint8_t len)
     case MT_ZDO_STATE_CHANGE_IND:
         zbNwkCheckZdo(data[0]);
         break;
+    
     case MT_AF_INCOMING_MSG:
-        
         if((msg = msgalloc(len)) == NULL)
             return NPI_LNX_FAILURE;
         log_debug("af incoming msg!");
         bxNwkmsgsend(msg); // 将消息发送nwk邮箱
         break;
-    case MT_SAPI_RESET_IND:
+        
+    case MT_SYS_RESET_IND:
         sapi_log("reset IND");
         zbStateReadInfo();
-        break;
-    
-    case MT_SAPI_AF_INCOMING_MSG:
-        if((msg = msgalloc(len)) == NULL)
-            return NPI_LNX_FAILURE;
-        sapi_log("af incoming msg!");
-        memcpy(msg,data,len);
-        bxNwkmsgsend(msg); // 将消息发送nwk邮箱
         break;
                 
     default:

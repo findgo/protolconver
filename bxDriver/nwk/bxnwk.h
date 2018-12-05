@@ -3,7 +3,7 @@
 
 #include "prefix.h"
 #include "msglink.h"
-#include "mt_sapi.h"
+#include "mt_app.h"
 
 #define NWK_FC_DATA     0x00
 #define NWK_FC_CMD      0x01

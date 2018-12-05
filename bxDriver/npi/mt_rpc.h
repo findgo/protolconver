@@ -68,7 +68,7 @@ typedef enum {
   MT_RPC_SYS_MAC = 0x0200,
   MT_RPC_SYS_NWK = 0x0300,
   MT_RPC_SYS_AF = 0x0400,
-  MT_RPC_SYS_ZDO = 0x5000,
+  MT_RPC_SYS_ZDO = 0x0500,
   MT_RPC_SYS_SAPI = 0x0600,   /* Simple API. */
   MT_RPC_SYS_UTIL = 0x0700,
   MT_RPC_SYS_DBG = 0x0800,

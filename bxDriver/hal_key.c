@@ -1,7 +1,7 @@
 #include "hal_key.h"
 #include "mkey.h"
 #include "timers.h"
-#include "mt_sapi.h"
+#include "mt_app.h"
 
 #define HAL_KEY_SCAN_TIME   10
 
@@ -50,6 +50,7 @@ void keyTask(void)
     switch(keyVal){
     case MKEY_PRESS1_DOWN:
         key_log("reset key down!");
+        //mtsapi_SystemReset();
         break;
 
     case MKEY_PRESS1_UP:
@@ -58,7 +59,7 @@ void keyTask(void)
 
     case MKEY_PRESS1_LONG:
         key_log("reset key long down!");
-        //mtsapi_ResetFactory();
+        mtsapi_ResetFactory();
         break;
     default:
         break;

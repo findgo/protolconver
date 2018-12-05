@@ -21,8 +21,8 @@
 
 void npiInit(void);
 void npiTask(void);
-#define NPISendAsynchData(cmdId, pData, len) npisendframe(cmdId | MT_RPC_CMD_AREQ, pData, len)
-#define NPISendSynchData(cmdId, pData, len) npisendframe(cmdId | MT_RPC_CMD_SREQ, pData, len)
+#define NPISendAsynchData(cmdId, pData, len)    npisendframe(cmdId | MT_RPC_CMD_AREQ, pData, len)
+#define NPISendSynchData(cmdId, pData, len)     npisendframe(cmdId | MT_RPC_CMD_SREQ, pData, len)
 
 // 内部API
 int npisendframe(uint16_t cmd, uint8_t *pData, uint8_t len);

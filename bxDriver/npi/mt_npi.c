@@ -6,7 +6,7 @@
 
 
 // -- macros --
-#define mtlogln(fmt, ...) mo_logln(DEBUG, fmt, ##__VA_ARGS__)
+#define mtlogln(fmt, ...) log_debugln(fmt, ##__VA_ARGS__)
 
 // State values for UART frame parsing
 #define SOP_STATE      0x00
@@ -225,7 +225,9 @@ static void npi_procframe( uint16_t cmd, uint8_t *pBuf, uint8_t length)
     npi_syncreq_t *msg;
     uint16_t commandId;
 
+    
     commandId = cmd & MT_RPC_SUBSYSTEM_MASK;
+    mtlogln("cmd: 0x%04x,id: 0x%04x",cmd, commandId);
 	if ( (cmd & MT_RPC_CMD_TYPE_MASK) == MT_RPC_CMD_SRSP) { // ((cmd & MT_RPC_SUBSYSTEM_MASK) == MT_RPC_SYS_BOOT)
 		// process synchronous response
         if((msg = msgQpeek(&npi_sync_q)) == NULL)
