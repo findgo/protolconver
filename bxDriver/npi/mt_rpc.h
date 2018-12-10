@@ -16,8 +16,8 @@ extern "C" {
 #define MT_RPC_FRAME_FCS_SZ     1 // FCS size
 
 /* 1st byte is the length of the data field, 2nd/3rd bytes are command field. */
-#define MT_RPC_PDU_HDR_SZ    3  // length + cmd0 + cmd1
-#define MT_RPC_PDU_LEN_SZ    1  // length
+#define MT_RPC_PDU_HDR_SZ     3  // length + cmd0 + cmd1
+#define MT_RPC_PDU_LEN_SZ     1  // length
 #define MT_RPC_PDU_CMD0_SZ    1  // cmd0
 #define MT_RPC_PDU_CMD1_SZ    1  // cmd1 
 
@@ -25,7 +25,7 @@ extern "C" {
 #define MT_RPC_POS_LEN        0
 #define MT_RPC_POS_CMD0       1
 #define MT_RPC_POS_CMD1       2
-#define MT_RPC_POS_DAT0       3
+#define MT_RPC_POS_DATA       3
 
 // Start of frame character value
 #define MT_RPC_UART_SOF        0xFE

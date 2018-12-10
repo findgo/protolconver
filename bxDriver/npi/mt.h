@@ -428,6 +428,40 @@ extern "C"
 /* AREQ */
 #define MT_DEBUG_MSG                         ( MT_RPC_SYS_DBG | 0x80 )
 
+  
+/***************************************************************************************************
+ * APP CONFIG COMMANDS
+ ***************************************************************************************************/  
+
+#define MT_APP_CNF_SET_DEFAULT_REMOTE_ENDDEVICE_TIMEOUT    ( MT_RPC_SYS_APPCFG | 0x01 )
+#define MT_APP_CNF_SET_ENDDEVICETIMEOUT                    ( MT_RPC_SYS_APPCFG | 0x02 )
+#define MT_APP_CNF_SET_ALLOWREJOIN_TC_POLICY               ( MT_RPC_SYS_APPCFG | 0x03 )
+#define MT_APP_CNF_BDB_ADD_INSTALLCODE                     ( MT_RPC_SYS_APPCFG | 0x04 )
+#define MT_APP_CNF_BDB_START_COMMISSIONING                 ( MT_RPC_SYS_APPCFG | 0x05 )
+#define MT_APP_CNF_BDB_SET_JOINUSESINSTALLCODEKEY          ( MT_RPC_SYS_APPCFG | 0x06 )
+#define MT_APP_CNF_BDB_SET_ACTIVE_DEFAULT_CENTRALIZED_KEY  ( MT_RPC_SYS_APPCFG | 0x07 )
+#define MT_APP_CNF_BDB_SET_CHANNEL                         ( MT_RPC_SYS_APPCFG | 0x08 )
+#define MT_APP_CNF_BDB_SET_TC_REQUIRE_KEY_EXCHANGE         ( MT_RPC_SYS_APPCFG | 0x09  )   
+#define MT_APP_CNF_BDB_ZED_ATTEMPT_RECOVER_NWK             ( MT_RPC_SYS_APPCFG | 0x0A )
+  
+#define MT_APP_CNF_BDB_COMMISSIONING_NOTIFICATION          ( MT_RPC_SYS_APPCFG | 0x80  )   
+//Application debug commands
+#define MT_APP_CNF_SET_NWK_FRAME_COUNTER                   ( MT_RPC_SYS_APPCFG | 0xFF   )
+  
+  
+/***************************************************************************************************
+ * GP COMMANDS
+ ***************************************************************************************************/  
+//From Host to ZNP
+#define MT_GP_DATA_REQ                       ( MT_RPC_SYS_GP | 0x01 )
+#define MT_GP_SEC_RSP                        ( MT_RPC_SYS_GP | 0x02 )
+
+//From ZNP to Host
+#define MT_GP_SEC_REQ                        ( MT_RPC_SYS_GP | 0x03 )
+#define MT_GP_DATA_IND                       ( MT_RPC_SYS_GP | 0x04 )
+#define MT_GP_DATA_CNF                       ( MT_RPC_SYS_GP | 0x05 )
+ 
+
 /***************************************************************************************************
  * APP COMMANDS
  ***************************************************************************************************/

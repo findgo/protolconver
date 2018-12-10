@@ -89,7 +89,7 @@ int npisendframe(uint16_t cmd, uint8_t *pData, uint8_t len)
 	pBuf[1 + MT_RPC_POS_CMD0] = HI_UINT16(cmd);
 	pBuf[1 + MT_RPC_POS_CMD1] = LO_UINT16(cmd);
     if(pData){
-	    memcpy(&pBuf[1 + MT_RPC_POS_DAT0], pData, len);
+	    memcpy(&pBuf[1 + MT_RPC_POS_DATA], pData, len);
     }
 	pBuf[1 + len + MT_RPC_PDU_HDR_SZ] = npi_calcfcs(len, cmd, pData);
     
