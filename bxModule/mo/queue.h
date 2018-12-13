@@ -1,3 +1,17 @@
+
+/**
+  ******************************************************************************
+  * @file 
+  * @author  
+  * @version 
+  * @date    
+  * @brief  
+  ******************************************************************************
+  * @attention 	20180920     v1.1   	jgb		
+  * @attention 	20181213     v1.2   	jgb		 提供释放队列句柄
+  ******************************************************************************
+  */
+
 /* 队列,操作和接收都会引起数据拷贝,*/
 
 
@@ -32,6 +46,12 @@ typedef struct QueueStatic_s
  * @return  句柄
  */
 QueueHandle_t queueNew( const uint32_t uxQueueItemCap, const uint32_t uxItemSize);
+/**
+ * @brief   释放动态分配队列句柄
+ * @param   xQueue - 句柄
+ * @return  句柄
+ */
+void queueFree( const QueueHandle_t xQueue);
 #endif
 /**
  * @brief   静态分配一个队列

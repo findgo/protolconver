@@ -17,9 +17,6 @@
 
 /* set support dynamic alloca compatibility. */
 #define configSUPPORT_DYNAMIC_ALLOCATION        (1)
-//使能事件触发
-#define configSUPPORT_TASKS_EVENT               (0)
-
 
 #define mtCOVERAGE_TEST_DELAY()
 #define mtCOVERAGE_TEST_MARKER()

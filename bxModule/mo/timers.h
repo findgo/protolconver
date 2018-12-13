@@ -1,4 +1,17 @@
 
+/**
+  ******************************************************************************
+  * @file 
+  * @author  
+  * @version 
+  * @date    
+  * @brief  
+  ******************************************************************************
+  * @attention 	20180920     v1.1   	jgb		
+  * @attention 	20181213     v1.2   	jgb		 提供释放时间句柄
+  ******************************************************************************
+  */
+
 
 #ifndef TIMERS_H
 #define TIMERS_H
@@ -14,6 +27,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+//定义时基
+#define __GetCurTimeTick(void)  mcu_getCurSysctime();
 
 /* IDs for commands that can be sent/received on the timer queue.*/
 #define tmrCOMMAND_START                        ( ( uint32_t ) 0 )
@@ -41,6 +57,12 @@ typedef void (*TimerCallbackFunction_t)( void* arg );
  * @return  成功返回句柄,否则NULL
  */
 TimerHandle_t timerNew( TimerCallbackFunction_t pxCallbackFunction, void * arg) ;
+/**
+ * @brief   释入时间句柄
+ * @param   xTimer - 句柄 
+ * @return  成功返回句柄,否则NULL
+ */
+void timerFree( const TimerHandle_t xTimer);
 #endif
 /**
  * @brief   静态分配一个时间句柄

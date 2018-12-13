@@ -44,6 +44,12 @@ QueueHandle_t queueNew( const uint32_t uxQueueItemCap, const uint32_t uxItemSize
 
     return ( QueueHandle_t )pxNewQueue;
 }
+
+void queueFree( const QueueHandle_t xQueue)
+{
+    mo_free(xQueue);
+}
+
 #endif
 QueueHandle_t queueAssign(QueueStatic_t *const pxStaticQueue , const uint32_t uxQueueItemCap, const uint32_t uxItemSize,  uint8_t *const pucQueueStorage )
 {

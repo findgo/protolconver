@@ -5,9 +5,6 @@
 #include "common_def.h"
 #include "task.h"
 
-
-
-
 void tasks_init_System(void);
 
 #endif

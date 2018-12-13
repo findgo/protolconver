@@ -1,3 +1,15 @@
+/**
+  ******************************************************************************
+  * @file 
+  * @author  
+  * @version 
+  * @date    
+  * @brief  
+  ******************************************************************************
+  * @attention 	20181213     v2.1   	jgb		 功能完全版支持
+  ******************************************************************************
+  */
+
 /*
  * 信息链表有两个主要API, msgalloc, msgdealloc 所有信息的处理必需有这里创建
  * msglen msgspare msgsetspare 在信息未释放前,可以使用spare 是信息里一个预留空间,8位,可供用户特殊使用
@@ -28,7 +40,6 @@ extern "C" {
 #define MSG_INVALID_POINTER     (-2)  // 表明指针无效
 #define MSG_BUFFER_NOT_AVAIL    (-3)  // 表明释放时,信息处于队列上,不可释放
 #define MSG_QBOX_FULL           (-4)  // 信息邮箱满
-// 仅使能 configSUPPORT_TASKS_EVENT 
 #define MSG_INVALID_TASK        (-11)  // 无效任务
 
 typedef struct {

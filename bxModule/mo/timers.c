@@ -33,7 +33,6 @@ typedef struct tmrTimerQueueMessage
 /*local funcition */
 static void __InitialiseNewTimer( tmrTimer_t *const pxNewTimer , TimerCallbackFunction_t pxCallbackFunction, void *arg );
 static void __CheckForValidListAndQueue( void ) ;
-static uint32_t __GetCurTimeTick(void);
 static uint8_t __InsertTimerInActiveList( tmrTimer_t * const pxTimer, const uint32_t xTimeNow , 
                                         const uint32_t xTimeoutInTicks, const uint32_t xMarkTimeInTicks);
 static uint8_t __GenericCommandReceived(tmrTimerQueueMessage_t *const message);
@@ -219,6 +218,12 @@ TimerHandle_t timerNew( TimerCallbackFunction_t pxCallbackFunction, void *arg)
 
     return ( TimerHandle_t )pxNewTimer;
 }
+
+void timerFree( const TimerHandle_t xTimer) 
+{
+    mo_free(xTimer);
+}
+
 #endif
 // ok
 TimerHandle_t timerAssign(TimerStatic_t *const pxTimerBuffer, TimerCallbackFunction_t pxCallbackFunction, void *arg)
@@ -398,12 +403,5 @@ uint32_t timerGetNextTimeout(void)
     }
     
     return (xNextExpiryTime - xTimeNow) & 0xffffffffu;
-}
-
-
-
-static uint32_t __GetCurTimeTick(void)
-{
-    return mcu_getCurSysctime();    
 }
 
