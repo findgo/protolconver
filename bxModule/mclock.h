@@ -23,9 +23,9 @@ typedef struct {
     uint32_t start;
 }ctimer_t;
 
+void Systick_Configuration(void);
 uint32_t mcu_getCurSysctime(void);
 uint32_t mcu_elapsedSystime(void);
-void mcu_systime_isr_callback(void);
 
 #define ctimerStart(t)  do{ (t).start = mcu_getCurSysctime();}while(0)
 #define ctimerExpired(t, timeout)   timer_after_eq(mcu_getCurSysctime(), (t).start + timeout)

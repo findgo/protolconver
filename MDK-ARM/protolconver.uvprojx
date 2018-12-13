@@ -392,11 +392,6 @@
           <GroupName>bxDriver</GroupName>
           <Files>
             <File>
-              <FileName>systick.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bxDriver\systick.c</FilePath>
-            </File>
-            <File>
               <FileName>loop.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\bxDriver\loop.c</FilePath>

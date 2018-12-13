@@ -15,7 +15,6 @@
 #include "wintom.h"
 #include "mleds.h"
 #include "hal_key.h"
-#include "systick.h"
 
 #include "curtain.h"
 #include "bxnwk.h"
@@ -101,8 +100,6 @@ int main(void)
     SystemClock_Config();
     SystemCoreClockUpdate();
 
-    
-    MX_GPIO_Init();
     // init sysytem
     tasks_init_System();
 

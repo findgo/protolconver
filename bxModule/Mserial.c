@@ -333,6 +333,7 @@ uint16_t Serial_Read( uint8_t COM, uint8_t *buf, uint16_t len )
 }
 
 /***********only for Isr callback***********/
+#if COM_USE_NUM > 0
 /**
   * @brief  发送空中断调用函数
   * @param  None
@@ -352,7 +353,6 @@ void COM0_TXE_Isr_callback(void)
     }
     isrEXIT_CRITICAL();
 }
-#if COM_USE_NUM > 0
 /**
   * @brief  发送完成中断回调函数
   * @param  None
