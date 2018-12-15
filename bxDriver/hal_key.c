@@ -20,7 +20,7 @@ uint8_t BxGPIO_ReadInputDataBit(GPIO_TypeDef* GPIOx, uint32_t GPIO_Pin)
 }
 
 static timer_t keytimer;
-static mkeycfgStatic_t keycfgReset;
+static mkeycfg_t keycfgReset;
 
 void halkeyInit(void)
 {
