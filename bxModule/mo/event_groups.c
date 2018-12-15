@@ -4,46 +4,44 @@
 typedef struct EventGroup_s
 {
     EventBits_t eventBits;
-} EventGroup_t;
+} EventGroupInner_t;
 
 #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1)
-EventGroupHandle_t eventGroupNew( void )
+EventGroup_t * eventGroupNew( void )
 {
-    EventGroup_t *pxEventBits;
+    EventGroupInner_t *pxEventBits;
 
     /* Allocate the event group. */
-    pxEventBits = ( EventGroup_t * ) mo_malloc( sizeof( EventGroup_t ) );
+    pxEventBits = ( EventGroupInner_t * ) mo_malloc( sizeof( EventGroupInner_t ) );
 
     if( pxEventBits){
         pxEventBits->eventBits = 0;
     }
 
-    return ( EventGroupHandle_t ) pxEventBits;
+    return ( EventGroup_t * ) pxEventBits;
 }
 #endif
 
-EventGroupHandle_t eventGroupAssign( EventGroupStatic_t *pxEventGroupBuffer )
+void eventGroupAssign( EventGroup_t *pxEventGroupBuffer )
 {
-    EventGroup_t *pxEventBits;
+    EventGroupInner_t *pxEventBits;
 
     /* A StaticEventGroup_t object must be provided. */
     configASSERT( pxEventGroupBuffer );
 
     /* The user has provided a statically allocated event group - use it. */
-    pxEventBits = ( EventGroup_t * ) pxEventGroupBuffer; 
+    pxEventBits = ( EventGroupInner_t * ) pxEventGroupBuffer; 
 
     if( pxEventBits ){
         pxEventBits->eventBits = 0;
     }
-
-    return ( EventGroupHandle_t ) pxEventBits;
 }
 
 /*-----------------------------------------------------------*/
 
-EventBits_t eventGroupWaitBits( EventGroupHandle_t xEventGroup, const EventBits_t uBitsToProcessFor)
+EventBits_t eventGroupWaitBits( EventGroup_t * xEventGroup, const EventBits_t uBitsToProcessFor)
 {
-    EventGroup_t *pxEventBits = ( EventGroup_t * ) xEventGroup;
+    EventGroupInner_t *pxEventBits = ( EventGroupInner_t * ) xEventGroup;
     EventBits_t previousEventBits;
 
     /* Check the user is not attempting to wait on the bits used by the kernel
@@ -66,7 +64,7 @@ EventBits_t eventGroupWaitBits( EventGroupHandle_t xEventGroup, const EventBits_
     return previousEventBits;
 }
 
-EventBits_t eventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear )
+EventBits_t eventGroupClearBits( EventGroup_t * xEventGroup, const EventBits_t uxBitsToClear )
 {
     EventBits_t uxReturn;
     isrSaveCriticial_status_Variable;
@@ -76,17 +74,17 @@ EventBits_t eventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits
 
     isrENTER_CRITICAL();
     /* The value returned is the event group value prior to the bits being cleared. */
-    uxReturn = ( ( EventGroup_t * ) xEventGroup )->eventBits;
+    uxReturn = ( ( EventGroupInner_t * ) xEventGroup )->eventBits;
 
     /* Clear the bits. */
-    ( ( EventGroup_t * ) xEventGroup )->eventBits &= ~uxBitsToClear;
+    ( ( EventGroupInner_t * ) xEventGroup )->eventBits &= ~uxBitsToClear;
     isrEXIT_CRITICAL();
     
     return uxReturn;
 }
 
 
-EventBits_t eventGroupSetBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToSet )
+EventBits_t eventGroupSetBits( EventGroup_t * xEventGroup, const EventBits_t uxBitsToSet )
 {
     EventBits_t uxReturn;
     isrSaveCriticial_status_Variable;
@@ -95,9 +93,9 @@ EventBits_t eventGroupSetBits( EventGroupHandle_t xEventGroup, const EventBits_t
     configASSERT( xEventGroup );
     
     isrENTER_CRITICAL();
-    uxReturn = ( ( EventGroup_t * ) xEventGroup )->eventBits;
+    uxReturn = ( ( EventGroupInner_t * ) xEventGroup )->eventBits;
     /* Set the bits. */
-    ( ( EventGroup_t * ) xEventGroup )->eventBits |= uxBitsToSet;
+    ( ( EventGroupInner_t * ) xEventGroup )->eventBits |= uxBitsToSet;
     isrEXIT_CRITICAL();
 
     return uxReturn;

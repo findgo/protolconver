@@ -87,7 +87,7 @@ uint8_t msgspare( void *const msg_ptr)
     return MSG_HDR_SPARE(msg_ptr);
 }
 
-msgboxhandle_t msgBoxNew(const uint16_t MaxCap)
+msgbox_t * msgBoxNew(const uint16_t MaxCap)
 {
     msgboxInner_t *pNewmsgbox;
 
@@ -99,23 +99,21 @@ msgboxhandle_t msgBoxNew(const uint16_t MaxCap)
         pNewmsgbox->qhead = NULL;
     }
 
-    return (msgboxhandle_t )pNewmsgbox;
+    return (msgbox_t * )pNewmsgbox;
 }
 
-msgboxhandle_t msgBoxAssign(msgboxstatic_t *const pmsgboxBuffer, const uint16_t MaxCap)
+void msgBoxAssign(msgbox_t *const msgbox, const uint16_t MaxCap)
 {
-    msgboxInner_t *pNewmsgbox = ( msgboxInner_t * )pmsgboxBuffer;
+    msgboxInner_t *pNewmsgbox = ( msgboxInner_t * )msgbox;
 
     if( pNewmsgbox ){
         pNewmsgbox->capacity = MaxCap;
         pNewmsgbox->count = 0;
         pNewmsgbox->qhead = NULL;
     }
-
-    return (msgboxhandle_t )pNewmsgbox;
 }
 
-uint16_t msgBoxcnt(const msgboxhandle_t msgbox )
+uint16_t msgBoxcnt( msgbox_t *const msgbox )
 {
     if ( msgbox == NULL )
         return 0;
@@ -123,7 +121,7 @@ uint16_t msgBoxcnt(const msgboxhandle_t msgbox )
     return MSGBOX_CNT(msgbox);
 }
 
-uint16_t msgBoxIdle(const msgboxhandle_t msgbox )
+uint16_t msgBoxIdle( msgbox_t *const msgbox )
 {
     if ( msgbox == NULL )
         return 0;
@@ -132,7 +130,7 @@ uint16_t msgBoxIdle(const msgboxhandle_t msgbox )
     return (MSGBOX_CAP(msgbox) - MSGBOX_CNT(msgbox));
 }
 
-void *msgBoxaccept(const msgboxhandle_t msgbox )
+void *msgBoxaccept( msgbox_t *const msgbox )
 {
     // no message on the list
     if(MSGBOX_CNT(msgbox) == 0)
@@ -143,7 +141,7 @@ void *msgBoxaccept(const msgboxhandle_t msgbox )
     return msgQpop(&MSGBOX_QHEAD(msgbox));
 }
 
-void *msgBoxpeek(const msgboxhandle_t msgbox )
+void *msgBoxpeek( msgbox_t *const msgbox )
 {
     // no message on the list
     if(MSGBOX_CNT(msgbox) == 0)
@@ -152,7 +150,7 @@ void *msgBoxpeek(const msgboxhandle_t msgbox )
     return msgQpeek(&MSGBOX_QHEAD(msgbox));
 }
 
-int msgBoxGenericpost(const msgboxhandle_t msgbox, void *const msg_ptr,const uint8_t isfront )
+int msgBoxGenericpost( msgbox_t *const msgbox, void *const msg_ptr,const uint8_t isfront )
 {
     if ( msg_ptr == NULL || msgbox == NULL) {
         return ( MSG_INVALID_POINTER );

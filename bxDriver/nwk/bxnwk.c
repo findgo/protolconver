@@ -22,7 +22,7 @@ extern void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt);
 static uint8_t *bxNwkParseHdr(nwkHdr_t *hdr, uint8_t *pDat);
 static void bxNwk_ProcessInNpdu(nwkHdr_t *phdr, MoIncomingMsgPkt_t *pkt);
 
-static msgboxstatic_t nwkmsgboxHandlebuf = MSGBOX_STATIC_INIT(MSGBOX_UNLIMITED_CAP);
+static msgbox_t nwkmsgboxHandlebuf = MSGBOX_STATIC_INIT(MSGBOX_UNLIMITED_CAP);
 
 void bxNwkInit(void)
 {

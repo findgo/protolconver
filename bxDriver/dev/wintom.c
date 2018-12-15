@@ -19,11 +19,9 @@ typedef struct {
 }Wtreq_t;
 
 // 消息静态句柄缓存
-static msgboxstatic_t wtmsgboxHandlebuf = MSGBOX_STATIC_INIT(WT_MSG_Q_MAX);
+static msgbox_t wtmsgbox = MSGBOX_STATIC_INIT(WT_MSG_Q_MAX);
 
-// 时间句柄
-static timer_t * wintomTimerHandle = NULL;
-// 静态分配时间结构
+// 分配时间结构
 static timer_t wintomTimer;
 
 static wintom_rspCallbacks_t *wintom_rspCB = NULL;
@@ -96,7 +94,7 @@ uint8_t wintom_getSingleDevID(uint8_t channel)
     if(channel > WT_CHANNEL_15)
         return FALSE;
     
-    if(msgBoxIdle(&wtmsgboxHandlebuf) < 1) // full on message on the list
+    if(msgBoxIdle(&wtmsgbox) < 1) // full on message on the list
         return FALSE;
     
     size = 2 + 1 + 1 + 1  + 1; // head(2) + len(1) + cmdcode(1) + para0(1) + checksum
@@ -118,7 +116,7 @@ uint8_t wintom_getSingleDevID(uint8_t channel)
 
     *pbuf++ = checksum;
 
-    if(msgBoxpost(&wtmsgboxHandlebuf, reqmsg) < 0){
+    if(msgBoxpost(&wtmsgbox, reqmsg) < 0){
         msgdealloc(reqmsg);
         return FALSE;
     }
@@ -145,7 +143,7 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *pa
     Wtreq_t *reqmsg;
     uint8_t *pbuf;
     
-    if(msgBoxIdle(&wtmsgboxHandlebuf) < 1) // full on message on the list
+    if(msgBoxIdle(&wtmsgbox) < 1) // full on message on the list
         return FALSE;
     
     size = 2 + 1 + 1 + 1 + 1 + ( paraleftbuf == NULL ? 0 : paraleftlen ) + 1; // head(2) + len(1) + cmdcode(1) + para0(1) + para1(1) + otherpara + checksum
@@ -178,7 +176,7 @@ uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *pa
 
     *pbuf++ = checksum;
 
-    if(msgBoxpost(&wtmsgboxHandlebuf, reqmsg) < 0){
+    if(msgBoxpost(&wtmsgbox, reqmsg) < 0){
         msgdealloc(reqmsg);
         return FALSE;
     }
@@ -284,7 +282,7 @@ void wintomTask(void)
     if(wintom_state == 0){ // idle ,check any request on the list
         // check any request on the list ? 
 
-        if((reqmsg = msgBoxaccept(&wtmsgboxHandlebuf)) == NULL)
+        if((reqmsg = msgBoxaccept(&wtmsgbox)) == NULL)
             return;
 
         WT_SEND(reqmsg->dat, msglen(reqmsg) - 1);
@@ -294,17 +292,17 @@ void wintomTask(void)
         
         if(cmd == WT_CMDCODE_GET_POS || cmd == WT_CMDCODE_GET_ANGLE
             || cmd == WT_CMDCODE_GET_DEVID || cmd == WT_CMDCODE_GET_MOTOSTATUS){
-            timerStart(wintomTimerHandle, WT_RSP_TIMEOUT); // start a rsp time out
+            timerStart(&wintomTimer, WT_RSP_TIMEOUT); // start a rsp time out
             wintom_state = 1;
         }
         else {
-            timerStart(wintomTimerHandle, WT_TRANSFER_DELAY_TIMEOUT); // Transfer delay
+            timerStart(&wintomTimer, WT_TRANSFER_DELAY_TIMEOUT); // Transfer delay
             wintom_state = 2;
         }
     }
     else if(wintom_state == 1){ // wait for rsp
         if(wintomProcessInRcv()){      
-            timerStop(wintomTimerHandle);
+            timerStop(&wintomTimer);
             wintom_state = 0;  
         }
     }

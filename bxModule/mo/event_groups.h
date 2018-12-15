@@ -49,44 +49,43 @@ extern "C" {
 
 // 事件位掩码
 typedef uint32_t EventBits_t;
-// 句柄
-typedef void * EventGroupHandle_t;
+
 //静态结构体,用于屏蔽用户对结构体的可见
-typedef struct EventGroupStatic_s
+typedef struct EventGroup_s
 {
     uint32_t xDummy0;
-} EventGroupStatic_t;
+} EventGroup_t;
 
 
 #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1)
 /**
  * @brief   动态分配一个事件组句柄
  * @param   无
- * @return  句柄
+ * @return  
  */
-EventGroupHandle_t eventGroupNew( void );
+EventGroup_t *eventGroupNew( void );
 #endif
 /**
  * @brief   静态分配一个事件组句柄
  * @param   静态事件组缓冲区
- * @return  句柄
+ * @return  
  */
-EventGroupHandle_t eventGroupAssign( EventGroupStatic_t *pxEventGroupBuffer ) ;
+void eventGroupAssign( EventGroup_t *pxEventGroupBuffer ) ;
 /**
  * @brief   获取一个事件组触发的事件, 此函数会清除所有的事件,所以需要及时处理所有的事
  * @param   xEventGroup: 句柄
  * @param   uBitsToProcessFor: 想要处理的事件掩码, 处理全部用参数 EVG_BITS_TO_PROCESS_ALL;
  * @return  要处理的事件掩码
  */
-EventBits_t eventGroupWaitBits( EventGroupHandle_t xEventGroup, const EventBits_t uBitsToProcessFor);
+EventBits_t eventGroupWaitBits( EventGroup_t * xEventGroup, const EventBits_t uBitsToProcessFor);
 /**
  * @brief   设置,清除事件组的事件位
  * @param   xEventGroup - 句柄
  * @param   uxBitsToClear - 事件位掩码,可多位设置
  * @return  设置前的位掩码
  */
-EventBits_t eventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear ) ;
-EventBits_t eventGroupSetBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToSet ) ;
+EventBits_t eventGroupClearBits( EventGroup_t * xEventGroup, const EventBits_t uxBitsToClear ) ;
+EventBits_t eventGroupSetBits( EventGroup_t * xEventGroup, const EventBits_t uxBitsToSet ) ;
 #define eventGroupClearBitsFromISR( xEventGroup, uxBitsToClear )    eventGroupClearBits( xEventGroup, uxBitsToClear )
 #define eventGroupSetBitsFromISR(xEventGroup, uxBitsToSet )         eventGroupSetBits(xEventGroup, uxBitsToSet )
 /**
