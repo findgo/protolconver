@@ -34,8 +34,7 @@ static const ltlAttrRec_t CurtainLevelControlAttriList[] = {
     },
 };
         
-static TimerStatic_t tmCurtainstatic;
-static TimerHandle_t tmCurtainhandle = NULL;
+static timer_t timerCurtain;
 
 static void tmCurtainCb(void *arg);
 static void curtainParsePoscb(uint8_t moto_no, uint8_t devID, uint8_t pos );
@@ -48,8 +47,8 @@ void curtainAttriInit(void)
     ltl_registerAttrList(LTL_TRUNK_ID_GENERAL_LEVEL_CONTROL,  LTL_NODE_CURTAIN,  UBOUND(CurtainLevelControlAttriList), CurtainLevelControlAttriList);    
     wintom_registerRspCallBack(&wintom_rspcb);
     
-    tmCurtainhandle = timerAssign(&tmCurtainstatic, tmCurtainCb, (void *)&tmCurtainhandle);
-    timerStart(tmCurtainhandle, CURTAIN_POS_SCAN_TIME);
+    timerAssign(&timerCurtain, tmCurtainCb, (void *)&timerCurtain);
+    timerStart(&timerCurtain, CURTAIN_POS_SCAN_TIME);
 }
 
 void CurtainOnoff(uint8_t nodeNO, uint8_t cmd)
@@ -103,7 +102,7 @@ void CurtainLevelControlStop(uint8_t node )
 static void tmCurtainCb(void *arg)
 {
     wintom_getPos(WT_DEV_ID_GERNERAL);
-    timerRestart(*((TimerHandle_t *)arg), CURTAIN_POS_SCAN_TIME);
+    timerRestart(*((timer_t * *)arg), CURTAIN_POS_SCAN_TIME);
 }
 
 

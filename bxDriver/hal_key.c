@@ -19,16 +19,14 @@ uint8_t BxGPIO_ReadInputDataBit(GPIO_TypeDef* GPIOx, uint32_t GPIO_Pin)
     return 0x00;
 }
 
-
-static TimerHandle_t keytimeHandle;
-static TimerStatic_t keytimer;
+static timer_t keytimer;
 static mkeycfgStatic_t keycfgReset;
 
 void halkeyInit(void)
 {
     mkeyAssign(&keycfgReset, halkeyResetIsDown, MKEY_PRESS1_DOWN, MKEY_PRESS1_LONG, MKEY_NULL, 0, 600, 0);
-    keytimeHandle = timerAssign(&keytimer, halkeyCB , (void *)&keytimeHandle);
-    timerStart(keytimeHandle, HAL_KEY_SCAN_TIME);
+    timerAssign(&keytimer, halkeyCB , (void *)&keytimer);
+    timerStart(&keytimer, HAL_KEY_SCAN_TIME);
 }
 
 
@@ -40,7 +38,7 @@ static uint8_t halkeyResetIsDown(void)
 static void halkeyCB(void *arg)
 {
     mkeydecetor_task();
-    timerRestart(*((TimerHandle_t *)arg), HAL_KEY_SCAN_TIME);
+    timerRestart(*((timer_t * *)arg), HAL_KEY_SCAN_TIME);
 }
 
 void keyTask(void)

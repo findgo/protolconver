@@ -31,8 +31,7 @@ void zbNwkCheckZdo(uint8_t status);
 
 nwk_info_t nwkinfo;
 
-static TimerHandle_t ZBtimehandle;
-static TimerStatic_t ZBtimerStaticBuf;
+static timer_t ZBtimer;
 
 /*
 int mtaf_Register(endPointDesc_t *endPointDesc)
@@ -203,7 +202,7 @@ static void mtsapi_GetDeviceAllInfohandle(uint8_t *data, uint8_t len)
     if(type != NPI_LOGICAL_TYPE){
         mtsapi_writeLogicalType(NPI_LOGICAL_TYPE);
         nwkinfo.state = ZB_STATE_WRITE_LOGICAL_TYPE;
-        timerStart(ZBtimehandle, ZB_WAIT_RESPONSE_TIME);
+        timerStart(&ZBtimer, ZB_WAIT_RESPONSE_TIME);
         return;
 
     }
@@ -212,7 +211,7 @@ static void mtsapi_GetDeviceAllInfohandle(uint8_t *data, uint8_t len)
     if(devstate == 0x00){
         mtsapi_StartNwk(0x02); // 启动网络
         nwkinfo.state = ZB_STATE_START_MODEL;
-        timerStart(ZBtimehandle, ZB_WAIT_JOIN_NWK_TIME);
+        timerStart(&ZBtimer, ZB_WAIT_JOIN_NWK_TIME);
         return;
     }
     
@@ -234,7 +233,7 @@ static void mtsapi_GetDeviceAllInfohandle(uint8_t *data, uint8_t len)
     nwkinfo.state = ZB_STATE_ON_NET;
     nwkinfo.valid = TRUE;
     
-    timerStop(ZBtimehandle);
+    timerStop(&ZBtimer);
     mledsetblink(MLED_1, 1, 99, 5000);
     sapi_log("realy on net now");
 }
@@ -244,7 +243,7 @@ static void zbStateReadInfo(void)
 {
     mtsapi_GeDeviceAllInfo();
     nwkinfo.state = ZB_STATE_INFO_CHECK;
-    timerStart(ZBtimehandle, ZB_WAIT_RESPONSE_TIME);
+    timerStart(&ZBtimer, ZB_WAIT_RESPONSE_TIME);
 }
 
 static void zbStateCheckWrite(uint8_t status, uint8_t type)
@@ -256,7 +255,7 @@ static void zbStateCheckWrite(uint8_t status, uint8_t type)
 
     mtsapi_SystemReset();
     nwkinfo.state = ZB_STATE_IDLE;    
-    timerStart(ZBtimehandle, ZB_WAIT_RESET_IND_TIME); 
+    timerStart(&ZBtimer, ZB_WAIT_RESET_IND_TIME); 
 }
 
 void zbNwkCheckZdo(uint8_t status)
@@ -264,12 +263,12 @@ void zbNwkCheckZdo(uint8_t status)
     if(status == 0){
         mtsapi_GeDeviceAllInfo();
         nwkinfo.state = ZB_STATE_INFO_CHECK;
-        timerStart(ZBtimehandle, ZB_WAIT_RESPONSE_TIME);
+        timerStart(&ZBtimer, ZB_WAIT_RESPONSE_TIME);
     }
     else{
         // 重试
         nwkinfo.state = ZB_STATE_RECOVER;
-        timerStart(ZBtimehandle, ZB_RETRY_DELAY_TIME);
+        timerStart(&ZBtimer, ZB_RETRY_DELAY_TIME);
     }
 }
 
@@ -278,13 +277,13 @@ void ZbInit()
 {
     npiInit();
 
-    ZBtimehandle = timerAssign(&ZBtimerStaticBuf, ZbtimerCb, &ZBtimehandle);
+    timerAssign(&ZBtimer, ZbtimerCb, &ZBtimer);
     
     nwkinfo.state = ZB_STATE_IDLE;
     nwkinfo.valid = FALSE;
     nwkinfo.err = 0;
     nwkinfo.devType = NPI_LOGICAL_TYPE;
-    timerStart(ZBtimehandle, ZB_WAIT_RESET_IND_TIME);   // 等待复位指示
+    timerStart(&ZBtimer, ZB_WAIT_RESET_IND_TIME);   // 等待复位指示
 }
 
 uint8_t ZbisOnNet(void)
@@ -298,7 +297,7 @@ void zbRestart(void)
     nwkinfo.valid = FALSE;
     nwkinfo.err = 0;
     mtsapi_SystemReset();
-    timerStart(ZBtimehandle, ZB_WAIT_RESET_IND_TIME); 
+    timerStart(&ZBtimer, ZB_WAIT_RESET_IND_TIME); 
 }
 
 static void ZbtimerCb(void * arg)
@@ -324,7 +323,7 @@ static void ZbtimerCb(void * arg)
     case ZB_STATE_RECOVER:
         sapi_log("try to join or recover net!");
         mtsapi_StartNwk(0x02);
-        timerStart(ZBtimehandle, ZB_WAIT_JOIN_NWK_TIME);
+        timerStart(&ZBtimer, ZB_WAIT_JOIN_NWK_TIME);
         break;
     }
 

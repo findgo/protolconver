@@ -22,9 +22,9 @@ typedef struct {
 static msgboxstatic_t wtmsgboxHandlebuf = MSGBOX_STATIC_INIT(WT_MSG_Q_MAX);
 
 // 时间句柄
-static TimerHandle_t wintomTimerHandle = NULL;
+static timer_t * wintomTimerHandle = NULL;
 // 静态分配时间结构
-static TimerStatic_t wintomTimer;
+static timer_t wintomTimer;
 
 static wintom_rspCallbacks_t *wintom_rspCB = NULL;
 
@@ -137,7 +137,6 @@ static uint8_t checksum(uint8_t *dat,uint16_t length)
 
     return sum;
 }
-
 
 uint8_t wintom_request(uint8_t cmdCode, uint8_t para0, uint8_t para1,uint8_t *paraleftbuf, uint8_t paraleftlen)
 {
@@ -326,7 +325,7 @@ static void wintom_TimerCB(void *arg)
 
 void wintomInit(void)
 {
-    wintomTimerHandle = timerAssign(&wintomTimer,  wintom_TimerCB, NULL);
+    timerAssign(&wintomTimer,  wintom_TimerCB, NULL);
     SerialDrvInit(COM1, 9600, 0, DRV_PAR_NONE);
 }
 
