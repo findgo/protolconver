@@ -249,6 +249,59 @@ typedef struct
   uint8_t               numAttr;     // number of attribute status in the list
   ltlWriteRspStatus_t attrList[];  // attribute status records
 } ltlWriteRspCmd_t;
+// Configure Reporting Command format
+typedef struct
+{
+  uint16_t attrID;             // attribute ID
+  uint8_t  dataType;           // attribute data type
+  uint16_t minReportInt;       // minimum reporting interval
+  uint8_t  *reportableChange;  // reportable change (only applicable to analog data type)
+                             // - the size depends on the attribute data type
+} ltlCfgReportRec_t;
+
+typedef struct
+{
+  uint8_t             numAttr;    // number of attribute IDs in the list
+  ltlCfgReportRec_t attrList[]; // attribute ID list
+} ltlCfgReportCmd_t;
+
+// Attribute Status record
+typedef struct
+{
+  uint8_t  status;             // should be ZCL_STATUS_SUCCESS or error
+  uint16_t attrID;             // attribute ID
+} ltlCfgReportStatus_t;
+
+// Configure Reporting Response Command format
+typedef struct
+{
+  uint8_t                numAttr;    // number of attribute status in the list
+  ltlCfgReportStatus_t attrList[]; // attribute status records
+} ltlCfgReportRspCmd_t;
+
+typedef struct
+{
+  uint8_t  numAttr;    // number of attributes in the list
+  uint16_t attrID[];                 // attribute ID table
+} ltlReadReportCfgCmd_t;
+
+// Attribute Reporting Configuration record
+typedef struct
+{
+  uint8_t  status;             // status field
+  uint16_t attrID;             // attribute ID
+  uint8_t  dataType;           // attribute data type
+  uint16_t minReportInt;       // minimum reporting interval
+  uint8_t  *reportableChange;  // reportable change (only applicable to analog data type)
+                             // - the size depends on the attribute data type
+} ltlReportCfgRspRec_t;
+                             
+// Read Reporting Configuration Response Command format
+typedef struct
+{
+  uint8_t              numAttr;    // number of records in the list
+  ltlReportCfgRspRec_t attrList[]; // attribute reporting configuration list
+} ltlReadReportCfgRspCmd_t;
 
 // Attribute Report
 typedef struct
@@ -265,7 +318,6 @@ typedef struct
   uint8_t       numAttr;       // number of reports in the list
   ltlReport_t attrList[];    // attribute report list
 } ltlReportCmd_t;
-
 
 // Default Response Command format
 typedef struct
@@ -289,17 +341,11 @@ typedef LStatus_t (*ltlSpecificTrunckHdCB_t)( ltlApduMsg_t *ApduMsg );
 
 /* 回调函数定义当   ltlAttrRec_t 属性记录中dataPtr为NULL是由用户提供数据
 回调实现三个oper, LTL_OPER_LEN,LTL_OPER_READ,LTL_OPER_WRITE
-由用户决定数据的存储,比如数据库
+由用户决定数据的存储,比如数据库,flash等
 return LTL_STATUS_SUCCESS 成功
 */
 typedef LStatus_t (*ltlReadWriteCB_t)( uint16_t trunkID, uint8_t nodeNO, uint16_t attrId, uint8_t oper,
                                        uint8_t *pValue, uint16_t *pLen );
-/* 回调函数定义 由用户决定数据的授权,
-回调实现两个oper, LTL_OPER_READ,LTL_OPER_WRITE
- @return  only LTL_STATUS_SUCCESS 成功  LTL_STATUS_NOT_AUTHORIZED 未授权
-*/
-typedef LStatus_t (*ltlAuthorizeCB_t)(ltlAttrRec_t *pAttr, uint8_t oper );
-
 
 /*********************************************************************
  *              注册特定集下命令解析回调,用于解析集下命令
@@ -335,22 +381,14 @@ LStatus_t ltl_registerAttrList(uint16_t trunkID, uint8_t nodeNO, uint8_t numAttr
  *                    registered with the LTL.  
  *              dataptr为NULL时,将调用此回调,用户处理此数据
  *
- *              Note: The pfnAuthorizeCB callback function is only required
- *                    when the Read/Write operation on an attribute requires
- *                    authorization (i.e., attributes with ACCESS_CONTROL_AUTH_READ
- *                    or ACCESS_CONTROL_AUTH_WRITE access permissions).
- *              授权回调,对
- *
  * @param       pfnReadWriteCB - function pointer to read/write routine
- * @param       pfnAuthorizeCB - function pointer to authorize read/write operation
  *
  * @return      LTL_SUCCESS if successful. LTL_FAILURE, otherwise.
  */
-LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, 
-                                ltlReadWriteCB_t pfnReadWriteCB, ltlAuthorizeCB_t pfnAuthorizeCB );
+LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, ltlReadWriteCB_t pfnReadWriteCB );
 
-
-
+uint8_t ltlGetDataTypeLength( uint8_t dataType );
+uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData );
 
 LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
                                 uint8_t specific, uint8_t direction, uint8_t disableDefaultRsp,
@@ -366,7 +404,7 @@ LStatus_t ltl_SendWriteRequest(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeN
                                 uint8_t disableDefaultRsp, uint8_t cmd, ltlWriteCmd_t *writeCmd );
 #define ltl_SendWriteReq(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
                         ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES, writeCmd )
-#define ltl_SendWriteRequUndivided(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
+#define ltl_SendWriteReqUndivided(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
                         ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED, writeCmd )
                         
 #define ltl_SendWriteReqNoRsp(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
@@ -375,6 +413,23 @@ LStatus_t ltl_SendWriteRequest(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeN
 LStatus_t ltl_SendwriteRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
                                  uint8_t seqNum , uint8_t direction,
                                  uint8_t disableDefaultRsp, ltlWriteRspCmd_t *writeRspCmd);
+
+LStatus_t ltl_SendConfigReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum , uint8_t direction, 
+                                 uint8_t disableDefaultRsp, ltlCfgReportCmd_t *cfgReportCmd);
+
+LStatus_t ltl_SendConfigReportRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum , uint8_t direction, 
+                                 uint8_t disableDefaultRsp, ltlCfgReportRspCmd_t *cfgReportRspCmd);
+
+LStatus_t ltl_SendReadReportCfgCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum , uint8_t direction, 
+                                 uint8_t disableDefaultRsp, ltlReadReportCfgCmd_t *readReportCfgCmd);
+
+LStatus_t ltl_SendReadReportCfgRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum , uint8_t direction, 
+                                 uint8_t disableDefaultRsp, ltlReadReportCfgRspCmd_t *readReportCfgRspCmd);
+
 LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
                                  uint8_t seqNum , uint8_t direction,
                                  uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd);
