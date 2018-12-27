@@ -606,15 +606,10 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
  */
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData )
 {
-    if ( dataType == LTL_DATATYPE_LONG_CHAR_STR || dataType == LTL_DATATYPE_LONG_OCTET_ARRAY ) {
-        return ( BUILD_UINT16( pData[0], pData[1] ) + OCTET_CHAR_LONG_HEADROOM_LEN); // long string length + 2 for length field
+    if ( dataType == LTL_DATATYPE_CHAR_STR || dataType == LTL_DATATYPE_OCTET_ARRAY || dataType == LTL_DATATYPE_TWO_OCTET_ARRAY){
+        return ( *pData + OCTET_CHAR_HEADROOM_LEN); // 1 for length field
     }
-    else if ( dataType == LTL_DATATYPE_CHAR_STR || dataType == LTL_DATATYPE_OCTET_ARRAY ){
-        return ( *pData + OCTET_CHAR_HEADROOM_LEN); // string length + 1 for length field
-    }else if(dataType == LTL_DATATYPE_ARRAY){
-        // TODO: do later
-    }
-
+    
     return ltlGetDataTypeLength( dataType );
 }
 
@@ -685,12 +680,11 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
             len = *pStr;
             buf = memcpy( buf, pStr, len + 1 ); // Including length field
             break;
-
-        case LTL_DATATYPE_LONG_CHAR_STR:
-        case LTL_DATATYPE_LONG_OCTET_ARRAY:
+            
+        case LTL_DATATYPE_TWO_OCTET_ARRAY:
             pStr = (uint8_t *)attrData;
-            len = BUILD_UINT16( pStr[0], pStr[1] );
-            buf = memcpy( buf, pStr, len + 2 ); // Including length field
+            len = *pStr * 2;
+            buf = memcpy( buf, pStr, len + 1 ); // Including length field
             break;
             
         case LTL_DATATYPE_SN_ADDR:
@@ -2261,26 +2255,6 @@ void ltl_StrToAppString(char *pRawStr, char *pAppStr, uint8_t Applen )
     rawlen = MIN(rawlen, (Applen - OCTET_CHAR_HEADROOM_LEN));
 
     *pAppStr++ = rawlen; // for length    
-    memcpy(pAppStr, pRawStr, rawlen);
-}
-/*********************************************************************
- * @brief  long string to app string (app string format: len | string)
- *
- * @param   pRawStr - in -- pointer to the ascii Raw string buffer
- * @param   pAppStr - out -- pointer to the ascii app string buffer
- * @param   Applen  -- App buffer length
- *
- * @return  
- */
-void ltl_LongStrToAppString(char *pRawStr, char *pAppStr, uint16_t Applen )
-{
-    uint16_t rawlen;
-    
-    rawlen = strlen(pRawStr);
-    rawlen = MIN(rawlen, (Applen - OCTET_CHAR_LONG_HEADROOM_LEN));
-
-    *pAppStr++ = LO_UINT16(rawlen); // for length low
-    *pAppStr++ = HI_UINT16(rawlen); // for length high
     memcpy(pAppStr, pRawStr, rawlen);
 }
 
