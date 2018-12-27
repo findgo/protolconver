@@ -11,7 +11,6 @@
  */
 /*** Frame Control ***/
 #define ltl_FCType( a )               ( (a) & LTL_FRAMECTL_TYPE_MASK )
-#define ltl_FCDirection( a )          ( (a) & LTL_FRAMECTL_DIR_MASK)
 #define ltl_FCDisableDefaultRsp( a )  ( (a) & LTL_FRAMECTL_DISALBE_DEFAULT_RSP_MASK )
 
 /*** Attribute Access Control ***/
@@ -22,6 +21,7 @@
 #define LTL_PROFILE_CMD_HAS_RSP( cmd )  ( (cmd) == LTL_CMD_READ_ATTRIBUTES            || \
                                         (cmd) == LTL_CMD_WRITE_ATTRIBUTES           || \
                                         (cmd) == LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED || \
+                                        (cmd) == LTL_CMD_WRITE_ATTRIBUTES_NORSP || \
                                         (cmd) == LTL_CMD_CONFIGURE_REPORTING   || \
                                         (cmd) == LTL_CMD_READ_CONFIGURE_REPORTING || \
                                         (cmd) == LTL_CMD_DEFAULT_RSP ) // exception
@@ -59,8 +59,7 @@ typedef struct
 // local function
 static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf );
 static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr,uint8_t *pDat);
-static void ltlEncodeHdr( ltlFrameHdr_t *hdr,uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
-                                uint8_t specific, uint8_t direction, uint8_t disableDefaultRsp,uint8_t cmd);
+static void ltlEncodeHdr( ltlFrameHdr_t *hdr,uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, uint8_t specific, uint8_t disableDefaultRsp,uint8_t cmd);
 static uint8_t *ltlBuildHdr( ltlFrameHdr_t *hdr, uint8_t *pDat );
 static uint8_t ltlHdrSize(ltlFrameHdr_t *hdr);
 static ltlLibPlugin_t *ltlFindPlugin( uint16_t trunkID );
@@ -91,7 +90,7 @@ static uint8_t ltlProcessInWriteUndividedCmd(ltlApduMsg_t *ApduMsg);
 static ltlLibPlugin_t *libplugins = NULL;
 static ltlAttrRecsList_t *attrList = NULL;
 
-static ltlCmdItems_t ltlCmdTable[] = 
+static const ltlCmdItems_t ltlCmdTable[] = 
 {
     {ltlParseInReadCmd, ltlProcessInReadCmd},           // LTL_CMD_READ_ATTRIBUTES
     {NULL/*ltlParseInReadRspCmd*/, NULL},               //LTL_CMD_READ_ATTRIBUTES_RSP
@@ -254,7 +253,7 @@ LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, ltlReadWrite
  * @return  LTL_STATUS_SUCCESS if OK
  */
 LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
-                                uint8_t specific, uint8_t direction, uint8_t disableDefaultRsp,
+                                uint8_t specific, uint8_t disableDefaultRsp,
                                 uint8_t cmd, uint8_t *cmdFormat,uint16_t cmdFormatLen)
 {
     ltlFrameHdr_t hdr;
@@ -269,7 +268,7 @@ LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint
     
     memset((uint8_t *)&hdr,0,sizeof(ltlFrameHdr_t));
     
-    ltlEncodeHdr(&hdr, trunkID, nodeNO, seqNum, specific, direction, disableDefaultRsp, cmd);
+    ltlEncodeHdr(&hdr, trunkID, nodeNO, seqNum, specific, disableDefaultRsp, cmd);
 
     msglen = ltlHdrSize(&hdr);
 
@@ -288,7 +287,7 @@ LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint
     pbuf = ltlBuildHdr(&hdr, pbuf);
     memcpy(pbuf, cmdFormat, cmdFormatLen);
 
-    status = ltlPrefixrequest(dstaddr, msgbuf, msglen);
+    status = ltlPrefixrequest(dstAddr, msgbuf, msglen);
     mo_free(msgbuf);
     
     return status;
@@ -311,7 +310,6 @@ static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr, uint8_t *pDat)
     hdr->transSeqNum = *pDat++;
 
     hdr->fc.type = ltl_FCType(*pDat);
-    hdr->fc.direction = ltl_FCDirection(*pDat) ? LTL_FRAMECTL_DIR_SERVER_CLIENT : LTL_FRAMECTL_DIR_CLIENT_SERVER;
     hdr->fc.disableDefaultRsp = ltl_FCDisableDefaultRsp(*pDat) ? LTL_FRAMECTL_DIS_DEFAULT_RSP_ON : LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF;
     pDat++;
 
@@ -335,7 +333,7 @@ static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr, uint8_t *pDat)
  * @return  no
  */
 static void ltlEncodeHdr( ltlFrameHdr_t *hdr,uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
-                                uint8_t specific, uint8_t direction, uint8_t disableDefaultRsp,uint8_t cmd)
+                                uint8_t specific, uint8_t disableDefaultRsp,uint8_t cmd)
 {
     // trunkID
     hdr->trunkID = trunkID;  
@@ -348,7 +346,6 @@ static void ltlEncodeHdr( ltlFrameHdr_t *hdr,uint16_t trunkID,uint8_t nodeNO,uin
     
     // Build the Frame Control byte
     hdr->fc.type = specific ? LTL_FRAMECTL_TYPE_TRUNK_SPECIFIC : LTL_FRAMECTL_TYPE_PROFILE;
-    hdr->fc.direction = direction ? LTL_FRAMECTL_DIR_SERVER_CLIENT : LTL_FRAMECTL_DIR_CLIENT_SERVER;
     hdr->fc.disableDefaultRsp=  disableDefaultRsp ? LTL_FRAMECTL_DIS_DEFAULT_RSP_ON : LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF;
 }
 
@@ -371,8 +368,7 @@ static uint8_t *ltlBuildHdr( ltlFrameHdr_t *hdr, uint8_t *pDat )
     
     // Build the Frame Control byte
     *pDat = hdr->fc.type;
-    *pDat |= hdr->fc.direction << 2;
-    *pDat |= hdr->fc.disableDefaultRsp << 3;
+    *pDat |= hdr->fc.disableDefaultRsp << 2;
     pDat++;  // move past the frame control field
     
     // Add the Trunk's command ID
@@ -553,7 +549,6 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
     uint8_t len;
 
     switch ( dataType ){
-        case LTL_DATATYPE_DATA8:
         case LTL_DATATYPE_BOOLEAN:
         case LTL_DATATYPE_BITMAP8:
         case LTL_DATATYPE_UINT8:
@@ -562,7 +557,6 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
             len = 1;
             break;
 
-        case LTL_DATATYPE_DATA16:
         case LTL_DATATYPE_BITMAP16:
         case LTL_DATATYPE_UINT16:
         case LTL_DATATYPE_INT16:
@@ -572,14 +566,12 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
             len = 2;
             break;
 
-        case LTL_DATATYPE_DATA32:
         case LTL_DATATYPE_BITMAP32:
         case LTL_DATATYPE_UINT32:
         case LTL_DATATYPE_INT32:
         case LTL_DATATYPE_SINGLE_PREC:
             len = 4;
             break;
-        case LTL_DATATYPE_DATA64:
         case LTL_DATATYPE_BITMAP64:           
         case LTL_DATATYPE_UINT64:
         case LTL_DATATYPE_INT64:
@@ -615,10 +607,10 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData )
 {
     if ( dataType == LTL_DATATYPE_LONG_CHAR_STR || dataType == LTL_DATATYPE_LONG_OCTET_ARRAY ) {
-        return ( BUILD_UINT16( pData[0], pData[1] ) + 2); // long string length + 2 for length field
+        return ( BUILD_UINT16( pData[0], pData[1] ) + OCTET_CHAR_LONG_HEADROOM_LEN); // long string length + 2 for length field
     }
     else if ( dataType == LTL_DATATYPE_CHAR_STR || dataType == LTL_DATATYPE_OCTET_ARRAY ){
-        return ( *pData + 1 ); // string length + 1 for length field
+        return ( *pData + OCTET_CHAR_HEADROOM_LEN); // string length + 1 for length field
     }else if(dataType == LTL_DATATYPE_ARRAY){
         // TODO: do later
     }
@@ -641,7 +633,6 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
     uint16_t len;
 
     switch ( dataType ){
-        case LTL_DATATYPE_DATA8:
         case LTL_DATATYPE_BOOLEAN:
         case LTL_DATATYPE_BITMAP8:
         case LTL_DATATYPE_INT8:
@@ -650,7 +641,6 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
             *buf++ = *((uint8_t *)attrData);
             break;
 
-        case LTL_DATATYPE_DATA16:
         case LTL_DATATYPE_BITMAP16:
         case LTL_DATATYPE_UINT16:
         case LTL_DATATYPE_INT16:
@@ -661,7 +651,6 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
             *buf++ = HI_UINT16( *((uint16_t *)attrData) );
             break;
 
-        case LTL_DATATYPE_DATA32:
         case LTL_DATATYPE_BITMAP32:
         case LTL_DATATYPE_UINT32:
         case LTL_DATATYPE_INT32:
@@ -672,7 +661,6 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
             *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 3 );
             break;
 
-        case LTL_DATATYPE_DATA64:
         case LTL_DATATYPE_BITMAP64:           
         case LTL_DATATYPE_UINT64:
         case LTL_DATATYPE_INT64:
@@ -847,9 +835,7 @@ static LStatus_t ltlWriteAttrDataUsingCB( uint16_t trunkID, uint8_t nodeNO, ltlA
     return ( status );
 }
 
-LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
-                                uint8_t seqNum,uint8_t direction, 
-                                uint8_t disableDefaultRsp, ltlReadCmd_t *readCmd )
+LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, uint8_t seqNum, ltlReadCmd_t *readCmd )
 {
     uint8_t i;
     uint16_t dataLen;
@@ -868,9 +854,8 @@ LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
             *pBuf++ = HI_UINT16( readCmd->attrID[i] );
         }
 
-        status = ltl_SendCommand(dstAddr, trunkID, nodeNO,seqNum, 
-                                FALSE, direction, disableDefaultRsp, 
-                                LTL_CMD_READ_ATTRIBUTES, buf,  dataLen);
+        status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
+                                FALSE, TRUE, LTL_CMD_READ_ATTRIBUTES, buf,  dataLen);
         mo_free( buf );
     }
     else{
@@ -881,9 +866,7 @@ LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
 }
 
 
-LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
-                                uint8_t seqNum,uint8_t direction,
-                                uint8_t disableDefaultRsp, ltlReadRspCmd_t *readRspCmd )
+LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, uint8_t seqNum, ltlReadRspCmd_t *readRspCmd )
 {
     uint8_t i;
     uint16_t len = 0;
@@ -944,16 +927,14 @@ LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
     } // for loop
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, direction, disableDefaultRsp,
-                            LTL_CMD_READ_ATTRIBUTES_RSP, buf, len);
+                            FALSE, TRUE, LTL_CMD_READ_ATTRIBUTES_RSP, buf, len);
               
     mo_free( buf );
 
     return ( status );
 }
 LStatus_t ltl_SendWriteRequest(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
-                                uint8_t seqNum,uint8_t direction,
-                                uint8_t disableDefaultRsp, uint8_t cmd, ltlWriteCmd_t *writeCmd )
+                                uint8_t seqNum, uint8_t cmd, ltlWriteCmd_t *writeCmd )
 {
     uint8_t *buf;
     uint8_t *pBuf;
@@ -986,8 +967,7 @@ LStatus_t ltl_SendWriteRequest(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeN
         }
         
         status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                                FALSE, direction, disableDefaultRsp,
-                                cmd, buf, dataLen);
+                                FALSE, TRUE, cmd, buf, dataLen);
         mo_free( buf );
     }
     else{
@@ -997,9 +977,7 @@ LStatus_t ltl_SendWriteRequest(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeN
     return ( status);
 }
 
-LStatus_t ltl_SendWriteRsp(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction,
-                                 uint8_t disableDefaultRsp, ltlWriteRspCmd_t *writeRspCmd)
+LStatus_t ltl_SendWriteRsp(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum, ltlWriteRspCmd_t *writeRspCmd)
 {
     uint8_t i;
     uint16_t len = 0;
@@ -1029,16 +1007,14 @@ LStatus_t ltl_SendWriteRsp(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
     }
     
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, direction, disableDefaultRsp,
-                            LTL_CMD_WRITE_ATTRIBUTES_RSP, buf, len);              
+                            FALSE, TRUE, LTL_CMD_WRITE_ATTRIBUTES_RSP, buf, len);              
     mo_free( buf );
 
     return status;
 }
                                  
 LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction, 
-                                 uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd)
+                                 uint8_t seqNum, uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd)
 {
     uint8_t i;
     uint16_t dataLen;
@@ -1076,16 +1052,14 @@ LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
     }
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, direction, disableDefaultRsp,
-                            LTL_CMD_REPORT_ATTRIBUTES, buf, dataLen);
+                            FALSE, disableDefaultRsp, LTL_CMD_REPORT_ATTRIBUTES, buf, dataLen);
     mo_free( buf );
 
     return ( status );
 }
                                  
-LStatus_t ltl_SendConfigReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction, 
-                                 uint8_t disableDefaultRsp, ltlCfgReportCmd_t *cfgReportCmd)
+LStatus_t ltl_SendConfigReportReq( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
+                                            uint8_t seqNum , ltlCfgReportCmd_t *cfgReportCmd)
 {
     uint16_t dataLen = 0;
     LStatus_t status;    
@@ -1130,16 +1104,14 @@ LStatus_t ltl_SendConfigReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t no
     } // for loop
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, direction, disableDefaultRsp,
-                            LTL_CMD_CONFIGURE_REPORTING, buf, dataLen);
+                            FALSE, TRUE, LTL_CMD_CONFIGURE_REPORTING, buf, dataLen);
     mo_free( buf );
 
     return ( status );
 }
                           
-LStatus_t ltl_SendConfigReportRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction, 
-                                 uint8_t disableDefaultRsp, ltlCfgReportRspCmd_t *cfgReportRspCmd)
+LStatus_t ltl_SendConfigReportRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum, ltlCfgReportRspCmd_t *cfgReportRspCmd)
 {
     uint16_t dataLen;
     uint8_t *buf;
@@ -1170,16 +1142,14 @@ LStatus_t ltl_SendConfigReportRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t
     }
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, direction, disableDefaultRsp,
-                            LTL_CMD_CONFIGURE_REPORTING_RSP, buf, dataLen);
+                            FALSE, TRUE, LTL_CMD_CONFIGURE_REPORTING_RSP, buf, dataLen);
     mo_free( buf );
 
   return ( status );
 }
 
-LStatus_t ltl_SendReadReportCfgCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction, 
-                                 uint8_t disableDefaultRsp, ltlReadReportCfgCmd_t *readReportCfgCmd)
+LStatus_t ltl_SendReadReportCfgReq( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum , ltlReadReportCfgCmd_t *readReportCfgCmd)
 {
       uint16_t dataLen;
       uint8_t *buf;
@@ -1202,16 +1172,14 @@ LStatus_t ltl_SendReadReportCfgCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t n
     }
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, direction, disableDefaultRsp,
-                            LTL_CMD_READ_CONFIGURE_REPORTING, buf, dataLen);
+                            FALSE, TRUE, LTL_CMD_READ_CONFIGURE_REPORTING, buf, dataLen);
     mo_free( buf );
 
   return ( status );
 }
 
-LStatus_t ltl_SendReadReportCfgRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction, 
-                                 uint8_t disableDefaultRsp, ltlReadReportCfgRspCmd_t *readReportCfgRspCmd)
+LStatus_t ltl_SendReadReportCfgRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
+                                 uint8_t seqNum , ltlReadReportCfgRspCmd_t *readReportCfgRspCmd)
 {
     uint16_t dataLen = 0;
     LStatus_t status;
@@ -1263,16 +1231,14 @@ LStatus_t ltl_SendReadReportCfgRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_
     }
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, direction, disableDefaultRsp,
-                            LTL_CMD_READ_CONFIGURE_REPORTING_RSP, buf, dataLen);
+                            FALSE, TRUE, LTL_CMD_READ_CONFIGURE_REPORTING_RSP, buf, dataLen);
     mo_free( buf );
 
     return ( status );
 }
 //ok
-LStatus_t ltl_SendDefaultRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                uint8_t seqNum, uint8_t direction,
-                                uint8_t disableDefaultRsp, ltlDefaultRspCmd_t *defaultRspCmd)
+LStatus_t ltl_SendDefaultRsp( uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
+                                uint8_t seqNum, ltlDefaultRspCmd_t *defaultRspCmd)
 {
   uint8_t buf[2]; // Command ID and Status;
 
@@ -1280,8 +1246,8 @@ LStatus_t ltl_SendDefaultRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t node
   buf[0] = defaultRspCmd->commandID;
   buf[1] = defaultRspCmd->statusCode;
 
-  return (ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, FALSE, direction, disableDefaultRsp,
-                    LTL_CMD_DEFAULT_RSP, buf, 2));
+  return (ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, FALSE, TRUE,
+                          LTL_CMD_DEFAULT_RSP, buf, 2));
 }
 
 /*********************************************************************
@@ -1927,7 +1893,7 @@ static void *ltlParseInDefaultRspCmd(uint8_t *pdata ,uint16_t datalen)
 
     // Build and send Read Response command
     ltl_SendReadRsp(ApduMsg->pkt->srcaddr,ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo,
-                    ApduMsg->hdr.transSeqNum, LTL_FRAMECTL_DIR_SERVER_CLIENT, true, readRspCmd);
+                    ApduMsg->hdr.transSeqNum, readRspCmd);
     mo_free( readRspCmd );
 
     return TRUE;
@@ -2013,8 +1979,7 @@ static uint8_t ltlProcessInWriteCmd(ltlApduMsg_t *ApduMsg)
             writeRspCmd->numAttr = 1;
         }
 
-        ltl_SendWriteRsp(ApduMsg->pkt->srcaddr, ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo,ApduMsg->hdr.transSeqNum, 
-                    LTL_FRAMECTL_DIR_SERVER_CLIENT,TRUE, writeRspCmd);
+        ltl_SendWriteRsp(ApduMsg->pkt->srcaddr, ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo,ApduMsg->hdr.transSeqNum, writeRspCmd);
         mo_free( writeRspCmd );
     }
 
@@ -2200,8 +2165,7 @@ static uint8_t ltlProcessInWriteUndividedCmd(ltlApduMsg_t *ApduMsg)
         mo_free( curWriteRec );
     }
 
-    ltl_SendWriteRsp(ApduMsg->pkt->srcaddr, ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo,ApduMsg->hdr.transSeqNum, 
-                    LTL_FRAMECTL_DIR_SERVER_CLIENT, TRUE, writeRspCmd);
+    ltl_SendWriteRsp(ApduMsg->pkt->srcaddr, ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo,ApduMsg->hdr.transSeqNum,  writeRspCmd);
     mo_free( writeRspCmd );
 
     return TRUE;
@@ -2276,9 +2240,7 @@ void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt)
         defaultRspCmd.commandID = ApduMsg.hdr.commandID;
         defaultRspCmd.statusCode = status;
         // send default response
-        ltl_SendDefaultRspCmd(pkt->srcaddr, ApduMsg.hdr.trunkID, ApduMsg.hdr.nodeNo,
-                                ApduMsg.hdr.transSeqNum, LTL_FRAMECTL_DIR_SERVER_CLIENT, 
-                                TRUE,  &defaultRspCmd);
+        ltl_SendDefaultRsp(pkt->srcaddr, ApduMsg.hdr.trunkID, ApduMsg.hdr.nodeNo, ApduMsg.hdr.transSeqNum,  &defaultRspCmd);
     }
 }
 

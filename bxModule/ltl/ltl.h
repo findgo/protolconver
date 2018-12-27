@@ -9,14 +9,10 @@
 // define in frame control field
 //bit mask
 #define LTL_FRAMECTL_TYPE_MASK             0x03
-#define LTL_FRAMECTL_DIR_MASK              0x04
-#define LTL_FRAMECTL_DISALBE_DEFAULT_RSP_MASK  0x08
+#define LTL_FRAMECTL_DISALBE_DEFAULT_RSP_MASK  0x04
 //subfield type
 #define LTL_FRAMECTL_TYPE_PROFILE          0x00
 #define LTL_FRAMECTL_TYPE_TRUNK_SPECIFIC   0x01
-//subfield Manufacturer code
-#define LTL_FRAMECTL_DIR_CLIENT_SERVER 0
-#define LTL_FRAMECTL_DIR_SERVER_CLIENT 1
 //subfield disable default response
 #define LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF 0
 #define LTL_FRAMECTL_DIS_DEFAULT_RSP_ON 1
@@ -42,10 +38,6 @@
 
 /*** Data Types (32) ***/
 #define LTL_DATATYPE_NO_DATA                            0x00
-#define LTL_DATATYPE_DATA8                              0x05
-#define LTL_DATATYPE_DATA16                             0x06
-#define LTL_DATATYPE_DATA32                             0x07
-#define LTL_DATATYPE_DATA64                             0x08
 #define LTL_DATATYPE_BOOLEAN                            0x10
 #define LTL_DATATYPE_BITMAP8                            0x15
 #define LTL_DATATYPE_BITMAP16                           0x16
@@ -136,18 +128,12 @@
 #define ltl_IsProfileCmd( a )           ( (a) == LTL_FRAMECTL_TYPE_PROFILE )
 #define ltl_IsTrunkCmd( a )             ( (a) == LTL_FRAMECTL_TYPE_TRUNK_SPECIFIC )
 
-// ltl_ServerCmd client to server
-// ltl_ClientCmd server to client
-#define ltl_ServerCmd( a )       ( (a) == LTL_FRAMECTL_DIR_CLIENT_SERVER )
-#define ltl_ClientCmd( a )       ( (a) == LTL_FRAMECTL_DIR_SERVER_CLIENT )
-
 typedef uint8_t LStatus_t;
 
 // LTL header - frame control field
 typedef struct
 {
     uint8_t type;
-    uint8_t direction;
     uint8_t disableDefaultRsp;
     uint8_t reserved;
 } ltlFrameHdrctl_t;
@@ -156,8 +142,8 @@ typedef struct
 typedef struct
 {
     uint16_t    trunkID;
-    uint8_t     transSeqNum;
     uint8_t     nodeNo;
+    uint8_t     transSeqNum;
     uint8_t     commandID;
     ltlFrameHdrctl_t fc;
 } ltlFrameHdr_t;
@@ -391,52 +377,29 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType );
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData );
 
 LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
-                                uint8_t specific, uint8_t direction, uint8_t disableDefaultRsp,
+                                uint8_t specific , uint8_t disableDefaultRsp,
                                 uint8_t cmd, uint8_t *cmdFormat,uint16_t cmdFormatLen);
-LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
-                                uint8_t seqNum,uint8_t direction,
-                                uint8_t disableDefaultRsp, ltlReadCmd_t *readCmd );
-LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
-                                uint8_t seqNum,uint8_t direction,
-                                uint8_t disableDefaultRsp, ltlReadRspCmd_t *readRspCmd );
-LStatus_t ltl_SendWriteRequest(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
-                                uint8_t seqNum,uint8_t direction,
-                                uint8_t disableDefaultRsp, uint8_t cmd, ltlWriteCmd_t *writeCmd );
-#define ltl_SendWriteReq(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
-                        ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES, writeCmd )
-#define ltl_SendWriteReqUndivided(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
-                        ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED, writeCmd )
+LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, uint8_t seqNum, ltlReadCmd_t *readCmd );
+LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, uint8_t seqNum, ltlReadRspCmd_t *readRspCmd );
+LStatus_t ltl_SendWriteRequest(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, uint8_t seqNum, uint8_t cmd, ltlWriteCmd_t *writeCmd );
+
+#define ltl_SendWriteReq(dstAddr, trunkID, nodeNO, seqNum, writeCmd ) ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, LTL_CMD_WRITE_ATTRIBUTES, writeCmd )
+#define ltl_SendWriteReqUndivided(dstAddr, trunkID, nodeNO, seqNum, writeCmd ) ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum,  LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED, writeCmd )       
+#define ltl_SendWriteReqNoRsp(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, LTL_CMD_WRITE_ATTRIBUTES_NORSP, writeCmd )
                         
-#define ltl_SendWriteReqNoRsp(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, writeCmd ) \
-                        ltl_SendWriteRequest(dstAddr, trunkID, nodeNO, seqNum, direction, disableDefaultRsp, LTL_CMD_WRITE_ATTRIBUTES_NORSP, writeCmd )
-                        
-LStatus_t ltl_SendwriteRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction,
-                                 uint8_t disableDefaultRsp, ltlWriteRspCmd_t *writeRspCmd);
+LStatus_t ltl_SendWriteRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum , ltlWriteRspCmd_t *writeRspCmd);
 
-LStatus_t ltl_SendConfigReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction, 
-                                 uint8_t disableDefaultRsp, ltlCfgReportCmd_t *cfgReportCmd);
+LStatus_t ltl_SendConfigReportReq( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum , ltlCfgReportCmd_t *cfgReportCmd);
 
-LStatus_t ltl_SendConfigReportRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction, 
-                                 uint8_t disableDefaultRsp, ltlCfgReportRspCmd_t *cfgReportRspCmd);
+LStatus_t ltl_SendConfigReportRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum , ltlCfgReportRspCmd_t *cfgReportRspCmd);
 
-LStatus_t ltl_SendReadReportCfgCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction, 
-                                 uint8_t disableDefaultRsp, ltlReadReportCfgCmd_t *readReportCfgCmd);
+LStatus_t ltl_SendReadReportCfgReq( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum , ltlReadReportCfgCmd_t *readReportCfgCmd);
 
-LStatus_t ltl_SendReadReportCfgRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction, 
-                                 uint8_t disableDefaultRsp, ltlReadReportCfgRspCmd_t *readReportCfgRspCmd);
+LStatus_t ltl_SendReadReportCfgRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum , ltlReadReportCfgRspCmd_t *readReportCfgRspCmd);
 
-LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum , uint8_t direction,
-                                 uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd);
+LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum, uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd);
 
-LStatus_t ltl_SendDefaultRspCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                uint8_t seqNum, uint8_t direction,
-                                uint8_t disableDefaultRsp, ltlDefaultRspCmd_t *defaultRspCmd);
+LStatus_t ltl_SendDefaultRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum, ltlDefaultRspCmd_t *defaultRspCmd);
 
 void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt);
 
