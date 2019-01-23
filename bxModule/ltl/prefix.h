@@ -23,9 +23,9 @@ typedef struct
 // 主要是减少多次分配内存,但使用要注意
 // 如果不习惯使用,  直接调用网络层数据发送API
 // 提供网络帧头长度
-#define ltlprefixHdrsize(dstAddr) bxNwkHdrLen()
+#define ltlprefixHdrsize(dstAddr)   2
 // 填充网络帧头,并返回越过前置头的指置
-#define ltlPrefixBuildHdr(dstAddr, pDat ) bxNwkBuildHdr(pDat, NWK_FC_DATA , dstAddr, 0)
+#define ltlPrefixBuildHdr(dstAddr, pDat ) bxNwkBuildHdr(pDat, dstAddr)
 // 直接发送
 #define ltlPrefixrequest(dstaddr, pDat, buflen) bxNwk_LowDataRequest(dstaddr, pDat, buflen);  
 
