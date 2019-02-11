@@ -53,11 +53,9 @@
 #define LTL_DATATYPE_DOUBLE_PREC                        0x3d
 #define LTL_DATATYPE_CHAR_STR                           0x41
 #define LTL_DATATYPE_OCTET_ARRAY                        0x42
-#define LTL_DATATYPE_TWO_OCTET_ARRAY                    0x43
-#define LTL_DATATYPE_TRUNK_ID                           0x51
-#define LTL_DATATYPE_ATTR_ID                            0x52
-#define LTL_DATATYPE_SN_ADDR                            0x53
-#define LTL_DATATYPE_128_BIT_SEC_KEY                    0x54
+#define LTL_DATATYPE_DWORD_ARRAY                        0x43
+#define LTL_DATATYPE_SN_ADDR                            0x51
+#define LTL_DATATYPE_128_BIT_SEC_KEY                    0x52
 #define LTL_DATATYPE_UNKNOWN                            0xff
 
 /*** Error Status Codes ***/
@@ -353,7 +351,7 @@ LStatus_t ltl_registerAttrList(uint16_t trunkID, uint8_t nodeNO, uint8_t numAttr
  * @return      LTL_SUCCESS if successful. LTL_FAILURE, otherwise.
  */
 LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, ltlReadWriteCB_t pfnReadWriteCB );
-
+uint8_t ltlIsAnalogDataType( uint8_t dataType );
 uint8_t ltlGetDataTypeLength( uint8_t dataType );
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData );
 
@@ -392,6 +390,5 @@ uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrId, ltlA
 
 
 void ltl_StrToAppString(char *pRawStr, char *pAppStr, uint8_t Applen );
-void ltl_LongStrToAppString(char *pRawStr, char *pAppStr, uint16_t Applen );
 
 #endif

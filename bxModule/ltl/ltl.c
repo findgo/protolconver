@@ -98,12 +98,12 @@ static const ltlCmdItems_t ltlCmdTable[] =
     {ltlParseInWriteCmd, ltlProcessInWriteUndividedCmd},//LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED
     {NULL/*ltlParseInWriteRspCmd*/, NULL},              //LTL_CMD_WRITE_ATTRIBUTES_RSP
     {ltlParseInWriteCmd, ltlProcessInWriteCmd},         //LTL_CMD_WRITE_ATTRIBUTES_NORSP
-    {NULL/*ltlParseInConfigReportCmd*/, NULL},           //LTL_CMD_CONFIGURE_REPORTING
+    {ltlParseInConfigReportCmd, NULL},           //LTL_CMD_CONFIGURE_REPORTING
     {NULL/*ltlParseInConfigReportRspCmd*/, NULL},       //LTL_CMD_CONFIGURE_REPORTING_RSP
-    {NULL/*ltlParseInReadReportCfgCmd*/, NULL},         //LTL_CMD_READ_CONFIGURE_REPORTING
+    {ltlParseInReadReportCfgCmd, NULL},         //LTL_CMD_READ_CONFIGURE_REPORTING
     {NULL/*ltlParseInReadReportCfgRspCmd*/, NULL},      //LTL_CMD_READ_CONFIGURE_REPORTING_RSP
     {NULL/*ltlParseInReportCmd*/, NULL},                //LTL_CMD_REPORT_ATTRIBUTES
-    {NULL/*ltlParseInDefaultRspCmd*/, NULL},            //LTL_CMD_DEFAULT_RSP                          
+    {ltlParseInDefaultRspCmd, NULL},            //LTL_CMD_DEFAULT_RSP                          
 };
 
 /*********************************************************************
@@ -561,8 +561,6 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
         case LTL_DATATYPE_UINT16:
         case LTL_DATATYPE_INT16:
         case LTL_DATATYPE_ENUM16:
-        case LTL_DATATYPE_TRUNK_ID:
-        case LTL_DATATYPE_ATTR_ID:
             len = 2;
             break;
 
@@ -606,7 +604,7 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
  */
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData )
 {
-    if ( dataType == LTL_DATATYPE_CHAR_STR || dataType == LTL_DATATYPE_OCTET_ARRAY || dataType == LTL_DATATYPE_TWO_OCTET_ARRAY){
+    if ( dataType == LTL_DATATYPE_CHAR_STR || dataType == LTL_DATATYPE_OCTET_ARRAY || dataType == LTL_DATATYPE_DWORD_ARRAY){
         return ( *pData + OCTET_CHAR_HEADROOM_LEN); // 1 for length field
     }
     
@@ -640,8 +638,6 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
         case LTL_DATATYPE_UINT16:
         case LTL_DATATYPE_INT16:
         case LTL_DATATYPE_ENUM16:
-        case LTL_DATATYPE_TRUNK_ID:
-        case LTL_DATATYPE_ATTR_ID:
             *buf++ = LO_UINT16( *((uint16_t *)attrData) );
             *buf++ = HI_UINT16( *((uint16_t *)attrData) );
             break;
@@ -681,7 +677,7 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
             buf = memcpy( buf, pStr, len + 1 ); // Including length field
             break;
             
-        case LTL_DATATYPE_TWO_OCTET_ARRAY:
+        case LTL_DATATYPE_DWORD_ARRAY:
             pStr = (uint8_t *)attrData;
             len = *pStr * 2;
             buf = memcpy( buf, pStr, len + 1 ); // Including length field
@@ -829,6 +825,7 @@ static LStatus_t ltlWriteAttrDataUsingCB( uint16_t trunkID, uint8_t nodeNO, ltlA
     return ( status );
 }
 
+// 读属性命令
 LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, uint8_t seqNum, ltlReadCmd_t *readCmd )
 {
     uint8_t i;
@@ -859,7 +856,7 @@ LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, ui
     return ( status );
 }
 
-
+// 读属性应答命令
 LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, uint8_t seqNum, ltlReadRspCmd_t *readRspCmd )
 {
     uint8_t i;
