@@ -173,6 +173,7 @@ int mt_AsncHandle(uint16_t commandID, uint8_t *data, uint8_t len)
         if((msg = msgalloc(len)) == NULL)
             return NPI_LNX_FAILURE;
         log_debug("af incoming msg!");
+        memcpy(msg,data,len);
         bxNwkmsgsend(msg); // 将消息发送nwk邮箱
         break;
         

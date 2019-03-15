@@ -33,7 +33,8 @@ static const uint16_t hwver = HW_VERSION;
 static char manufactTab[OCTET_CHAR_HEADROOM_LEN + MANUFACTURER_NAME_STRING_MAX_LEN];
 static uint32_t buildDateCode;
 static const uint32_t productID = PRODUCT_IDENTIFIER;
-static uint8_t serialnumberTab[16];
+static uint8_t AppSerialnumberTab[16 + OCTET_CHAR_HEADROOM_LEN] = {16};
+static uint8_t *pSerialnumberTab = ltl_AppArraytoArray(&AppSerialnumberTab);
 static const uint8_t powersrc = POWERSOURCE_DC;
 
 
@@ -76,9 +77,9 @@ static const ltlAttrRec_t GeneralBasicAttriList[] = {
     },
     {
         ATTRID_BASIC_SERIAL_NUMBER,
-        LTL_DATATYPE_SN_ADDR,
+        LTL_DATATYPE_UINT8_ARRAY,
         ACCESS_CONTROL_READ,
-        (void *)&serialnumberTab
+        (void *)&AppSerialnumberTab
     },
     {
         ATTRID_BASIC_POWER_SOURCE,
@@ -153,25 +154,25 @@ static void SerialNumber(void)
     mcu_info_t *info;
     
     info = bsp_GetChipInfo();
-    serialnumberTab[0] = BREAK_UINT32(info->id0, 0);
-    serialnumberTab[1] = BREAK_UINT32(info->id0, 1);
-    serialnumberTab[2] = BREAK_UINT32(info->id0, 2);
-    serialnumberTab[3] = BREAK_UINT32(info->id0, 3);
+    pSerialnumberTab[0] = BREAK_UINT32(info->id0, 0);
+    pSerialnumberTab[1] = BREAK_UINT32(info->id0, 1);
+    pSerialnumberTab[2] = BREAK_UINT32(info->id0, 2);
+    pSerialnumberTab[3] = BREAK_UINT32(info->id0, 3);
 
-    serialnumberTab[4] = BREAK_UINT32(info->id1, 0);
-    serialnumberTab[5] = BREAK_UINT32(info->id1, 1);
-    serialnumberTab[6] = BREAK_UINT32(info->id1, 2);
-    serialnumberTab[7] = BREAK_UINT32(info->id1, 3);
+    pSerialnumberTab[4] = BREAK_UINT32(info->id1, 0);
+    pSerialnumberTab[5] = BREAK_UINT32(info->id1, 1);
+    pSerialnumberTab[6] = BREAK_UINT32(info->id1, 2);
+    pSerialnumberTab[7] = BREAK_UINT32(info->id1, 3);
     
-    serialnumberTab[8] = BREAK_UINT32(info->id2, 0);
-    serialnumberTab[9] = BREAK_UINT32(info->id2, 1);
-    serialnumberTab[10] = BREAK_UINT32(info->id2, 2);
-    serialnumberTab[11] = BREAK_UINT32(info->id2, 3);
+    pSerialnumberTab[8] = BREAK_UINT32(info->id2, 0);
+    pSerialnumberTab[9] = BREAK_UINT32(info->id2, 1);
+    pSerialnumberTab[10] = BREAK_UINT32(info->id2, 2);
+    pSerialnumberTab[11] = BREAK_UINT32(info->id2, 3);
 
-    serialnumberTab[12] = 0;
-    serialnumberTab[13] = 0;
-    serialnumberTab[14] = 0;
-    serialnumberTab[15] = 0;
+    pSerialnumberTab[12] = 0;
+    pSerialnumberTab[13] = 0;
+    pSerialnumberTab[14] = 0;
+    pSerialnumberTab[15] = 0;
 }
 
 
