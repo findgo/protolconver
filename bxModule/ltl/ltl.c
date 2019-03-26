@@ -1861,8 +1861,9 @@ static void *ltlParseInDefaultRspCmd(uint8_t *pdata ,uint16_t datalen)
         // find this device attribute record
         if ( ltlFindAttrRec( ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo, readCmd->attrID[i], &attrRec ) ){ 
             if ( ltl_AccessCtrlRead( attrRec.accessControl ) ) {
-               statusRec->data = attrRec.dataPtr; // get the attribute pointer
+               statusRec->status = LTL_STATUS_SUCCESS;
                statusRec->dataType = attrRec.dataType; // get the attribute data type
+               statusRec->data = attrRec.dataPtr; // get the attribute pointer
             }
             else{
                 statusRec->status = LTL_STATUS_WRITE_ONLY;
