@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include "common_def.h"
 
-/* Default total heap size 17K*/
+/* Default total heap size 4K*/
 #define configTOTAL_HEAP_SIZE               ( ( size_t ) ( 4 * 1024 ) )
 
 /* set byte alignment */
