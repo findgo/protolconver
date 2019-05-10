@@ -38,7 +38,7 @@ static uint8_t halkeyResetIsDown(void)
 static void halkeyCB(void *arg)
 {
     mkeydecetor_task();
-    timerRestart(*((timer_t * *)arg), HAL_KEY_SCAN_TIME);
+    timerRestart((timer_t *)arg, HAL_KEY_SCAN_TIME);
 }
 
 void keyTask(void)

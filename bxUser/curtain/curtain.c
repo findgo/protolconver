@@ -102,7 +102,7 @@ void CurtainLevelControlStop(uint8_t node )
 static void tmCurtainCb(void *arg)
 {
     wintom_getPos(WT_DEV_ID_GERNERAL);
-    timerRestart(*((timer_t * *)arg), CURTAIN_POS_SCAN_TIME);
+    timerRestart((timer_t *)arg, CURTAIN_POS_SCAN_TIME);
 }
 
 
